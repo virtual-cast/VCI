@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using UniGLTF;
-using UniJSON;
 using UnityEngine;
-
+using System.Linq;
+using System.Text;
+using System.IO;
+using UniJSON;
 
 namespace VCI
 {
@@ -101,7 +101,7 @@ namespace VCI
             gltf.extensions.VCAST_vci_material_unity = new glTF_VCAST_vci_material_unity
             {
                 materials = exporter.Materials
-                .Select(m => UnityMaterial.CreateFromMaterial(m, exporter.TextureManager.Textures))
+                .Select(m => VRM.glTF_VRM_Material.CreateFromMaterial(m, exporter.TextureManager.Textures))
                 .ToList()
             };
 

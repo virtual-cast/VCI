@@ -217,7 +217,10 @@ namespace UniGLTF
     [Serializable]
     public class glTF_VCAST_vci_material_unity
     {
-        public List<UnityMaterial> materials;
+        /// <summary>
+        /// Same as vrm material
+        /// </summary>
+        public List<VRM.glTF_VRM_Material> materials;
     }
     #endregion
 
