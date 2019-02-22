@@ -206,7 +206,6 @@ namespace VCI
         static string[] IncluceFiles = new string[]
         {
             "Assets/VRM/UniVRM/Scripts/Format/glTF_VRM_Material.cs.meta",
-            "Assets/VRM/UniVRM/Scripts/Format/MaterialImporter.cs.meta",
             "Assets/VRM/UniVRM/Scripts/Format/VRMMaterialExporter.cs.meta",
             "Assets/VRM/UniVRM/Scripts/Format/VRMMaterialImporter.cs.meta",
         };

@@ -1,8 +1,5 @@
 #pragma warning disable
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UniGLTF;
 using UnityEditor;
 using UnityEngine;
@@ -14,41 +11,19 @@ namespace VCI
     {
         #region Export NonHumanoid
         const string CONVERT_OBJECT_KEY = VCIVersion.MENU + "/Export VCI";
-        const int DescriptionLimit = 2048;
 
-        [MenuItem(CONVERT_OBJECT_KEY, true)]
-        private static bool ExportObjectValidate()
-        {
-            var root = Selection.activeObject as GameObject;
-            if (root == null)
-            {
-                return false;
-            }
-
-            var vciObject = root.GetComponent<VCIObject>();
-            if (vciObject == null)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        [MenuItem(CONVERT_OBJECT_KEY, false)]
+        [MenuItem(CONVERT_OBJECT_KEY)]
         private static void ExportObjectFromMenu()
         {
-            var root = Selection.activeObject as GameObject;
-
-            var vciObject = root.GetComponent<VCIObject>();
-
             var errorMessage = "";
-            if (!Validate(root, out errorMessage))
+            if (!Validate(out errorMessage))
             {
-                Debug.LogWarning(errorMessage);
+                Debug.LogAssertion(errorMessage);
                 return;
             }
             
             // save dialog
+            var root = Selection.activeObject as GameObject;
             var path = EditorUtility.SaveFilePanel(
                     "Save " + VCIVersion.EXTENSION,
                     null,
@@ -71,29 +46,30 @@ namespace VCI
             }
         }
 
-        private static bool Validate(GameObject root, out string errorMessage)
+        private static bool Validate(out string errorMessage)
         {
-            var vciObject = root.GetComponent<VCIObject>();
-
-            var errorMessages = new List<string>();
-            if (string.IsNullOrEmpty(vciObject.Meta.author))
+            var selectedGameObjects = Selection.gameObjects;
+            if (selectedGameObjects.Length == 0)
             {
-                errorMessages.Add("Authorを入力して下さい。");
-            }
-
-            if (DescriptionLimit < vciObject.Meta.description.Length)
-            {
-                errorMessages.Add($"Descriptionは{DescriptionLimit}文字以内にして下さい。");
-            }
-
-            if (errorMessages.Any())
-            {
-                errorMessage = string.Join(Environment.NewLine, errorMessages);
+                errorMessage = "VCIObjectがアタッチされたGameObjectを選択して下さい。";
                 return false;
             }
 
-            errorMessage = "";
-            return true;
+            if (2 <= selectedGameObjects.Length)
+            {
+                errorMessage = "VCIObjectがアタッチされたGameObjectを1つ選択して下さい。";
+                return false;
+            }
+
+            var vciObject = selectedGameObjects[0].GetComponent<VCIObject>();
+            if (vciObject == null)
+            {
+                errorMessage = "VCIObjectがアタッチされたGameObjectを選択して下さい。";
+                return false;
+            }
+
+            var isValid = VCIMetaValidator.Validate(vciObject, out errorMessage);
+            return isValid;
         }
         #endregion
     }

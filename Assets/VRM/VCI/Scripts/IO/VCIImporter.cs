@@ -272,6 +272,8 @@ namespace VCI
             public string reference;
             public Texture2D thumbnail;
             public string version;
+            
+            [SerializeField, TextArea(1,16)]
             public string description;
 
             public string exporterVersion;

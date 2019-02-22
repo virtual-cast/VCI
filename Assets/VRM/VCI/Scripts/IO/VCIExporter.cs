@@ -41,9 +41,6 @@ namespace VCI
             exporter.Prepare(go);
             exporter.Export();
 
-            // clear VRM
-            //gltf.extensions.VRM = null;
-
             var vciObject = exporter.Copy.GetComponent<VCIObject>();
 
             // vci interaction

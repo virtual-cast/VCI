@@ -10,66 +10,84 @@ namespace VCI
     {
         private VCIObject _target;
         private SerializedProperty _scriptProp;
+        private SerializedProperty _metaProp;
+        private SerializedProperty _thumbnailProp;
+        private SerializedProperty _vciScriptProp;
+        
+
+        private 
 
         void OnEnable()
         {
             _target = (VCIObject)target;
-            _scriptProp = serializedObject.FindProperty("Scripts");
+            _scriptProp = serializedObject.FindProperty("m_Script");
+            _metaProp = serializedObject.FindProperty("Meta");
+            _thumbnailProp = _metaProp.FindPropertyRelative("thumbnail");
+            _vciScriptProp = serializedObject.FindProperty("Scripts");
+        }
+
+        private void SetMetaPropertyField(SerializedProperty meta, string name)
+        {
+            var prop = meta.FindPropertyRelative(name);
+            if(prop != null)
+            {
+                EditorGUILayout.PropertyField(prop);
+            }
+            else
+            {
+                Debug.LogError("SetMetaPropertyField SerializedProperty not found");
+            }
         }
 
         public override void OnInspectorGUI()
         {
+            serializedObject.Update ();
+            EditorGUILayout.PropertyField(_scriptProp);
+
             // Version   
             EditorGUI.BeginDisabledGroup(true);
             if(string.IsNullOrEmpty(_target.Meta.exporterVersion))
                 _target.Meta.exporterVersion = VCIVersion.VERSION;
-            _target.Meta.exporterVersion = EditorGUILayout.TextField("ExporterVersion", _target.Meta.exporterVersion);
-            //if(string.IsNullOrEmpty(_target.Meta.specVersion))
-            //    _target.Meta.specVersion = VCISpecVersion.Version;
-            //_target.Meta.specVersion = EditorGUILayout.TextField("SpecVersion", _target.Meta.specVersion);
+            SetMetaPropertyField(_metaProp, nameof(_target.Meta.exporterVersion));
             EditorGUI.EndDisabledGroup();
             EditorGUILayout.Space();
 
             // information
             EditorGUILayout.LabelField("Information",  EditorStyles.boldLabel);
-            _target.Meta.title = EditorGUILayout.TextField("Title", _target.Meta.title);
-            _target.Meta.version = EditorGUILayout.TextField("Version", _target.Meta.version);
-            _target.Meta.author = EditorGUILayout.TextField("Author", _target.Meta.author);
-            _target.Meta.contactInformation = EditorGUILayout.TextField("ContactInformation", _target.Meta.contactInformation);
-            _target.Meta.reference = EditorGUILayout.TextField("Reference", _target.Meta.reference);
+            SetMetaPropertyField(_metaProp, nameof(_target.Meta.title));
+            SetMetaPropertyField(_metaProp, nameof(_target.Meta.version));
+            SetMetaPropertyField(_metaProp, nameof(_target.Meta.author));
+            SetMetaPropertyField(_metaProp, nameof(_target.Meta.contactInformation));
+            SetMetaPropertyField(_metaProp, nameof(_target.Meta.reference));
             
             // thumbnail
-            _target.Meta.thumbnail = (Texture2D)EditorGUILayout.ObjectField("Thumbnail", _target.Meta.thumbnail, typeof(Texture2D), false);
+            SetMetaPropertyField(_metaProp, nameof(_target.Meta.thumbnail));
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            _thumbnailProp.objectReferenceValue = (Texture2D)EditorGUILayout.ObjectField(_thumbnailProp.objectReferenceValue, typeof(Texture2D), false, GUILayout.Width(100), GUILayout.Height(100));
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             // description
-            EditorGUILayout.LabelField("Description",  EditorStyles.boldLabel);
-            _target.Meta.description = EditorGUILayout.TextArea(_target.Meta.description, GUILayout.MinHeight(100));
+            SetMetaPropertyField(_metaProp, nameof(_target.Meta.description));
             EditorGUILayout.Space();
 
             // License
-            EditorGUILayout.LabelField("License",  EditorStyles.boldLabel);
-            _target.Meta.modelDataLicenseType = 
-                (UniGLTF.glTF_VCAST_vci_meta.LicenseType)EditorGUILayout.EnumPopup("Model Data License", _target.Meta.modelDataLicenseType);
-            _target.Meta.modelDataOtherLicenseUrl = 
-                EditorGUILayout.TextField("ModelDataOtherLicenseUrl", _target.Meta.modelDataOtherLicenseUrl);
+            SetMetaPropertyField(_metaProp, nameof(_target.Meta.modelDataLicenseType));
+            SetMetaPropertyField(_metaProp, nameof(_target.Meta.modelDataOtherLicenseUrl));
             EditorGUILayout.Space();
 
-            _target.Meta.scriptLicenseType = 
-                (UniGLTF.glTF_VCAST_vci_meta.LicenseType)EditorGUILayout.EnumPopup("Script License", _target.Meta.scriptLicenseType);
-            _target.Meta.scriptOtherLicenseUrl = 
-                EditorGUILayout.TextField("ScriptOtherLicenseUrl", _target.Meta.scriptOtherLicenseUrl);
+            SetMetaPropertyField(_metaProp, nameof(_target.Meta.scriptLicenseType));
+            SetMetaPropertyField(_metaProp, nameof(_target.Meta.scriptOtherLicenseUrl));
             EditorGUILayout.Space();
 
             // script settings
-            EditorGUILayout.LabelField("Script settings",  EditorStyles.boldLabel);
-            _target.Meta.scriptWriteProtected = EditorGUILayout.Toggle("ScriptWriteProtected", _target.Meta.scriptWriteProtected);
-            _target.Meta.scriptEnableDebugging = EditorGUILayout.Toggle("ScriptEnableDebugging", _target.Meta.scriptEnableDebugging);
+            SetMetaPropertyField(_metaProp, nameof(_target.Meta.scriptWriteProtected));
+            SetMetaPropertyField(_metaProp, nameof(_target.Meta.scriptEnableDebugging));
             EditorGUILayout.Space();
 
-            // scripts
-            serializedObject.Update ();
-            EditorGUILayout.PropertyField(_scriptProp, true);
+            // vci scripts
+            EditorGUILayout.PropertyField(_vciScriptProp, true);
             serializedObject.ApplyModifiedProperties ();
         }
     }
