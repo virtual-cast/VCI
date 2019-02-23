@@ -36,10 +36,28 @@ namespace VCI
             return gltf;
         }
 
+        /// <summary>
+        /// workaround. fix next UniVRM
+        /// </summary>
+        /// <param name="gltf"></param>
+        static void RemoveVRM(glTF gltf)
+        {
+            var ex = gltf.extensions;
+            var fi = ex.GetType().GetField("VRM");
+            if (fi != null)
+            {
+                fi.SetValue(ex, null);
+            }
+        }
+
         public static void _Export(glTF gltf, VCIExporter exporter, GameObject go)
         {
             exporter.Prepare(go);
             exporter.Export();
+
+            // clear VRM
+            //gltf.extensions.VRM = null;
+            RemoveVRM(gltf);
 
             var vciObject = exporter.Copy.GetComponent<VCIObject>();
 

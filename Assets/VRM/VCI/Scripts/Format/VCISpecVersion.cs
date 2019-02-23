@@ -1,4 +1,4 @@
-#pragma warning disable
+ï»¿#pragma warning disable
 using System;
 
 namespace VCI
@@ -9,7 +9,7 @@ namespace VCI
 
         //public const int Minor = 10;
 
-        // “––ÊUniVCI‚Ìƒo[ƒWƒ‡ƒ“‚Æ“¯‚¶
+        // å½“é¢UniVCIã®ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã¨åŒã˜
         public const int Minor = VCIVersion.MINOR;
 
         public static string Version
