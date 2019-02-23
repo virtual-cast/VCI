@@ -11,6 +11,10 @@ UnityのEditorから `VCI` をエクスポートすることができます。
 このライブラリはアルファバージョンで機能の変更があります。
 製品に組み込まないでください。Runtimeのエクスポートは未確認です。
 
+## License
+
+[MIT License](./LICENSE.txt)
+
 ## Download
 
 * https://github.com/virtual-cast/VCI/releases
