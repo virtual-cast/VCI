@@ -145,6 +145,25 @@ JsonObjectValidator.GenericDeserializer<JsonValue,UnityEngine.Vector4>.Deseriali
 JsonObjectValidator.GenericDeserializer<JsonValue,UnityEngine.Vector4>.DeserializeField<System.Single>(default(JsonSchema), default(ListTreeNode<JsonValue>));
 }
 
+// Color
+f.Serialize(default(UnityEngine.Color));
+{
+var value = default(UnityEngine.Color);
+default(ListTreeNode<JsonValue>).Deserialize(ref value);
+}
+{
+JsonObjectValidator.GenericDeserializer<JsonValue,UnityEngine.Color>.DeserializeField<System.Single>(default(JsonSchema), default(ListTreeNode<JsonValue>));
+}
+{
+JsonObjectValidator.GenericDeserializer<JsonValue,UnityEngine.Color>.DeserializeField<System.Single>(default(JsonSchema), default(ListTreeNode<JsonValue>));
+}
+{
+JsonObjectValidator.GenericDeserializer<JsonValue,UnityEngine.Color>.DeserializeField<System.Single>(default(JsonSchema), default(ListTreeNode<JsonValue>));
+}
+{
+JsonObjectValidator.GenericDeserializer<JsonValue,UnityEngine.Color>.DeserializeField<System.Single>(default(JsonSchema), default(ListTreeNode<JsonValue>));
+}
+
 // Quaternion
 f.Serialize(default(UnityEngine.Quaternion));
 {
@@ -1990,6 +2009,25 @@ JsonObjectValidator.GenericDeserializer<MsgPackValue,UnityEngine.Vector4>.Deseri
 }
 {
 JsonObjectValidator.GenericDeserializer<MsgPackValue,UnityEngine.Vector4>.DeserializeField<System.Single>(default(JsonSchema), default(ListTreeNode<MsgPackValue>));
+}
+
+// Color
+f.Serialize(default(UnityEngine.Color));
+{
+var value = default(UnityEngine.Color);
+default(ListTreeNode<MsgPackValue>).Deserialize(ref value);
+}
+{
+JsonObjectValidator.GenericDeserializer<MsgPackValue,UnityEngine.Color>.DeserializeField<System.Single>(default(JsonSchema), default(ListTreeNode<MsgPackValue>));
+}
+{
+JsonObjectValidator.GenericDeserializer<MsgPackValue,UnityEngine.Color>.DeserializeField<System.Single>(default(JsonSchema), default(ListTreeNode<MsgPackValue>));
+}
+{
+JsonObjectValidator.GenericDeserializer<MsgPackValue,UnityEngine.Color>.DeserializeField<System.Single>(default(JsonSchema), default(ListTreeNode<MsgPackValue>));
+}
+{
+JsonObjectValidator.GenericDeserializer<MsgPackValue,UnityEngine.Color>.DeserializeField<System.Single>(default(JsonSchema), default(ListTreeNode<MsgPackValue>));
 }
 
 // Quaternion

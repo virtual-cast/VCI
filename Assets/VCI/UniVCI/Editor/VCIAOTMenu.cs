@@ -68,6 +68,7 @@ namespace VCI {
                         typeof(Vector2),
                         typeof(Vector3),
                         typeof(Vector4),
+                        typeof(Color),
                         typeof(Quaternion),
                         typeof(glTF),
                         })
@@ -108,6 +109,7 @@ namespace VCI {
                         typeof(Vector2),
                         typeof(Vector3),
                         typeof(Vector4),
+                        typeof(Color),
                         typeof(Quaternion),
                         })
                         {

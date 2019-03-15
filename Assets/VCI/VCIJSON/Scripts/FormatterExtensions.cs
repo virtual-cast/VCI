@@ -59,6 +59,17 @@ namespace VCIJSON
             f.EndMap();
         }
 
+        public static void Value(this IFormatter f, UnityEngine.Color v)
+        {
+            //CommaCheck();
+            f.BeginMap(4);
+            f.Key("r"); f.Value(v.r);
+            f.Key("g"); f.Value(v.g);
+            f.Key("b"); f.Value(v.b);
+            f.Key("a"); f.Value(v.a);
+            f.EndMap();
+        }
+
         static MethodInfo GetMethod<T>(Expression<Func<T>> expression)
         {
             var method = typeof(FormatterExtensions).GetMethod("Serialize");

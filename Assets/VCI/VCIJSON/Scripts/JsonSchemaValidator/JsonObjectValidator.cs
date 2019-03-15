@@ -651,21 +651,19 @@ namespace VCIJSON
 
                     s_d = (ListTreeNode<S> s) =>
                     {
-                        if (!s.IsMap())
-                        {
-                            throw new ArgumentException(s.Value.ValueType.ToString());
-                        }
-
                         // boxing
                         var t = (object)Activator.CreateInstance<T>();
-                        foreach (var kv in s.ObjectItems())
+                        if (s.IsMap())
                         {
-                            FieldSetter setter;
-                            if (fieldDeserializers.TryGetValue(kv.Key.GetUtf8String(), out setter))
+                            foreach (var kv in s.ObjectItems())
                             {
-                                if (setter != null)
+                                FieldSetter setter;
+                                if (fieldDeserializers.TryGetValue(kv.Key.GetUtf8String(), out setter))
                                 {
-                                    setter(kv.Value, t);
+                                    if (setter != null)
+                                    {
+                                        setter(kv.Value, t);
+                                    }
                                 }
                             }
                         }

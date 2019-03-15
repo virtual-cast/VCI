@@ -625,15 +625,15 @@ namespace VCIGLTF
 
         private static RigidbodyConstraints GetConstraints(glTF_VCAST_vci_Rigidbody rigidbody)
         {
-            return 
-            ((rigidbody.freezePositionX)?RigidbodyConstraints.FreezePositionX:0) |
-            ((rigidbody.freezePositionY)?RigidbodyConstraints.FreezePositionY:0) |
-            ((rigidbody.freezePositionZ)?RigidbodyConstraints.FreezePositionZ:0) |
-            ((rigidbody.freezeRotationX)?RigidbodyConstraints.FreezeRotationX:0) |
-            ((rigidbody.freezeRotationY)?RigidbodyConstraints.FreezeRotationY:0) |
-            ((rigidbody.freezeRotationZ)?RigidbodyConstraints.FreezeRotationZ:0) 
+            return
+            ((rigidbody.freezePositionX) ? RigidbodyConstraints.FreezePositionX : 0) |
+            ((rigidbody.freezePositionY) ? RigidbodyConstraints.FreezePositionY : 0) |
+            ((rigidbody.freezePositionZ) ? RigidbodyConstraints.FreezePositionZ : 0) |
+            ((rigidbody.freezeRotationX) ? RigidbodyConstraints.FreezeRotationX : 0) |
+            ((rigidbody.freezeRotationY) ? RigidbodyConstraints.FreezeRotationY : 0) |
+            ((rigidbody.freezeRotationZ) ? RigidbodyConstraints.FreezeRotationZ : 0)
              ;
-            
+
         }
     }
     #endregion
@@ -735,7 +735,7 @@ namespace VCIGLTF
             if (joint.nodeIndex != -1)
             {
                 var rigidbody = nodes[joint.nodeIndex].GetComponent<Rigidbody>();
-                if(rigidbody == null)
+                if (rigidbody == null)
                 {
                     Debug.LogWarning("AddJointComponent connect RigidBody is not found.");
                     return null;
@@ -854,6 +854,11 @@ namespace VCIGLTF
 
         private static Joint GetJoint(GameObject go, glTF_VCAST_vci_joint joint)
         {
+            if (string.IsNullOrEmpty(joint.type))
+            {
+                return go.AddComponent<HingeJoint>();
+            }
+
             switch (joint.type.ToLower())
             {
                 case JointString.Fixed:
