@@ -33,5 +33,20 @@ namespace VCIGLTF
             context.ShowMeshes();
             context.EnableUpdateWhenOffscreen();
         }
+
+        public static void LoadVrmAsync(string path, Byte[] bytes, Action<GameObject> onLoaded, Action<Exception> onError = null, bool show = true)
+        {
+            var context = new ImporterContext();
+            context.Parse(path, bytes);
+            context.LoadAsync(() =>
+            {
+                if (show)
+                {
+                    context.ShowMeshes();
+                }
+                onLoaded(context.Root);
+            }, 
+            onError);
+        }
     }
 }

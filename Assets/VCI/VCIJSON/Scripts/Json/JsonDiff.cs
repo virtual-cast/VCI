@@ -16,7 +16,7 @@ namespace VCIJSON
         public string Msg;
 
         public static JsonDiff Create<T>(ListTreeNode<T> node, JsonDiffType diffType, string msg)
-            where T: IListTreeItem, IValue<T>
+            where T : IListTreeItem, IValue<T>
         {
             return new JsonDiff
             {

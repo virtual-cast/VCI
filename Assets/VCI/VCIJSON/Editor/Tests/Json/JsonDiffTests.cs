@@ -1,6 +1,5 @@
-﻿using NUnit.Framework;
-using System.Linq;
-
+﻿using System.Linq;
+using NUnit.Framework;
 
 namespace VCIJSON
 {
@@ -9,12 +8,12 @@ namespace VCIJSON
         [Test]
         public void PathTest()
         {
-            var json=@"
+            var json = @"
 {
     ""a"": [
         {
             ""aa"": 1
-        }       
+        }
     ]
 }
 ";
@@ -22,10 +21,14 @@ namespace VCIJSON
 
             {
                 var it = root.Traverse().GetEnumerator();
-                it.MoveNext(); Assert.AreEqual("/", it.Current.Pointer().ToString());
-                it.MoveNext(); Assert.AreEqual("/a", it.Current.Pointer().ToString());
-                it.MoveNext(); Assert.AreEqual("/a/0", it.Current.Pointer().ToString());
-                it.MoveNext(); Assert.AreEqual("/a/0/aa", it.Current.Pointer().ToString());
+                it.MoveNext();
+                Assert.AreEqual("/", it.Current.Pointer().ToString());
+                it.MoveNext();
+                Assert.AreEqual("/a", it.Current.Pointer().ToString());
+                it.MoveNext();
+                Assert.AreEqual("/a/0", it.Current.Pointer().ToString());
+                it.MoveNext();
+                Assert.AreEqual("/a/0/aa", it.Current.Pointer().ToString());
                 Assert.False(it.MoveNext());
             }
 
@@ -36,8 +39,10 @@ namespace VCIJSON
                 f.Serialize("JsonPath");
 
                 root.SetValue(Utf8String.From("/a"), f.GetStoreBytes());
-                it.MoveNext(); Assert.AreEqual("/", it.Current.Pointer().ToString());
-                it.MoveNext(); Assert.AreEqual("/a", it.Current.Pointer().ToString());
+                it.MoveNext();
+                Assert.AreEqual("/", it.Current.Pointer().ToString());
+                it.MoveNext();
+                Assert.AreEqual("/a", it.Current.Pointer().ToString());
                 Assert.False(it.MoveNext());
             }
         }

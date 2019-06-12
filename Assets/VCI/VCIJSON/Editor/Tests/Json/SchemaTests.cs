@@ -1,5 +1,4 @@
-﻿#pragma warning disable 0649
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace VCIJSON
 {
@@ -8,14 +7,12 @@ namespace VCIJSON
         /// <summary>
         /// http://json-schema.org/examples.html
         /// </summary>
-        [JsonSchema(Title="Person")]
+        [JsonSchema(Title = "Person")]
         public class Person
         {
-            [JsonSchema(Required = true)]
-            public string firstName;
+            [JsonSchema(Required = true)] public string firstName;
 
-            [JsonSchema(Required = true)]
-            public string lastName;
+            [JsonSchema(Required = true)] public string lastName;
 
             [JsonSchema(Description = "Age in years", Minimum = 0)]
             public int age;
@@ -29,7 +26,7 @@ namespace VCIJSON
 
             var v = s.Validator as JsonObjectValidator;
             Assert.AreEqual("Age in years", v.Properties["age"].Description);
-            Assert.AreEqual(new[] { "firstName", "lastName" }, v.Required);
+            Assert.AreEqual(new[] {"firstName", "lastName"}, v.Required);
 
             var f = new JsonFormatter(2);
             s.ToJson(f);
@@ -39,7 +36,7 @@ namespace VCIJSON
             Assert.AreEqual(0, parsed["properties"]["age"]["minimum"].GetInt32());
         }
 
-        [JsonSchema(Title="MultipleConstraints")]
+        [JsonSchema(Title = "MultipleConstraints")]
         public class MultipleConstraints
         {
             [JsonSchema(Required = true, Minimum = 0, Maximum = 100)]
@@ -63,13 +60,13 @@ namespace VCIJSON
             Orthographic
         }
 
-        class EnumStringTest
+        private class EnumStringTest
         {
             [JsonSchema(EnumSerializationType = EnumSerializationType.AsLowerString)]
             public ProjectionType type;
         }
 
-        class EnumIntTest
+        private class EnumIntTest
         {
             [JsonSchema(EnumSerializationType = EnumSerializationType.AsInt)]
             public ProjectionType type;

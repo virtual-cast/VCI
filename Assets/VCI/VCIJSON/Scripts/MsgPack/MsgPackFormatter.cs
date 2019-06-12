@@ -1,11 +1,11 @@
 ﻿using System;
 
-
 namespace VCIJSON
 {
     public class MsgPackFormatter : IFormatter, IRpc
     {
-        IStore m_store;
+        private IStore m_store;
+
         public MsgPackFormatter(IStore store)
         {
             m_store = store;
@@ -91,16 +91,16 @@ namespace VCIJSON
         {
             if (n < 0x0F)
             {
-                m_store.Write((Byte)((Byte)MsgPackType.FIX_ARRAY | n));
+                m_store.Write((Byte) ((Byte) MsgPackType.FIX_ARRAY | n));
             }
             else if (n < 0xFFFF)
             {
-                m_store.Write((Byte)MsgPackType.ARRAY16);
-                m_store.WriteBigEndian((UInt16)n);
+                m_store.Write((Byte) MsgPackType.ARRAY16);
+                m_store.WriteBigEndian((UInt16) n);
             }
             else
             {
-                m_store.Write((Byte)MsgPackType.ARRAY32);
+                m_store.Write((Byte) MsgPackType.ARRAY32);
                 m_store.WriteBigEndian(n);
             }
         }
@@ -113,16 +113,16 @@ namespace VCIJSON
         {
             if (n < 0x0F)
             {
-                m_store.Write((Byte)((Byte)MsgPackType.FIX_MAP | n));
+                m_store.Write((Byte) ((Byte) MsgPackType.FIX_MAP | n));
             }
             else if (n < 0xFFFF)
             {
-                m_store.Write((Byte)MsgPackType.MAP16);
-                m_store.WriteBigEndian((UInt16)n);
+                m_store.Write((Byte) MsgPackType.MAP16);
+                m_store.WriteBigEndian((UInt16) n);
             }
             else
             {
-                m_store.Write((Byte)MsgPackType.MAP32);
+                m_store.Write((Byte) MsgPackType.MAP32);
                 m_store.WriteBigEndian(n.ToNetworkByteOrder());
             }
         }
@@ -133,7 +133,7 @@ namespace VCIJSON
 
         public void Null()
         {
-            m_store.Write((Byte)MsgPackType.NIL);
+            m_store.Write((Byte) MsgPackType.NIL);
         }
 
         public void Key(Utf8String key)
@@ -149,27 +149,27 @@ namespace VCIJSON
         public void Value(Utf8String s)
         {
             var bytes = s.Bytes;
-            int size = bytes.Count;
+            var size = bytes.Count;
             if (size < 32)
             {
-                m_store.Write((Byte)((Byte)MsgPackType.FIX_STR | size));
+                m_store.Write((Byte) ((Byte) MsgPackType.FIX_STR | size));
                 m_store.Write(bytes);
             }
             else if (size < 0xFF)
             {
-                m_store.Write((Byte)(MsgPackType.STR8));
-                m_store.Write((Byte)(size));
+                m_store.Write((Byte) MsgPackType.STR8);
+                m_store.Write((Byte) size);
                 m_store.Write(bytes);
             }
             else if (size < 0xFFFF)
             {
-                m_store.Write((Byte)MsgPackType.STR16);
-                m_store.WriteBigEndian((UInt16)size);
+                m_store.Write((Byte) MsgPackType.STR16);
+                m_store.WriteBigEndian((UInt16) size);
                 m_store.Write(bytes);
             }
             else
             {
-                m_store.Write((Byte)MsgPackType.STR32);
+                m_store.Write((Byte) MsgPackType.STR32);
                 m_store.WriteBigEndian(size);
                 m_store.Write(bytes);
             }
@@ -178,32 +178,29 @@ namespace VCIJSON
         public void Value(bool value)
         {
             if (value)
-            {
-                m_store.Write((Byte)MsgPackType.TRUE);
-            }
+                m_store.Write((Byte) MsgPackType.TRUE);
             else
-            {
-                m_store.Write((Byte)MsgPackType.FALSE);
-            }
+                m_store.Write((Byte) MsgPackType.FALSE);
         }
 
         #region Singed
+
         public void Value(sbyte n)
         {
             if (n >= 0)
             {
                 // positive
-                Value((Byte)n);
+                Value((Byte) n);
             }
             else if (n >= -32)
             {
-                var value = (MsgPackType)((n + 32) + (Byte)MsgPackType.NEGATIVE_FIXNUM);
-                m_store.Write((Byte)value);
+                var value = (MsgPackType) (n + 32 + (Byte) MsgPackType.NEGATIVE_FIXNUM);
+                m_store.Write((Byte) value);
             }
             else
             {
-                m_store.Write((Byte)MsgPackType.INT8);
-                m_store.Write((Byte)n);
+                m_store.Write((Byte) MsgPackType.INT8);
+                m_store.Write((Byte) n);
             }
         }
 
@@ -213,24 +210,20 @@ namespace VCIJSON
             {
                 // positive
                 if (n <= 0xFF)
-                {
-                    Value((Byte)n);
-                }
+                    Value((Byte) n);
                 else
-                {
-                    Value((UInt16)n);
-                }
+                    Value((UInt16) n);
             }
             else
             {
                 // negative
                 if (n >= -128)
                 {
-                    m_store.Write((SByte)n);
+                    m_store.Write((SByte) n);
                 }
                 else
                 {
-                    m_store.Write((Byte)MsgPackType.INT16);
+                    m_store.Write((Byte) MsgPackType.INT16);
                     m_store.WriteBigEndian(n);
                 }
             }
@@ -242,32 +235,26 @@ namespace VCIJSON
             {
                 // positive
                 if (n <= 0xFF)
-                {
-                    Value((Byte)n);
-                }
+                    Value((Byte) n);
                 else if (n <= 0xFFFF)
-                {
-                    Value((UInt16)n);
-                }
+                    Value((UInt16) n);
                 else
-                {
-                    Value((UInt32)n);
-                }
+                    Value((UInt32) n);
             }
             else
             {
                 // negative
                 if (n >= -128)
                 {
-                    Value((SByte)n);
+                    Value((SByte) n);
                 }
                 else if (n >= -32768)
                 {
-                    Value((Int16)n);
+                    Value((Int16) n);
                 }
                 else
                 {
-                    m_store.Write((Byte)MsgPackType.INT32);
+                    m_store.Write((Byte) MsgPackType.INT32);
                     m_store.WriteBigEndian(n);
                 }
             }
@@ -279,47 +266,41 @@ namespace VCIJSON
             {
                 // positive
                 if (n <= 0xFF)
-                {
-                    Value((Byte)n);
-                }
+                    Value((Byte) n);
                 else if (n <= 0xFFFF)
-                {
-                    Value((UInt16)n);
-                }
+                    Value((UInt16) n);
                 else if (n <= 0xFFFFFFFF)
-                {
-                    Value((UInt32)n);
-                }
+                    Value((UInt32) n);
                 else
-                {
-                    Value((UInt64)n);
-                }
+                    Value((UInt64) n);
             }
             else
             {
                 // negative
                 if (n >= -128)
                 {
-                    Value((SByte)n);
+                    Value((SByte) n);
                 }
                 else if (n >= -32768)
                 {
-                    Value((Int16)n);
+                    Value((Int16) n);
                 }
                 else if (n >= -2147483648)
                 {
-                    Value((Int32)n);
+                    Value((Int32) n);
                 }
                 else
                 {
-                    m_store.Write((Byte)MsgPackType.INT64);
+                    m_store.Write((Byte) MsgPackType.INT64);
                     m_store.WriteBigEndian(n);
                 }
             }
         }
+
         #endregion
 
         #region Unsigned
+
         public void Value(byte n)
         {
             if (n <= 0x7F)
@@ -329,7 +310,7 @@ namespace VCIJSON
             }
             else
             {
-                m_store.Write((Byte)MsgPackType.UINT8);
+                m_store.Write((Byte) MsgPackType.UINT8);
                 m_store.Write(n);
             }
         }
@@ -338,11 +319,11 @@ namespace VCIJSON
         {
             if (n <= 0xFF)
             {
-                Value((Byte)n);
+                Value((Byte) n);
             }
             else
             {
-                m_store.Write((Byte)MsgPackType.UINT16);
+                m_store.Write((Byte) MsgPackType.UINT16);
                 m_store.WriteBigEndian(n);
             }
         }
@@ -351,15 +332,15 @@ namespace VCIJSON
         {
             if (n <= 0xFF)
             {
-                Value((Byte)n);
+                Value((Byte) n);
             }
             else if (n <= 0xFFFF)
             {
-                Value((UInt16)n);
+                Value((UInt16) n);
             }
             else
             {
-                m_store.Write((Byte)MsgPackType.UINT32);
+                m_store.Write((Byte) MsgPackType.UINT32);
                 m_store.WriteBigEndian(n);
             }
         }
@@ -368,33 +349,34 @@ namespace VCIJSON
         {
             if (n <= 0xFF)
             {
-                Value((Byte)n);
+                Value((Byte) n);
             }
             else if (n <= 0xFFFF)
             {
-                Value((UInt16)n);
+                Value((UInt16) n);
             }
             else if (n <= 0xFFFFFFFF)
             {
-                Value((UInt32)n);
+                Value((UInt32) n);
             }
             else
             {
-                m_store.Write((Byte)MsgPackType.UINT64);
+                m_store.Write((Byte) MsgPackType.UINT64);
                 m_store.WriteBigEndian(n);
             }
         }
+
         #endregion
 
         public void Value(float value)
         {
-            m_store.Write((Byte)MsgPackType.FLOAT);
+            m_store.Write((Byte) MsgPackType.FLOAT);
             m_store.WriteBigEndian(value);
         }
 
         public void Value(double value)
         {
-            m_store.Write((Byte)MsgPackType.DOUBLE);
+            m_store.Write((Byte) MsgPackType.DOUBLE);
             m_store.WriteBigEndian(value);
         }
 
@@ -402,19 +384,19 @@ namespace VCIJSON
         {
             if (bytes.Count < 0xFF)
             {
-                m_store.Write((Byte)(MsgPackType.BIN8));
-                m_store.Write((Byte)(bytes.Count));
+                m_store.Write((Byte) MsgPackType.BIN8);
+                m_store.Write((Byte) bytes.Count);
                 m_store.Write(bytes);
             }
             else if (bytes.Count < 0xFFFF)
             {
-                m_store.Write((Byte)MsgPackType.BIN16);
-                m_store.WriteBigEndian((UInt16)bytes.Count);
+                m_store.Write((Byte) MsgPackType.BIN16);
+                m_store.WriteBigEndian((UInt16) bytes.Count);
                 m_store.Write(bytes);
             }
             else
             {
-                m_store.Write((Byte)MsgPackType.BIN32);
+                m_store.Write((Byte) MsgPackType.BIN32);
                 m_store.WriteBigEndian(bytes.Count);
                 m_store.Write(bytes);
             }
@@ -423,13 +405,10 @@ namespace VCIJSON
         public void TimeStamp32(DateTimeOffset time)
         {
             // https://github.com/ousttrue/VCIJSON/blob/1.2/Scripts/Extensions/DateTimeOffsetExtensions.cs#L13-L16
-            if (time < DateTimeOffsetExtensions.EpochTime)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
-            m_store.Write((Byte)MsgPackType.FIX_EXT_4);
-            m_store.Write((SByte)(-1));
-            m_store.WriteBigEndian((uint)time.ToUnixTimeSeconds());
+            if (time < DateTimeOffsetExtensions.EpochTime) throw new ArgumentOutOfRangeException();
+            m_store.Write((Byte) MsgPackType.FIX_EXT_4);
+            m_store.Write((SByte) (-1));
+            m_store.WriteBigEndian((uint) time.ToUnixTimeSeconds());
         }
 
         public void Value(DateTimeOffset time)
@@ -448,11 +427,12 @@ namespace VCIJSON
         }
 
         #region IRpc
+
         public const int REQUEST_TYPE = 0;
         public const int RESPONSE_TYPE = 1;
         public const int NOTIFY_TYPE = 2;
 
-        int m_msgId = 1;
+        private int m_msgId = 1;
 
         public void Request(Utf8String method)
         {
@@ -604,6 +584,7 @@ namespace VCIJSON
         {
             throw new NotImplementedException();
         }
+
         #endregion
     }
 }

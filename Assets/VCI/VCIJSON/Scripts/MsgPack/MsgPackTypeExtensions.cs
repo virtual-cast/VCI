@@ -302,6 +302,7 @@
                 case MsgPackType.STR32:
                     return true;
             }
+
             return false;
         }
 

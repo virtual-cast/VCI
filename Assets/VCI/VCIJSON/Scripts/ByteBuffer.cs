@@ -1,19 +1,14 @@
 ﻿using System;
 
-
 namespace VCIJSON
 {
     public class ByteBuffer
     {
-        Byte[] m_buffer;
-        public ArraySegment<Byte> Bytes
-        {
-            get { return new ArraySegment<byte>(m_buffer, 0, Count); }
-        }
+        private Byte[] m_buffer;
+        public ArraySegment<Byte> Bytes => new ArraySegment<byte>(m_buffer, 0, Count);
 
         public ByteBuffer()
         {
-
         }
 
         public ByteBuffer(Byte[] buffer)
@@ -21,31 +16,23 @@ namespace VCIJSON
             m_buffer = buffer;
         }
 
-        int m_used;
-        public int Count
-        {
-            get { return m_used; }
-        }
+        private int m_used;
+        public int Count => m_used;
 
         public int Remain
         {
-            get {
+            get
+            {
                 if (m_buffer == null) return 0;
                 return m_buffer.Length - m_used;
             }
         }
 
-        void Ensure(int size)
+        private void Ensure(int size)
         {
-            if (m_buffer != null && size < m_buffer.Length - m_used)
-            {
-                return;
-            }
+            if (m_buffer != null && size < m_buffer.Length - m_used) return;
             var buffer = new Byte[m_used + size];
-            if (m_buffer != null && m_used > 0)
-            {
-                Buffer.BlockCopy(m_buffer, 0, buffer, 0, m_used);
-            }
+            if (m_buffer != null && m_used > 0) Buffer.BlockCopy(m_buffer, 0, buffer, 0, m_used);
             m_buffer = buffer;
         }
 
@@ -69,10 +56,7 @@ namespace VCIJSON
 
         public void Unshift(int size)
         {
-            if (size > m_used)
-            {
-                throw new ArgumentException();
-            }
+            if (size > m_used) throw new ArgumentException();
 
             if (m_used - size < size)
             {

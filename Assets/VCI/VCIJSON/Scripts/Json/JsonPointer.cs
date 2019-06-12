@@ -2,32 +2,15 @@
 using System.Linq;
 using System.Text;
 
-
 namespace VCIJSON
 {
     public struct JsonPointer
     {
-        public ArraySegment<Utf8String> Path
-        {
-            get;
-            private set;
-        }
+        public ArraySegment<Utf8String> Path { get; private set; }
 
-        public int Count
-        {
-            get
-            {
-                return Path.Count;
-            }
-        }
+        public int Count => Path.Count;
 
-        public Utf8String this[int index]
-        {
-            get
-            {
-                return Path.Array[Path.Offset + index];
-            }
-        }
+        public Utf8String this[int index] => Path.Array[Path.Offset + index];
 
         public JsonPointer Unshift()
         {
@@ -49,37 +32,29 @@ namespace VCIJSON
         public JsonPointer(Utf8String pointer) : this()
         {
             int pos;
-            if (!pointer.TrySearchAscii((Byte)'/', 0, out pos))
-            {
-                throw new ArgumentException();
-            }
-            if (pos != 0)
-            {
-                throw new ArgumentException();
-            }
+            if (!pointer.TrySearchAscii((Byte) '/', 0, out pos)) throw new ArgumentException();
+            if (pos != 0) throw new ArgumentException();
 
-            var splited = pointer.Split((Byte)'/').ToArray();
+            var splited = pointer.Split((Byte) '/').ToArray();
             Path = new ArraySegment<Utf8String>(splited, 1, splited.Length - 1);
         }
 
         public override string ToString()
         {
-            if (Path.Count == 0)
-            {
-                return "/";
-            }
+            if (Path.Count == 0) return "/";
 
             var sb = new StringBuilder();
             var end = Path.Offset + Path.Count;
-            for (int i = Path.Offset; i < end; ++i)
+            for (var i = Path.Offset; i < end; ++i)
             {
                 sb.Append('/');
                 sb.Append(Path.Array[i]);
             }
+
             return sb.ToString();
         }
 
-        static Utf8String GetKeyFromParent<T>(ListTreeNode<T> json)
+        private static Utf8String GetKeyFromParent<T>(ListTreeNode<T> json)
             where T : IListTreeItem, IValue<T>
         {
             var parent = json.Parent;

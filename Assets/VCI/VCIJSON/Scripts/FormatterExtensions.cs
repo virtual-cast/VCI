@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-
 
 namespace VCIJSON
 {
@@ -33,8 +32,10 @@ namespace VCIJSON
         {
             //CommaCheck();
             f.BeginMap(2);
-            f.Key("x"); f.Value(v.x);
-            f.Key("y"); f.Value(v.y);
+            f.Key("x");
+            f.Value(v.x);
+            f.Key("y");
+            f.Value(v.y);
             f.EndMap();
         }
 
@@ -42,9 +43,12 @@ namespace VCIJSON
         {
             //CommaCheck();
             f.BeginMap(3);
-            f.Key("x"); f.Value(v.x);
-            f.Key("y"); f.Value(v.y);
-            f.Key("z"); f.Value(v.z);
+            f.Key("x");
+            f.Value(v.x);
+            f.Key("y");
+            f.Value(v.y);
+            f.Key("z");
+            f.Value(v.z);
             f.EndMap();
         }
 
@@ -52,10 +56,29 @@ namespace VCIJSON
         {
             //CommaCheck();
             f.BeginMap(4);
-            f.Key("x"); f.Value(v.x);
-            f.Key("y"); f.Value(v.y);
-            f.Key("z"); f.Value(v.z);
-            f.Key("w"); f.Value(v.w);
+            f.Key("x");
+            f.Value(v.x);
+            f.Key("y");
+            f.Value(v.y);
+            f.Key("z");
+            f.Value(v.z);
+            f.Key("w");
+            f.Value(v.w);
+            f.EndMap();
+        }
+
+        public static void Value(this IFormatter f, UnityEngine.Quaternion v)
+        {
+            //CommaCheck();
+            f.BeginMap(4);
+            f.Key("x");
+            f.Value(v.x);
+            f.Key("y");
+            f.Value(v.y);
+            f.Key("z");
+            f.Value(v.z);
+            f.Key("w");
+            f.Value(v.w);
             f.EndMap();
         }
 
@@ -63,14 +86,18 @@ namespace VCIJSON
         {
             //CommaCheck();
             f.BeginMap(4);
-            f.Key("r"); f.Value(v.r);
-            f.Key("g"); f.Value(v.g);
-            f.Key("b"); f.Value(v.b);
-            f.Key("a"); f.Value(v.a);
+            f.Key("r");
+            f.Value(v.r);
+            f.Key("g");
+            f.Value(v.g);
+            f.Key("b");
+            f.Value(v.b);
+            f.Key("a");
+            f.Value(v.a);
             f.EndMap();
         }
 
-        static MethodInfo GetMethod<T>(Expression<Func<T>> expression)
+        private static MethodInfo GetMethod<T>(Expression<Func<T>> expression)
         {
             var method = typeof(FormatterExtensions).GetMethod("Serialize");
             return method.MakeGenericMethod(typeof(T));
@@ -82,15 +109,15 @@ namespace VCIJSON
         public static void KeyValue<T>(this IFormatter f, Expression<Func<T>> expression)
         {
             // lambda body
-            var lambdaBody = (MemberExpression)expression.Body;
+            var lambdaBody = (MemberExpression) expression.Body;
 
             if (lambdaBody.Expression.NodeType == ExpressionType.Constant)
             {
-                // 
+                //
                 // KeyValue(() => Field);
-                // 
-                var constant = (ConstantExpression)lambdaBody.Expression;
-                var field = (FieldInfo)lambdaBody.Member;
+                //
+                var constant = (ConstantExpression) lambdaBody.Expression;
+                var field = (FieldInfo) lambdaBody.Member;
                 var value = field.GetValue(constant.Value);
                 if (value != null)
                 {
@@ -100,17 +127,17 @@ namespace VCIJSON
             }
             else
             {
-                // 
+                //
                 // KeyValue(() => p.Field);
-                // 
-                var capture = (MemberExpression)lambdaBody.Expression;
+                //
+                var capture = (MemberExpression) lambdaBody.Expression;
 
-                var captureVariable = (ConstantExpression)capture.Expression;
+                var captureVariable = (ConstantExpression) capture.Expression;
                 var captureObj = captureVariable.Value;
-                var captureField = (FieldInfo)capture.Member;
+                var captureField = (FieldInfo) capture.Member;
                 var captureValue = captureField.GetValue(captureObj);
 
-                var field = (FieldInfo)lambdaBody.Member;
+                var field = (FieldInfo) lambdaBody.Member;
 
                 var value = field.GetValue(captureValue);
                 if (value != null)

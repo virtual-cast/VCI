@@ -1,13 +1,12 @@
 ﻿using System;
 
-
 namespace VCIJSON
 {
     public static class JsonParser
     {
-        static ValueNodeType GetValueType(Utf8String segment)
+        private static ValueNodeType GetValueType(Utf8String segment)
         {
-            switch (Char.ToLower((char)segment[0]))
+            switch (Char.ToLower((char) segment[0]))
             {
                 case '{': return ValueNodeType.Object;
                 case '[': return ValueNodeType.Array;
@@ -15,10 +14,7 @@ namespace VCIJSON
                 case 't': return ValueNodeType.Boolean;
                 case 'f': return ValueNodeType.Boolean;
                 case 'n':
-                    if (segment.ByteLength >= 2 && Char.ToLower((char)segment[1]) == 'a')
-                    {
-                        return ValueNodeType.NaN;
-                    }
+                    if (segment.ByteLength >= 2 && Char.ToLower((char) segment[1]) == 'a') return ValueNodeType.NaN;
 
                     return ValueNodeType.Null;
 
@@ -26,11 +22,9 @@ namespace VCIJSON
                     return ValueNodeType.Infinity;
 
                 case '-':
-                    if (segment.ByteLength >= 2 && Char.ToLower((char)segment[1]) == 'i')
-                    {
+                    if (segment.ByteLength >= 2 && Char.ToLower((char) segment[1]) == 'i')
                         return ValueNodeType.MinusInfinity;
-                    }
-                    goto case '0';// fall through
+                    goto case '0'; // fall through
                 case '0': // fall through
                 case '1': // fall through
                 case '2': // fall through
@@ -41,16 +35,12 @@ namespace VCIJSON
                 case '7': // fall through
                 case '8': // fall through
                 case '9': // fall through
-                    {
-                        if (segment.IsInt)
-                        {
-                            return ValueNodeType.Integer;
-                        }
-                        else
-                        {
-                            return ValueNodeType.Number;
-                        }
-                    }
+                {
+                    if (segment.IsInt)
+                        return ValueNodeType.Integer;
+                    else
+                        return ValueNodeType.Number;
+                }
 
                 default:
                     throw new ParserException(segment + " is not valid json start");
@@ -64,62 +54,49 @@ namespace VCIJSON
         /// <param name="valueType"></param>
         /// <param name="parentIndex"></param>
         /// <returns></returns>
-        static ListTreeNode<JsonValue> ParsePrimitive(ListTreeNode<JsonValue> tree, Utf8String segment, ValueNodeType valueType)
+        private static ListTreeNode<JsonValue> ParsePrimitive(ListTreeNode<JsonValue> tree, Utf8String segment,
+            ValueNodeType valueType)
         {
-            int i = 1;
+            var i = 1;
             for (; i < segment.ByteLength; ++i)
-            {
-                if (Char.IsWhiteSpace((char)segment[i])
+                if (Char.IsWhiteSpace((char) segment[i])
                     || segment[i] == '}'
                     || segment[i] == ']'
                     || segment[i] == ','
                     || segment[i] == ':'
-                    )
-                {
+                )
                     break;
-                }
-            }
             return tree.AddValue(segment.Subbytes(0, i).Bytes, valueType);
         }
 
-        static ListTreeNode<JsonValue> ParseString(ListTreeNode<JsonValue> tree, Utf8String segment)
+        private static ListTreeNode<JsonValue> ParseString(ListTreeNode<JsonValue> tree, Utf8String segment)
         {
             int pos;
-            if (segment.TrySearchAscii((Byte)'"', 1, out pos))
-            {
+            if (segment.TrySearchAscii((Byte) '"', 1, out pos))
                 return tree.AddValue(segment.Subbytes(0, pos + 1).Bytes, ValueNodeType.String);
-            }
             else
-            {
                 throw new ParserException("no close string: " + segment);
-            }
         }
 
-        static ListTreeNode<JsonValue> ParseArray(ListTreeNode<JsonValue> tree, Utf8String segment)
+        private static ListTreeNode<JsonValue> ParseArray(ListTreeNode<JsonValue> tree, Utf8String segment)
         {
             var array = tree.AddValue(segment.Bytes, ValueNodeType.Array);
 
             var closeChar = ']';
-            bool isFirst = true;
+            var isFirst = true;
             var current = segment.Subbytes(1);
             while (true)
             {
                 {
                     // skip white space
                     int nextToken;
-                    if (!current.TrySearchByte(x => !Char.IsWhiteSpace((char)x), out nextToken))
-                    {
+                    if (!current.TrySearchByte(x => !Char.IsWhiteSpace((char) x), out nextToken))
                         throw new ParserException("no white space expected");
-                    }
                     current = current.Subbytes(nextToken);
                 }
 
                 {
-                    if (current[0] == closeChar)
-                    {
-                        // end
-                        break;
-                    }
+                    if (current[0] == closeChar) break;
                 }
 
                 if (isFirst)
@@ -130,20 +107,15 @@ namespace VCIJSON
                 {
                     // search ',' or closeChar
                     int keyPos;
-                    if (!current.TrySearchByte(x => x == ',', out keyPos))
-                    {
-                        throw new ParserException("',' expected");
-                    }
+                    if (!current.TrySearchByte(x => x == ',', out keyPos)) throw new ParserException("',' expected");
                     current = current.Subbytes(keyPos + 1);
                 }
 
                 {
                     // skip white space
                     int nextToken;
-                    if (!current.TrySearchByte(x => !Char.IsWhiteSpace((char)x), out nextToken))
-                    {
+                    if (!current.TrySearchByte(x => !Char.IsWhiteSpace((char) x), out nextToken))
                         throw new ParserException("not whitespace expected");
-                    }
                     current = current.Subbytes(nextToken);
                 }
 
@@ -155,34 +127,29 @@ namespace VCIJSON
             // fix array range
             var count = current.Bytes.Offset + 1 - segment.Bytes.Offset;
             array.SetValueBytesCount(count);
-            
+
             return array;
         }
 
-        static ListTreeNode<JsonValue> ParseObject(ListTreeNode<JsonValue> tree, Utf8String segment)
+        private static ListTreeNode<JsonValue> ParseObject(ListTreeNode<JsonValue> tree, Utf8String segment)
         {
             var obj = tree.AddValue(segment.Bytes, ValueNodeType.Object);
 
             var closeChar = '}';
-            bool isFirst = true;
+            var isFirst = true;
             var current = segment.Subbytes(1);
             while (true)
             {
                 {
                     // skip white space
                     int nextToken;
-                    if (!current.TrySearchByte(x => !Char.IsWhiteSpace((char)x), out nextToken))
-                    {
+                    if (!current.TrySearchByte(x => !Char.IsWhiteSpace((char) x), out nextToken))
                         throw new ParserException("no white space expected");
-                    }
                     current = current.Subbytes(nextToken);
                 }
 
                 {
-                    if (current[0] == closeChar)
-                    {
-                        break;
-                    }
+                    if (current[0] == closeChar) break;
                 }
 
                 if (isFirst)
@@ -193,46 +160,33 @@ namespace VCIJSON
                 {
                     // search ',' or closeChar
                     int keyPos;
-                    if (!current.TrySearchByte(x => x == ',', out keyPos))
-                    {
-                        throw new ParserException("',' expected");
-                    }
+                    if (!current.TrySearchByte(x => x == ',', out keyPos)) throw new ParserException("',' expected");
                     current = current.Subbytes(keyPos + 1);
                 }
 
                 {
                     // skip white space
                     int nextToken;
-                    if (!current.TrySearchByte(x => !Char.IsWhiteSpace((char)x), out nextToken))
-                    {
+                    if (!current.TrySearchByte(x => !Char.IsWhiteSpace((char) x), out nextToken))
                         throw new ParserException("not whitespace expected");
-                    }
                     current = current.Subbytes(nextToken);
                 }
 
                 // key
                 var key = Parse(obj, current);
-                if (!key.IsString())
-                {
-                    throw new ParserException("object key must string: " + key.Value.Segment);
-                }
+                if (!key.IsString()) throw new ParserException("object key must string: " + key.Value.Segment);
                 current = current.Subbytes(key.Value.Segment.ByteLength);
 
                 // search ':'
                 int valuePos;
-                if (!current.TrySearchByte(x => x == ':', out valuePos))
-                {
-                    throw new ParserException(": is not found");
-                }
+                if (!current.TrySearchByte(x => x == ':', out valuePos)) throw new ParserException(": is not found");
                 current = current.Subbytes(valuePos + 1);
 
                 {
                     // skip white space
                     int nextToken;
-                    if (!current.TrySearchByte(x => !Char.IsWhiteSpace((char)x), out nextToken))
-                    {
+                    if (!current.TrySearchByte(x => !Char.IsWhiteSpace((char) x), out nextToken))
                         throw new ParserException("not whitespace expected");
-                    }
                     current = current.Subbytes(nextToken);
                 }
 
@@ -252,10 +206,8 @@ namespace VCIJSON
         {
             // skip white space
             int pos;
-            if (!segment.TrySearchByte(x => !char.IsWhiteSpace((char)x), out pos))
-            {
+            if (!segment.TrySearchByte(x => !char.IsWhiteSpace((char) x), out pos))
                 throw new ParserException("only whitespace");
-            }
             segment = segment.Subbytes(pos);
 
             var valueType = GetValueType(segment);

@@ -1,6 +1,5 @@
 ﻿using System;
 
-
 namespace VCIJSON
 {
     public enum TomlValueType
@@ -29,11 +28,7 @@ namespace VCIJSON
 
         public int ParentIndex { get; private set; }
 
-        public TomlValueType TomlValueType
-        {
-            get;
-            private set;
-        }
+        public TomlValueType TomlValueType { get; private set; }
 
         public ValueNodeType ValueType
         {
@@ -57,13 +52,15 @@ namespace VCIJSON
                     case TomlValueType.Table: return ValueNodeType.Object;
                     case TomlValueType.Array: return ValueNodeType.Array;
                 }
+
                 throw new NotImplementedException();
             }
         }
 
-        Utf8String m_segment;
+        private Utf8String m_segment;
 
-        public ArraySegment<byte> Bytes { get { return m_segment.Bytes; } }
+        public ArraySegment<byte> Bytes => m_segment.Bytes;
+
         public void SetBytesCount(int count)
         {
             throw new NotImplementedException();
@@ -71,11 +68,9 @@ namespace VCIJSON
 
         public int ChildCount
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            get { throw new NotImplementedException(); }
         }
+
         public void SetChildCount(int count)
         {
             throw new NotImplementedException();

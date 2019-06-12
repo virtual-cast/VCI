@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
-
+using System.Linq;
 
 namespace VCIJSON
 {
@@ -12,17 +11,15 @@ namespace VCIJSON
             if (t == null) return false;
 
             return t.IsGenericType
-                && (t.GetGenericTypeDefinition() == typeof(List<>));
+                   && t.GetGenericTypeDefinition() == typeof(List<>);
         }
 
         public static bool GetIsGenericDictionary(this Type t)
         {
             if (t == null) return false;
 
-            return t.IsGenericType
-                && (t.GetGenericTypeDefinition() == typeof(Dictionary<,>)
-                && t.GetGenericArguments().FirstOrDefault() == typeof(string)
-                );
+            return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Dictionary<,>) &&
+                   t.GetGenericArguments().FirstOrDefault() == typeof(string);
         }
     }
 }

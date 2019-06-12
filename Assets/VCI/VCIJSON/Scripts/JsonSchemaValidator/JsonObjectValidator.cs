@@ -1,8 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
 
 namespace VCIJSON
 {
@@ -14,29 +13,22 @@ namespace VCIJSON
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.5.1
         /// </summary>
-        public int MaxProperties
-        {
-            get; set;
-        }
+        public int MaxProperties { get; set; }
 
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.5.2
         /// </summary>
-        public int MinProperties
-        {
-            get; set;
-        }
+        public int MinProperties { get; set; }
 
-        HashSet<string> m_required = new HashSet<string>();
+        private HashSet<string> m_required = new HashSet<string>();
+
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.5.3
         /// </summary>
-        public HashSet<string> Required
-        {
-            get { return m_required; }
-        }
+        public HashSet<string> Required => m_required;
 
-        Dictionary<string, JsonSchema> m_props;
+        private Dictionary<string, JsonSchema> m_props;
+
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.5.4
         /// </summary>
@@ -44,10 +36,7 @@ namespace VCIJSON
         {
             get
             {
-                if (m_props == null)
-                {
-                    m_props = new Dictionary<string, JsonSchema>();
-                }
+                if (m_props == null) m_props = new Dictionary<string, JsonSchema>();
                 return m_props;
             }
         }
@@ -55,20 +44,15 @@ namespace VCIJSON
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.5.5
         /// </summary>
-        public string PatternProperties
-        {
-            get; private set;
-        }
+        public string PatternProperties { get; private set; }
 
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.5.6
         /// </summary>
-        public JsonSchema AdditionalProperties
-        {
-            get; set;
-        }
+        public JsonSchema AdditionalProperties { get; set; }
 
-        Dictionary<string, string[]> m_depndencies;
+        private Dictionary<string, string[]> m_depndencies;
+
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.5.7
         /// </summary>
@@ -76,10 +60,7 @@ namespace VCIJSON
         {
             get
             {
-                if (m_depndencies == null)
-                {
-                    m_depndencies = new Dictionary<string, string[]>();
-                }
+                if (m_depndencies == null) m_depndencies = new Dictionary<string, string[]>();
                 return m_depndencies;
             }
         }
@@ -91,10 +72,7 @@ namespace VCIJSON
 
             if (Properties.ContainsKey(key))
             {
-                if (sub.Validator != null)
-                {
-                    Properties[key].Validator.Merge(sub.Validator);
-                }
+                if (sub.Validator != null) Properties[key].Validator.Merge(sub.Validator);
             }
             else
             {
@@ -110,15 +88,9 @@ namespace VCIJSON
         public override bool Equals(object obj)
         {
             var rhs = obj as JsonObjectValidator;
-            if (rhs == null)
-            {
-                return false;
-            }
+            if (rhs == null) return false;
 
-            if (Properties.Count != rhs.Properties.Count)
-            {
-                return false;
-            }
+            if (Properties.Count != rhs.Properties.Count) return false;
             foreach (var pair in Properties)
             {
                 JsonSchema value;
@@ -143,26 +115,13 @@ namespace VCIJSON
                 }
             }
 
-            if (Required.Count != rhs.Required.Count)
-            {
-                return false;
-            }
-            if (!Required.OrderBy(x => x).SequenceEqual(rhs.Required.OrderBy(x => x)))
-            {
-                return false;
-            }
+            if (Required.Count != rhs.Required.Count) return false;
+            if (!Required.OrderBy(x => x).SequenceEqual(rhs.Required.OrderBy(x => x))) return false;
 
-            if (Dependencies.Count != rhs.Dependencies.Count)
-            {
-                return false;
-            }
+            if (Dependencies.Count != rhs.Dependencies.Count) return false;
             foreach (var kv in Dependencies)
-            {
                 if (!kv.Value.OrderBy(x => x).SequenceEqual(rhs.Dependencies[kv.Key].OrderBy(x => x)))
-                {
                     return false;
-                }
-            }
 
             if (AdditionalProperties == null
                 && rhs.AdditionalProperties == null)
@@ -179,10 +138,7 @@ namespace VCIJSON
             }
             else
             {
-                if (!AdditionalProperties.Equals(rhs.AdditionalProperties))
-                {
-                    return false;
-                }
+                if (!AdditionalProperties.Equals(rhs.AdditionalProperties)) return false;
             }
 
             return true;
@@ -191,34 +147,19 @@ namespace VCIJSON
         public void Merge(IJsonSchemaValidator obj)
         {
             var rhs = obj as JsonObjectValidator;
-            if (rhs == null)
-            {
-                throw new ArgumentException();
-            }
+            if (rhs == null) throw new ArgumentException();
 
             foreach (var x in rhs.Properties)
-            {
-                if (this.Properties.ContainsKey(x.Key))
-                {
-                    this.Properties[x.Key] = x.Value;
-                }
+                if (Properties.ContainsKey(x.Key))
+                    Properties[x.Key] = x.Value;
                 else
-                {
-                    this.Properties.Add(x.Key, x.Value);
-                }
-            }
+                    Properties.Add(x.Key, x.Value);
 
-            foreach (var x in rhs.Required)
-            {
-                this.Required.Add(x);
-            }
+            foreach (var x in rhs.Required) Required.Add(x);
 
             if (rhs.AdditionalProperties != null)
             {
-                if (AdditionalProperties != null)
-                {
-                    throw new NotImplementedException();
-                }
+                if (AdditionalProperties != null) throw new NotImplementedException();
                 AdditionalProperties = rhs.AdditionalProperties;
             }
         }
@@ -236,21 +177,15 @@ namespace VCIJSON
                     return true;
 
                 case "required":
-                    {
-                        foreach (var req in value.ArrayItems())
-                        {
-                            m_required.Add(req.GetString());
-                        }
-                    }
+                {
+                    foreach (var req in value.ArrayItems()) m_required.Add(req.GetString());
+                }
                     return true;
 
                 case "properties":
-                    {
-                        foreach (var prop in value.ObjectItems())
-                        {
-                            AddProperty(fs, prop.Key.GetString(), prop.Value);
-                        }
-                    }
+                {
+                    foreach (var prop in value.ObjectItems()) AddProperty(fs, prop.Key.GetString(), prop.Value);
+                }
                     return true;
 
                 case "patternProperties":
@@ -258,20 +193,19 @@ namespace VCIJSON
                     return true;
 
                 case "additionalProperties":
-                    {
-                        var sub = new JsonSchema();
-                        sub.Parse(fs, value, "additionalProperties");
-                        AdditionalProperties = sub;
-                    }
+                {
+                    var sub = new JsonSchema();
+                    sub.Parse(fs, value, "additionalProperties");
+                    AdditionalProperties = sub;
+                }
                     return true;
 
                 case "dependencies":
-                    {
-                        foreach (var kv in value.ObjectItems())
-                        {
-                            Dependencies.Add(kv.Key.GetString(), kv.Value.ArrayItems().Select(x => x.GetString()).ToArray());
-                        }
-                    }
+                {
+                    foreach (var kv in value.ObjectItems())
+                        Dependencies.Add(kv.Key.GetString(),
+                            kv.Value.ArrayItems().Select(x => x.GetString()).ToArray());
+                }
                     return true;
 
                 case "propertyNames":
@@ -283,7 +217,8 @@ namespace VCIJSON
 
         public void ToJsonScheama(IFormatter f)
         {
-            f.Key("type"); f.Value("object");
+            f.Key("type");
+            f.Value("object");
             if (Properties.Count > 0)
             {
                 f.Key("properties");
@@ -293,11 +228,12 @@ namespace VCIJSON
                     f.Key(kv.Key);
                     kv.Value.ToJson(f);
                 }
+
                 f.EndMap();
             }
         }
 
-        static class GenericFieldView<T>
+        private static class GenericFieldView<T>
         {
             public static FieldInfo[] GetFields()
             {
@@ -308,12 +244,9 @@ namespace VCIJSON
             public static void CreateFieldProcessors<G, D>(
                 Func<FieldInfo, D> creator,
                 Dictionary<string, D> processors
-                )
+            )
             {
-                foreach (var fi in GetFields())
-                {
-                    processors.Add(fi.Name, creator(fi));
-                }
+                foreach (var fi in GetFields()) processors.Add(fi.Name, creator(fi));
             }
         }
 
@@ -325,25 +258,25 @@ namespace VCIJSON
 
         public static class GenericValidator<T>
         {
-            class ObjectValidator
+            private class ObjectValidator
             {
-                delegate JsonSchemaValidationException FieldValidator(
+                private delegate JsonSchemaValidationException FieldValidator(
                     JsonSchema s, JsonSchemaValidationContext c, T o, out bool isIgnorable);
 
-                Dictionary<string, FieldValidator> m_validators;
+                private Dictionary<string, FieldValidator> m_validators;
 
-                static FieldValidator CreateFieldValidator(FieldInfo fi)
+                private static FieldValidator CreateFieldValidator(FieldInfo fi)
                 {
                     var mi = typeof(ObjectValidator).GetMethod("_CreateFieldValidator",
-                        BindingFlags.Static | BindingFlags.NonPublic)
+                            BindingFlags.Static | BindingFlags.NonPublic)
                         ;
                     var g = mi.MakeGenericMethod(fi.FieldType);
                     return GenericInvokeCallFactory.StaticFunc<FieldInfo, FieldValidator>(g)(fi);
                 }
 
-                static FieldValidator _CreateFieldValidator<U>(FieldInfo fi)
+                private static FieldValidator _CreateFieldValidator<U>(FieldInfo fi)
                 {
-                    var getter = (Func<T, U>)((t) => (U)fi.GetValue(t));
+                    var getter = (Func<T, U>) ((t) => (U) fi.GetValue(t));
 
                     return (JsonSchema s, JsonSchemaValidationContext c, T o, out bool isIgnorable) =>
                     {
@@ -375,7 +308,7 @@ namespace VCIJSON
                     JsonSchemaValidationContext c,
                     T o,
                     out bool isIgnorable
-                    )
+                )
                 {
                     var fieldName = property.Key;
                     var schema = property.Value;
@@ -395,9 +328,7 @@ namespace VCIJSON
 
                             if (isRequired // required fields must be checked
                                 || c.EnableDiagnosisForNotRequiredFields)
-                            {
                                 return ex;
-                            }
                         }
                     }
 
@@ -413,17 +344,14 @@ namespace VCIJSON
                     {
                         bool isIgnorable;
                         var ex = ValidateProperty(required, kv, c, o, out isIgnorable);
-                        if (ex != null && !isIgnorable)
-                        {
-                            return ex;
-                        }
+                        if (ex != null && !isIgnorable) return ex;
                     }
 
                     return null;
                 }
 
                 public void ValidationResults
-                    (HashSet<string> required,
+                (HashSet<string> required,
                     Dictionary<string, JsonSchema> properties,
                     JsonSchemaValidationContext c, T o,
                     Dictionary<string, ValidationResult> results)
@@ -433,7 +361,8 @@ namespace VCIJSON
                         bool isIgnorable;
                         var ex = ValidateProperty(required, kv, c, o, out isIgnorable);
 
-                        results.Add(kv.Key, new ValidationResult {
+                        results.Add(kv.Key, new ValidationResult
+                        {
                             IsIgnorable = isIgnorable,
                             Ex = ex,
                         });
@@ -441,14 +370,11 @@ namespace VCIJSON
                 }
             }
 
-            static ObjectValidator s_validator;
+            private static ObjectValidator s_validator;
 
-            static void prepareValidator()
+            private static void prepareValidator()
             {
-                if (s_validator == null)
-                {
-                    s_validator = new ObjectValidator();
-                }
+                if (s_validator == null) s_validator = new ObjectValidator();
             }
 
             public static JsonSchemaValidationException Validate(HashSet<string> required,
@@ -471,29 +397,23 @@ namespace VCIJSON
 
         public JsonSchemaValidationException Validate<T>(JsonSchemaValidationContext c, T o)
         {
-            if (o == null)
-            {
-                return new JsonSchemaValidationException(c, "null");
-            }
+            if (o == null) return new JsonSchemaValidationException(c, "null");
 
-            if (Properties.Count < MinProperties)
-            {
-                return new JsonSchemaValidationException(c, "no properties");
-            }
+            if (Properties.Count < MinProperties) return new JsonSchemaValidationException(c, "no properties");
 
             return GenericValidator<T>.Validate(Required, Properties, c, o);
         }
 
-        static class GenericSerializer<T>
+        private static class GenericSerializer<T>
         {
-            class Serializer
+            private class Serializer
             {
-                delegate void FieldSerializer(JsonSchema s, JsonSchemaValidationContext c, IFormatter f, T o,
+                private delegate void FieldSerializer(JsonSchema s, JsonSchemaValidationContext c, IFormatter f, T o,
                     Dictionary<string, ValidationResult> vRes, string[] deps);
 
-                Dictionary<string, FieldSerializer> m_serializers;
+                private Dictionary<string, FieldSerializer> m_serializers;
 
-                static FieldSerializer CreateFieldSerializer(FieldInfo fi)
+                private static FieldSerializer CreateFieldSerializer(FieldInfo fi)
                 {
                     var mi = typeof(Serializer).GetMethod("_CreateFieldSerializer",
                         BindingFlags.Static | BindingFlags.NonPublic);
@@ -501,33 +421,21 @@ namespace VCIJSON
                     return GenericInvokeCallFactory.StaticFunc<FieldInfo, FieldSerializer>(g)(fi);
                 }
 
-                static FieldSerializer _CreateFieldSerializer<U>(FieldInfo fi)
+                private static FieldSerializer _CreateFieldSerializer<U>(FieldInfo fi)
                 {
-                    Func<T, U> getter = t =>
-                    {
-                        return (U)fi.GetValue(t);
-                    };
+                    Func<T, U> getter = t => { return (U) fi.GetValue(t); };
 
                     return (s, c, f, o, vRes, deps) =>
                     {
                         var v = s.Validator;
                         var field = getter(o);
 
-                        if (vRes[fi.Name].Ex != null)
-                        {
-                            return;
-                        }
+                        if (vRes[fi.Name].Ex != null) return;
 
                         if (deps != null)
-                        {
-                            foreach(var dep in deps)
-                            {
+                            foreach (var dep in deps)
                                 if (vRes[dep].Ex != null)
-                                {
                                     return;
-                                }
-                            }
-                        }
 
                         f.Key(fi.Name);
                         v.Serialize(f, c, field);
@@ -563,25 +471,20 @@ namespace VCIJSON
                         objectValidator.Dependencies.TryGetValue(fieldName, out deps);
 
                         FieldSerializer fs;
-                        if (m_serializers.TryGetValue(fieldName, out fs))
-                        {
-                            fs(schema, c, f, o, validationResults, deps);
-                        }
+                        if (m_serializers.TryGetValue(fieldName, out fs)) fs(schema, c, f, o, validationResults, deps);
                     }
+
                     f.EndMap();
                 }
             }
 
-            static FieldInfo[] s_fields;
-            static Serializer s_serializer;
+            private static FieldInfo[] s_fields;
+            private static Serializer s_serializer;
 
             public static void Serialize(JsonObjectValidator objectValidator,
-                    IFormatter f, JsonSchemaValidationContext c, T value)
+                IFormatter f, JsonSchemaValidationContext c, T value)
             {
-                if (s_serializer == null)
-                {
-                    s_serializer = new Serializer();
-                }
+                if (s_serializer == null) s_serializer = new Serializer();
 
                 s_serializer.Serialize(objectValidator, f, c, value);
             }
@@ -595,12 +498,13 @@ namespace VCIJSON
         public static class GenericDeserializer<S, T>
             where S : IListTreeItem, IValue<S>
         {
-            delegate T Deserializer(ListTreeNode<S> src);
+            private delegate T Deserializer(ListTreeNode<S> src);
 
-            static Deserializer s_d;
+            private static Deserializer s_d;
 
-            delegate void FieldSetter(ListTreeNode<S> s, object o);
-            static FieldSetter GetFieldDeserializer<U>(FieldInfo fi)
+            private delegate void FieldSetter(ListTreeNode<S> s, object o);
+
+            private static FieldSetter GetFieldDeserializer<U>(FieldInfo fi)
             {
                 return (s, o) =>
                 {
@@ -633,18 +537,15 @@ namespace VCIJSON
                         return (FieldSetter)g.Invoke(null, new object[] { x });
                         */
                         JsonSchema prop;
-                        if (!props.TryGetValue(x.Name, out prop))
-                        {
-                            return null;
-                        }
+                        if (!props.TryGetValue(x.Name, out prop)) return null;
 
                         var mi = typeof(GenericDeserializer<S, T>).GetMethod("DeserializeField",
                             BindingFlags.Static | BindingFlags.Public);
                         var g = mi.MakeGenericMethod(x.FieldType);
 
-                        return (FieldSetter)((s, o) =>
+                        return (FieldSetter) ((s, o) =>
                         {
-                            var f = g.Invoke(null, new object[] { prop, s });
+                            var f = g.Invoke(null, new object[] {prop, s});
                             x.SetValue(o, f);
                         });
                     });
@@ -652,25 +553,20 @@ namespace VCIJSON
                     s_d = (ListTreeNode<S> s) =>
                     {
                         // boxing
-                        var t = (object)Activator.CreateInstance<T>();
+                        var t = (object) Activator.CreateInstance<T>();
                         if (s.IsMap())
-                        {
                             foreach (var kv in s.ObjectItems())
                             {
                                 FieldSetter setter;
                                 if (fieldDeserializers.TryGetValue(kv.Key.GetUtf8String(), out setter))
-                                {
                                     if (setter != null)
-                                    {
                                         setter(kv.Value, t);
-                                    }
-                                }
                             }
-                        }
-                        return (T)t;
-                    };
 
+                        return (T) t;
+                    };
                 }
+
                 dst = s_d(src);
             }
         }

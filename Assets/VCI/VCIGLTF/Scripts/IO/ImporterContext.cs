@@ -24,7 +24,7 @@ namespace VCIGLTF
     {
         #region MeasureTime
         bool m_showSpeedLog
-#if VCI_DEVELOP
+#if VRM_DEVELOP
             = true
 #endif
             ;
@@ -174,6 +174,13 @@ namespace VCIGLTF
                 Debug.LogWarningFormat("{0}: {1}", generatorVersion, ex);
                 return false;
             }
+        }
+
+        public bool IsGeneratedUniGLTFAndOlder(int major, int minor)
+        {
+            if (GLTF == null) return false;
+            if (GLTF.asset == null) return false;
+            return IsGeneratedUniGLTFAndOlderThan(GLTF.asset.generator, major, minor);
         }
 
         /// <summary>
@@ -473,7 +480,7 @@ namespace VCIGLTF
                 );
         }
 
-#if ((NET_4_6 || NET_STANDARD_2_0) && UNITY_2017_1_OR_NEWER)
+#if ((NET_4_6 || NET_STANDARD_2_0) && UNITY_2017_1_OR_NEWER && !UNITY_WEBGL)
         public async Task<GameObject> LoadAsyncTask()
         {
             await LoadAsync().ToTask();
@@ -567,7 +574,7 @@ namespace VCIGLTF
                         OnLoadModel();
                         if (m_showSpeedLog)
                         {
-                            //Debug.Log(GetSpeedLog());
+                            Debug.Log(GetSpeedLog());
                         }
                         return Unit.Default;
                     });

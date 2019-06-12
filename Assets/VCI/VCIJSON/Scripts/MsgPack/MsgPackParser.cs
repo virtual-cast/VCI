@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace VCIJSON
 {
@@ -10,9 +9,9 @@ namespace VCIJSON
             return Parse(new ArraySegment<byte>(bytes));
         }
 
-        static MsgPackType GetFormat(ArraySegment<Byte> bytes)
+        private static MsgPackType GetFormat(ArraySegment<Byte> bytes)
         {
-            return (MsgPackType)bytes.Get(0);
+            return (MsgPackType) bytes.Get(0);
         }
 
         /// <summary>
@@ -20,43 +19,108 @@ namespace VCIJSON
         /// </summary>
         /// <param name="count"></param>
         /// <returns></returns>
-        static ArraySegment<Byte> GetItemCount(ArraySegment<Byte> bytes, MsgPackType formatType, out UInt32 count)
+        private static ArraySegment<Byte> GetItemCount(ArraySegment<Byte> bytes, MsgPackType formatType,
+            out UInt32 count)
         {
             switch (formatType)
             {
-                case MsgPackType.FIX_ARRAY: count = 0; return bytes.Advance(1);
-                case MsgPackType.FIX_ARRAY_0x1: count = 1; return bytes.Advance(1);
-                case MsgPackType.FIX_ARRAY_0x2: count = 2; return bytes.Advance(1);
-                case MsgPackType.FIX_ARRAY_0x3: count = 3; return bytes.Advance(1);
-                case MsgPackType.FIX_ARRAY_0x4: count = 4; return bytes.Advance(1);
-                case MsgPackType.FIX_ARRAY_0x5: count = 5; return bytes.Advance(1);
-                case MsgPackType.FIX_ARRAY_0x6: count = 6; return bytes.Advance(1);
-                case MsgPackType.FIX_ARRAY_0x7: count = 7; return bytes.Advance(1);
-                case MsgPackType.FIX_ARRAY_0x8: count = 8; return bytes.Advance(1);
-                case MsgPackType.FIX_ARRAY_0x9: count = 9; return bytes.Advance(1);
-                case MsgPackType.FIX_ARRAY_0xA: count = 10; return bytes.Advance(1);
-                case MsgPackType.FIX_ARRAY_0xB: count = 11; return bytes.Advance(1);
-                case MsgPackType.FIX_ARRAY_0xC: count = 12; return bytes.Advance(1);
-                case MsgPackType.FIX_ARRAY_0xD: count = 13; return bytes.Advance(1);
-                case MsgPackType.FIX_ARRAY_0xE: count = 14; return bytes.Advance(1);
-                case MsgPackType.FIX_ARRAY_0xF: count = 15; return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY:
+                    count = 0;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY_0x1:
+                    count = 1;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY_0x2:
+                    count = 2;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY_0x3:
+                    count = 3;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY_0x4:
+                    count = 4;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY_0x5:
+                    count = 5;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY_0x6:
+                    count = 6;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY_0x7:
+                    count = 7;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY_0x8:
+                    count = 8;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY_0x9:
+                    count = 9;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY_0xA:
+                    count = 10;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY_0xB:
+                    count = 11;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY_0xC:
+                    count = 12;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY_0xD:
+                    count = 13;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY_0xE:
+                    count = 14;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_ARRAY_0xF:
+                    count = 15;
+                    return bytes.Advance(1);
 
-                case MsgPackType.FIX_MAP: count = 0; return bytes.Advance(1);
-                case MsgPackType.FIX_MAP_0x1: count = 1; return bytes.Advance(1);
-                case MsgPackType.FIX_MAP_0x2: count = 2; return bytes.Advance(1);
-                case MsgPackType.FIX_MAP_0x3: count = 3; return bytes.Advance(1);
-                case MsgPackType.FIX_MAP_0x4: count = 4; return bytes.Advance(1);
-                case MsgPackType.FIX_MAP_0x5: count = 5; return bytes.Advance(1);
-                case MsgPackType.FIX_MAP_0x6: count = 6; return bytes.Advance(1);
-                case MsgPackType.FIX_MAP_0x7: count = 7; return bytes.Advance(1);
-                case MsgPackType.FIX_MAP_0x8: count = 8; return bytes.Advance(1);
-                case MsgPackType.FIX_MAP_0x9: count = 9; return bytes.Advance(1);
-                case MsgPackType.FIX_MAP_0xA: count = 10; return bytes.Advance(1);
-                case MsgPackType.FIX_MAP_0xB: count = 11; return bytes.Advance(1);
-                case MsgPackType.FIX_MAP_0xC: count = 12; return bytes.Advance(1);
-                case MsgPackType.FIX_MAP_0xD: count = 13; return bytes.Advance(1);
-                case MsgPackType.FIX_MAP_0xE: count = 14; return bytes.Advance(1);
-                case MsgPackType.FIX_MAP_0xF: count = 15; return bytes.Advance(1);
+                case MsgPackType.FIX_MAP:
+                    count = 0;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_MAP_0x1:
+                    count = 1;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_MAP_0x2:
+                    count = 2;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_MAP_0x3:
+                    count = 3;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_MAP_0x4:
+                    count = 4;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_MAP_0x5:
+                    count = 5;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_MAP_0x6:
+                    count = 6;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_MAP_0x7:
+                    count = 7;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_MAP_0x8:
+                    count = 8;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_MAP_0x9:
+                    count = 9;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_MAP_0xA:
+                    count = 10;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_MAP_0xB:
+                    count = 11;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_MAP_0xC:
+                    count = 12;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_MAP_0xD:
+                    count = 13;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_MAP_0xE:
+                    count = 14;
+                    return bytes.Advance(1);
+                case MsgPackType.FIX_MAP_0xF:
+                    count = 15;
+                    return bytes.Advance(1);
 
                 case MsgPackType.ARRAY16:
                 case MsgPackType.MAP16:
@@ -77,7 +141,7 @@ namespace VCIJSON
         /// ArrayとMap以外のタイプのペイロードを得る
         /// </summary>
         /// <returns></returns>
-        static ArraySegment<Byte> GetBody(ArraySegment<Byte> bytes, MsgPackType formatType)
+        private static ArraySegment<Byte> GetBody(ArraySegment<Byte> bytes, MsgPackType formatType)
         {
             switch (formatType)
             {
@@ -117,24 +181,24 @@ namespace VCIJSON
 
                 case MsgPackType.STR8:
                 case MsgPackType.BIN8:
-                    {
-                        var count = bytes.Get(1);
-                        return bytes.Advance(1 + 1).Take(count);
-                    }
+                {
+                    var count = bytes.Get(1);
+                    return bytes.Advance(1 + 1).Take(count);
+                }
 
                 case MsgPackType.STR16:
                 case MsgPackType.BIN16:
-                    {
-                        var count = EndianConverter.NetworkByteWordToUnsignedNativeByteOrder(bytes.Advance(1));
-                        return bytes.Advance(1 + 2).Take(count);
-                    }
+                {
+                    var count = EndianConverter.NetworkByteWordToUnsignedNativeByteOrder(bytes.Advance(1));
+                    return bytes.Advance(1 + 2).Take(count);
+                }
 
                 case MsgPackType.STR32:
                 case MsgPackType.BIN32:
-                    {
-                        var count = EndianConverter.NetworkByteDWordToUnsignedNativeByteOrder(bytes.Advance(1));
-                        return bytes.Advance(1 + 4).Take((int)count);
-                    }
+                {
+                    var count = EndianConverter.NetworkByteDWordToUnsignedNativeByteOrder(bytes.Advance(1));
+                    return bytes.Advance(1 + 4).Take((int) count);
+                }
 
                 case MsgPackType.NIL:
                 case MsgPackType.TRUE:
@@ -338,28 +402,28 @@ namespace VCIJSON
                 case MsgPackType.FIX_EXT_16:
                     return bytes.Advance(2).Take(16);
                 case MsgPackType.EXT8:
-                    {
-                        var count = bytes.Get(1);
-                        return bytes.Advance(1 + 1 + 1).Take(count);
-                    }
+                {
+                    var count = bytes.Get(1);
+                    return bytes.Advance(1 + 1 + 1).Take(count);
+                }
                 case MsgPackType.EXT16:
-                    {
-                        var count = EndianConverter.NetworkByteWordToUnsignedNativeByteOrder(bytes.Advance(1));
-                        return bytes.Advance(1 + 2 + 1).Take(count);
-                    }
+                {
+                    var count = EndianConverter.NetworkByteWordToUnsignedNativeByteOrder(bytes.Advance(1));
+                    return bytes.Advance(1 + 2 + 1).Take(count);
+                }
                 case MsgPackType.EXT32:
-                    {
-                        var count = EndianConverter.NetworkByteDWordToUnsignedNativeByteOrder(bytes.Advance(1));
-                        return bytes.Advance(1 + 4 + 1).Take((int)count);
-                    }
+                {
+                    var count = EndianConverter.NetworkByteDWordToUnsignedNativeByteOrder(bytes.Advance(1));
+                    return bytes.Advance(1 + 4 + 1).Take((int) count);
+                }
                 default:
                     throw new ArgumentException("unknown type: " + formatType);
             }
         }
 
-        static ListTreeNode<MsgPackValue> _Parse(ListTreeNode<MsgPackValue> tree, ArraySegment<Byte> bytes)
+        private static ListTreeNode<MsgPackValue> _Parse(ListTreeNode<MsgPackValue> tree, ArraySegment<Byte> bytes)
         {
-            MsgPackType formatType = GetFormat(bytes);
+            var formatType = GetFormat(bytes);
             if (formatType.IsArray())
             {
                 var array = tree.AddValue(bytes, ValueNodeType.Array);

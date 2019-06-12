@@ -1,19 +1,16 @@
-using System;
+﻿using System;
+using System.IO;
 using UnityEngine;
 using VCIGLTF;
-using System.IO;
-
 
 namespace VCI
 {
     [Serializable]
     public class StringOrAsset
     {
-        [SerializeField, TextArea(2, 40)]
-        public string ScriptText;
+        [SerializeField] [TextArea(2, 40)] public string ScriptText;
 
-        [SerializeField]
-        public UnityEngine.Object ScriptAsset;
+        [SerializeField] public UnityEngine.Object ScriptAsset;
 
         public string Script
         {
@@ -64,6 +61,5 @@ namespace VCI
                 }
             }
         }
-
     }
 }

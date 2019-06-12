@@ -3,7 +3,6 @@ using UnityEngine;
 using VCIGLTF;
 using VCIJSON;
 
-
 namespace VCI
 {
     public class MaterialTests
@@ -17,7 +16,6 @@ namespace VCI
                 {
                     new glTF_VCI_Material
                     {
-
                     }
                 }
             };
@@ -41,7 +39,7 @@ namespace VCI
                     alphaMode = "OPAQUE",
                     pbrMetallicRoughness = new glTFPbrMetallicRoughness
                     {
-                        baseColorFactor = new float[] { 1, 0, 0, 1 },
+                        baseColorFactor = new float[] {1, 0, 0, 1},
                     },
                     extensions = new glTFMaterial_extensions
                     {
@@ -75,7 +73,7 @@ namespace VCI
                     alphaMode = "OPAQUE",
                     pbrMetallicRoughness = new glTFPbrMetallicRoughness
                     {
-                        baseColorFactor = new float[] { 1, 0, 0, 1 },
+                        baseColorFactor = new float[] {1, 0, 0, 1},
                         baseColorTexture = new glTFMaterialBaseColorTextureInfo(),
                     },
                     extensions = new glTFMaterial_extensions
@@ -93,7 +91,7 @@ namespace VCI
                     alphaMode = "BLEND",
                     pbrMetallicRoughness = new glTFPbrMetallicRoughness
                     {
-                        baseColorFactor = new float[] { 1, 0, 0, 1 },
+                        baseColorFactor = new float[] {1, 0, 0, 1},
                     },
                     extensions = new glTFMaterial_extensions
                     {
@@ -127,7 +125,7 @@ namespace VCI
                     alphaMode = "BLEND",
                     pbrMetallicRoughness = new glTFPbrMetallicRoughness
                     {
-                        baseColorFactor = new float[] { 1, 0, 0, 1 },
+                        baseColorFactor = new float[] {1, 0, 0, 1},
                         baseColorTexture = new glTFMaterialBaseColorTextureInfo(),
                     },
                     extensions = new glTFMaterial_extensions
@@ -162,7 +160,7 @@ namespace VCI
                     alphaMode = "MASK",
                     pbrMetallicRoughness = new glTFPbrMetallicRoughness
                     {
-                        baseColorFactor = new float[] { 1, 0, 0, 1 },
+                        baseColorFactor = new float[] {1, 0, 0, 1},
                         baseColorTexture = new glTFMaterialBaseColorTextureInfo(),
                     },
                     extensions = new glTFMaterial_extensions
@@ -186,14 +184,14 @@ namespace VCI
             }
         }
 
-        static Material ExportThenImport(Material src)
+        private static Material ExportThenImport(Material src)
         {
             //
             // export
             //
             var gltf = new glTF();
             var exporter = new VCIExporter(gltf);
-            exporter.Materials = new System.Collections.Generic.List<Material> { src };
+            exporter.Materials = new System.Collections.Generic.List<Material> {src};
             exporter.Export();
             var bytes = gltf.ToGlbBytes();
 

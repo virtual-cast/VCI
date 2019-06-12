@@ -1,20 +1,12 @@
-﻿using UnityEngine;
-using NUnit.Framework;
-using System.Collections;
-using System;
-
+﻿using NUnit.Framework;
 
 namespace VCIJSON
 {
     public class GenericCallUtilityTests
     {
-        class Sample
+        private class Sample
         {
-            public int Value
-            {
-                get;
-                private set;
-            }
+            public int Value { get; private set; }
 
             public void Set(int value)
             {
@@ -26,7 +18,6 @@ namespace VCIJSON
                 return Value;
             }
         }
-
 
 
         [Test]
@@ -45,7 +36,8 @@ namespace VCIJSON
             {
                 var mi = s.GetType().GetMethod("Get");
                 var func = GenericInvokeCallFactory.OpenFunc<Sample, int, int>(mi);
-                /*var value =*/ func(s, 1);
+                /*var value =*/
+                func(s, 1);
                 Assert.AreEqual(1, s.Value);
             }
 

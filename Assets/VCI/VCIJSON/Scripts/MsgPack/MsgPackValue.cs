@@ -1,33 +1,20 @@
-using System;
+﻿using System;
 using System.Text;
 
 namespace VCIJSON
 {
-    public struct MsgPackValue: IListTreeItem, IValue<MsgPackValue>
+    public struct MsgPackValue : IListTreeItem, IValue<MsgPackValue>
     {
-        public int ParentIndex
-        {
-            get;
-            private set;
-        }
+        public int ParentIndex { get; private set; }
 
-        public ArraySegment<Byte> Bytes
-        {
-            get;
-            private set;
-        }
+        public ArraySegment<Byte> Bytes { get; private set; }
+
         public void SetBytesCount(int count)
         {
             Bytes = new ArraySegment<byte>(Bytes.Array, Bytes.Offset, count);
         }
 
-        public MsgPackType Format
-        {
-            get
-            {
-                return (MsgPackType)Bytes.Get(0);
-            }
-        }
+        public MsgPackType Format => (MsgPackType) Bytes.Get(0);
 
         public ValueNodeType ValueType
         {
@@ -44,42 +31,26 @@ namespace VCIJSON
 
                     default:
                         if (Format.IsArray())
-                        {
                             return ValueNodeType.Array;
-                        }
                         else if (Format.IsMap())
-                        {
                             return ValueNodeType.Object;
-                        }
                         else if (Format.IsInteger())
-                        {
                             return ValueNodeType.Integer;
-                        }
                         else if (Format.IsFloat())
-                        {
                             return ValueNodeType.Number;
-                        }
                         else if (Format.IsString())
-                        {
                             return ValueNodeType.String;
-                        }
                         else if (Format.IsBinary())
-                        {
                             return ValueNodeType.Binary;
-                        }
                         else
-                        {
                             throw new NotImplementedException();
-                        }
                 }
             }
         }
 
-        int _childCount;
-        public int ChildCount
-        {
-            get { return _childCount; }
-        }
+        private int _childCount;
+        public int ChildCount => _childCount;
+
         public void SetChildCount(int count)
         {
             _childCount = count;
@@ -147,24 +118,24 @@ namespace VCIJSON
 
                 case MsgPackType.STR8:
                 case MsgPackType.BIN8:
-                    {
-                        var count = bytes.Get(1);
-                        return bytes.Advance(1 + 1).Take(count);
-                    }
+                {
+                    var count = bytes.Get(1);
+                    return bytes.Advance(1 + 1).Take(count);
+                }
 
                 case MsgPackType.STR16:
                 case MsgPackType.BIN16:
-                    {
-                        var count = EndianConverter.NetworkByteWordToUnsignedNativeByteOrder(bytes.Advance(1));
-                        return bytes.Advance(1 + 2).Take(count);
-                    }
+                {
+                    var count = EndianConverter.NetworkByteWordToUnsignedNativeByteOrder(bytes.Advance(1));
+                    return bytes.Advance(1 + 2).Take(count);
+                }
 
                 case MsgPackType.STR32:
                 case MsgPackType.BIN32:
-                    {
-                        var count = EndianConverter.NetworkByteDWordToUnsignedNativeByteOrder(bytes.Advance(1));
-                        return bytes.Advance(1 + 4).Take((int)count);
-                    }
+                {
+                    var count = EndianConverter.NetworkByteDWordToUnsignedNativeByteOrder(bytes.Advance(1));
+                    return bytes.Advance(1 + 4).Take((int) count);
+                }
 
                 case MsgPackType.NIL:
                 case MsgPackType.TRUE:
@@ -368,20 +339,20 @@ namespace VCIJSON
                 case MsgPackType.FIX_EXT_16:
                     return bytes.Advance(2).Take(16);
                 case MsgPackType.EXT8:
-                    {
-                        var count = bytes.Get(1);
-                        return bytes.Advance(1 + 1 + 1).Take(count);
-                    }
+                {
+                    var count = bytes.Get(1);
+                    return bytes.Advance(1 + 1 + 1).Take(count);
+                }
                 case MsgPackType.EXT16:
-                    {
-                        var count = EndianConverter.NetworkByteWordToUnsignedNativeByteOrder(bytes.Advance(1));
-                        return bytes.Advance(1 + 2 + 1).Take(count);
-                    }
+                {
+                    var count = EndianConverter.NetworkByteWordToUnsignedNativeByteOrder(bytes.Advance(1));
+                    return bytes.Advance(1 + 2 + 1).Take(count);
+                }
                 case MsgPackType.EXT32:
-                    {
-                        var count = EndianConverter.NetworkByteDWordToUnsignedNativeByteOrder(bytes.Advance(1));
-                        return bytes.Advance(1 + 4 + 1).Take((int)count);
-                    }
+                {
+                    var count = EndianConverter.NetworkByteDWordToUnsignedNativeByteOrder(bytes.Advance(1));
+                    return bytes.Advance(1 + 4 + 1).Take((int) count);
+                }
                 default:
                     throw new ArgumentException("unknown type: " + formatType);
             }
@@ -393,7 +364,7 @@ namespace VCIJSON
             switch (formatType)
             {
                 case MsgPackType.FIX_EXT_4:
-                    return (SByte)Bytes.Get(1);
+                    return (SByte) Bytes.Get(1);
             }
 
             throw new NotImplementedException();
@@ -580,16 +551,31 @@ namespace VCIJSON
                 case MsgPackType.NEGATIVE_FIXNUM_0x1E: return GenericCast<int, T>.Const(-30)();
                 case MsgPackType.NEGATIVE_FIXNUM_0x1F: return GenericCast<int, T>.Const(-31)();
 
-                case MsgPackType.INT8: return GenericCast<SByte, T>.Cast((SByte)GetBody().Get(0));
-                case MsgPackType.INT16: return GenericCast<short, T>.Cast(EndianConverter.NetworkByteWordToSignedNativeByteOrder(GetBody()));
-                case MsgPackType.INT32: return GenericCast<int, T>.Cast(EndianConverter.NetworkByteDWordToSignedNativeByteOrder(GetBody()));
-                case MsgPackType.INT64: return GenericCast<long, T>.Cast(EndianConverter.NetworkByteQWordToSignedNativeByteOrder(GetBody()));
+                case MsgPackType.INT8: return GenericCast<SByte, T>.Cast((SByte) GetBody().Get(0));
+                case MsgPackType.INT16:
+                    return GenericCast<short, T>.Cast(
+                        EndianConverter.NetworkByteWordToSignedNativeByteOrder(GetBody()));
+                case MsgPackType.INT32:
+                    return GenericCast<int, T>.Cast(EndianConverter.NetworkByteDWordToSignedNativeByteOrder(GetBody()));
+                case MsgPackType.INT64:
+                    return GenericCast<long, T>.Cast(
+                        EndianConverter.NetworkByteQWordToSignedNativeByteOrder(GetBody()));
                 case MsgPackType.UINT8: return GenericCast<Byte, T>.Cast(GetBody().Get(0));
-                case MsgPackType.UINT16: return GenericCast<ushort, T>.Cast(EndianConverter.NetworkByteWordToUnsignedNativeByteOrder(GetBody()));
-                case MsgPackType.UINT32: return GenericCast<uint, T>.Cast(EndianConverter.NetworkByteDWordToUnsignedNativeByteOrder(GetBody()));
-                case MsgPackType.UINT64: return GenericCast<ulong, T>.Cast(EndianConverter.NetworkByteQWordToUnsignedNativeByteOrder(GetBody()));
-                case MsgPackType.FLOAT: return GenericCast<float, T>.Cast(EndianConverter.NetworkByteDWordToFloatNativeByteOrder(GetBody()));
-                case MsgPackType.DOUBLE: return GenericCast<double, T>.Cast(EndianConverter.NetworkByteQWordToFloatNativeByteOrder(GetBody()));
+                case MsgPackType.UINT16:
+                    return GenericCast<ushort, T>.Cast(
+                        EndianConverter.NetworkByteWordToUnsignedNativeByteOrder(GetBody()));
+                case MsgPackType.UINT32:
+                    return GenericCast<uint, T>.Cast(
+                        EndianConverter.NetworkByteDWordToUnsignedNativeByteOrder(GetBody()));
+                case MsgPackType.UINT64:
+                    return GenericCast<ulong, T>.Cast(
+                        EndianConverter.NetworkByteQWordToUnsignedNativeByteOrder(GetBody()));
+                case MsgPackType.FLOAT:
+                    return GenericCast<float, T>.Cast(
+                        EndianConverter.NetworkByteDWordToFloatNativeByteOrder(GetBody()));
+                case MsgPackType.DOUBLE:
+                    return GenericCast<double, T>.Cast(
+                        EndianConverter.NetworkByteQWordToFloatNativeByteOrder(GetBody()));
 
                 case MsgPackType.FIX_STR: return GenericCast<string, T>.Const("")();
                 case MsgPackType.FIX_STR_0x01:
@@ -626,30 +612,33 @@ namespace VCIJSON
                 case MsgPackType.STR8:
                 case MsgPackType.STR16:
                 case MsgPackType.STR32:
-                    {
-                        var body = GetBody();
-                        var str = Encoding.UTF8.GetString(body.Array, body.Offset, body.Count);
-                        return GenericCast<string, T>.Cast(str);
-                    }
+                {
+                    var body = GetBody();
+                    var str = Encoding.UTF8.GetString(body.Array, body.Offset, body.Count);
+                    return GenericCast<string, T>.Cast(str);
+                }
 
                 case MsgPackType.BIN8:
                 case MsgPackType.BIN16:
                 case MsgPackType.BIN32:
-                    {
-                        var body = GetBody();
-                        return GenericCast<ArraySegment<Byte>, T>.Cast(body);
-                    }
+                {
+                    var body = GetBody();
+                    return GenericCast<ArraySegment<Byte>, T>.Cast(body);
+                }
 
                 case MsgPackType.FIX_EXT_4:
+                {
+                    if (GetExtType() == -1)
                     {
-                        if (GetExtType() == -1)
-                        {
-                            var unixtime = EndianConverter.NetworkByteDWordToUnsignedNativeByteOrder(GetBody());
-                            var dt = new DateTimeOffset(unixtime * DateTimeOffsetExtensions.TicksPerSecond + DateTimeOffsetExtensions.EpochTime.Ticks, TimeSpan.Zero);
-                            return GenericCast<DateTimeOffset, T>.Cast(dt);
-                        }
-                        break;
+                        var unixtime = EndianConverter.NetworkByteDWordToUnsignedNativeByteOrder(GetBody());
+                        var dt = new DateTimeOffset(
+                            unixtime * DateTimeOffsetExtensions.TicksPerSecond +
+                            DateTimeOffsetExtensions.EpochTime.Ticks, TimeSpan.Zero);
+                        return GenericCast<DateTimeOffset, T>.Cast(dt);
                     }
+
+                    break;
+                }
             }
 
             throw new ArgumentException("GetValue to array or map: " + formatType);
@@ -667,29 +656,20 @@ namespace VCIJSON
 
         public ArraySegment<Byte> GetBytes()
         {
-            if (!Format.IsBinary())
-            {
-                throw new MsgPackTypeException("Not bin");
-            }
+            if (!Format.IsBinary()) throw new MsgPackTypeException("Not bin");
             return GetBody();
         }
 
         public string GetString()
         {
-            if (!Format.IsString())
-            {
-                throw new MsgPackTypeException("Not str");
-            }
+            if (!Format.IsString()) throw new MsgPackTypeException("Not str");
             var bytes = GetBody();
             return Encoding.UTF8.GetString(bytes.Array, bytes.Offset, bytes.Count);
         }
 
         public Utf8String GetUtf8String()
         {
-            if (!Format.IsString())
-            {
-                throw new MsgPackTypeException("Not str");
-            }
+            if (!Format.IsString()) throw new MsgPackTypeException("Not str");
             var bytes = GetBody();
             return new Utf8String(bytes);
         }

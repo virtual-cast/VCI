@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
-using System.Reflection;
 #if UNITY_EDITOR
 using UnityEditor;
+
 #endif
 
 
@@ -20,14 +21,14 @@ namespace VCIJSON
         public static MethodInfo GetMethod(Type src, Type dst)
         {
             var name = GetMethodName(src, dst);
-            var mi = typeof(ConcreteCast).GetMethod(name, 
+            var mi = typeof(ConcreteCast).GetMethod(name,
                 BindingFlags.Static | BindingFlags.Public);
             return mi;
         }
 
 #if UNITY_EDITOR
 
-        static Type[] s_castTypes = new Type[]
+        private static Type[] s_castTypes = new Type[]
         {
             typeof(byte),
             typeof(ushort),
@@ -57,17 +58,13 @@ namespace VCIJSON {
     {
 ");
                 foreach (var x in s_castTypes)
-                {
-                    foreach (var y in s_castTypes)
-                    {
-                        w.WriteLine(@"
+                foreach (var y in s_castTypes)
+                    w.WriteLine(@"
         public static $1 $2($0 src)
         {
             return ($1)src;
         }
 ".Replace("$0", x.Name).Replace("$1", y.Name).Replace("$2", GetMethodName(x, y)));
-                    }
-                }
                 w.WriteLine(@"
     }
 }
@@ -79,7 +76,8 @@ namespace VCIJSON {
             File.WriteAllText(path, s.ToString().Replace("\r\n", "\n"), new UTF8Encoding(false));
             AssetDatabase.ImportAsset("Assets" + SOURCE);
         }
-        const string SOURCE = "/VCI/VCIJSON/Scripts/ConcreteCast.g.cs";
+
+        private const string SOURCE = "/VCI/VCIJSON/Scripts/ConcreteCast.g.cs";
 #endif
     }
 }

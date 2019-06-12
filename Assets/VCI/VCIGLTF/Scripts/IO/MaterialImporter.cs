@@ -1,5 +1,10 @@
 ﻿using UnityEngine;
+using System;
+using UnityEngine.Rendering;
 using UniGLTF.UniUnlit;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 
 namespace VCIGLTF
@@ -34,7 +39,7 @@ namespace VCIGLTF
         }
 
         /// StandardShader vaiables
-        /// 
+        ///
         /// _Color
         /// _MainTex
         /// _Cutoff
@@ -160,11 +165,13 @@ namespace VCIGLTF
                     if (texture != null)
                     {
                         var prop = "_MetallicGlossMap";
-                        material.SetTexture(prop, texture.ConvertTexture(prop));
+                        // Bake roughnessFactor values into a texture.
+                        material.SetTexture(prop, texture.ConvertTexture(prop, x.pbrMetallicRoughness.roughnessFactor));
                     }
-                    
+
                     material.SetFloat("_Metallic", 1.0f);
-                    material.SetFloat("_GlossMapScale", 1.0f - x.pbrMetallicRoughness.roughnessFactor);
+                    // Set 1.0f as hard-coded. See: https://github.com/dwango/UniVRM/issues/212.
+                    material.SetFloat("_GlossMapScale", 1.0f);
                 }
                 else
                 {
@@ -239,11 +246,12 @@ namespace VCIGLTF
                     material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
                     material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
                     material.SetInt("_ZWrite", 1);
+                    material.SetFloat("_Cutoff", x.alphaCutoff);
                     material.EnableKeyword("_ALPHATEST_ON");
                     material.DisableKeyword("_ALPHABLEND_ON");
                     material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
                     material.renderQueue = 2450;
-                        
+
                     break;
 
                 default: // OPAQUE

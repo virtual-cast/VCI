@@ -1,4 +1,4 @@
-
+﻿
 using System;
 using System.Linq;
 using System.Linq.Expressions;
@@ -16,7 +16,7 @@ namespace VCIJSON
             var self = Expression.Parameter(m.DeclaringType, m.Name);
             var args = m.GetParameters().Select(x => Expression.Parameter(x.ParameterType, x.Name)).ToArray();
             var call = Expression.Call(self, m, args);
-            return 
+            return
                 (Action<S, A0>)Expression.Lambda(call, new[] { self }.Concat(args).ToArray()).Compile();
         }
 
@@ -26,7 +26,7 @@ namespace VCIJSON
             var self = Expression.Parameter(m.DeclaringType, m.Name);
             var args = m.GetParameters().Select(x => Expression.Parameter(x.ParameterType, x.Name)).ToArray();
             var call = Expression.Call(self, m, args);
-            return 
+            return
                 (Action<S, A0, A1>)Expression.Lambda(call, new[] { self }.Concat(args).ToArray()).Compile();
         }
 
@@ -36,7 +36,7 @@ namespace VCIJSON
             var self = Expression.Parameter(m.DeclaringType, m.Name);
             var args = m.GetParameters().Select(x => Expression.Parameter(x.ParameterType, x.Name)).ToArray();
             var call = Expression.Call(self, m, args);
-            return 
+            return
                 (Action<S, A0, A1, A2>)Expression.Lambda(call, new[] { self }.Concat(args).ToArray()).Compile();
         }
 
@@ -69,7 +69,7 @@ namespace VCIJSON
             {
                 call = Expression.Call(self, m, args);
             }
-            return 
+            return
                 (Action<A0>)Expression.Lambda(call, args).Compile();
         }
 
@@ -102,7 +102,7 @@ namespace VCIJSON
             {
                 call = Expression.Call(self, m, args);
             }
-            return 
+            return
                 (Action<A0, A1>)Expression.Lambda(call, args).Compile();
         }
 
@@ -135,7 +135,7 @@ namespace VCIJSON
             {
                 call = Expression.Call(self, m, args);
             }
-            return 
+            return
                 (Action<A0, A1, A2>)Expression.Lambda(call, args).Compile();
         }
 
@@ -168,7 +168,7 @@ namespace VCIJSON
             {
                 call = Expression.Call(self, m, args);
             }
-            return 
+            return
                 (Action<A0, A1, A2, A3>)Expression.Lambda(call, args).Compile();
         }
 

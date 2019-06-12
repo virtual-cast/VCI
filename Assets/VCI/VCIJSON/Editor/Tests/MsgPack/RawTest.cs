@@ -1,6 +1,6 @@
-﻿using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
+using NUnit.Framework;
 
 namespace VCIJSON.MsgPack
 {
@@ -10,7 +10,7 @@ namespace VCIJSON.MsgPack
         [Test]
         public void fix_raw()
         {
-            var src = new Byte[] { 0, 1, 2 };
+            var src = new Byte[] {0, 1, 2};
             var f = new MsgPackFormatter();
             f.Value(src);
             var bytes = f.GetStoreBytes();
@@ -22,7 +22,7 @@ namespace VCIJSON.MsgPack
         [Test]
         public void raw16()
         {
-            var src = Enumerable.Range(0, 50).Select(x => (Byte)x).ToArray();
+            var src = Enumerable.Range(0, 50).Select(x => (Byte) x).ToArray();
             var f = new MsgPackFormatter();
             f.Value(src);
             var bytes = f.GetStoreBytes();

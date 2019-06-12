@@ -1,36 +1,28 @@
-#pragma warning disable
-using System;
+﻿using System;
 using System.IO;
-using System.Linq;
-using VCIGLTF;
 using UnityEditor;
 using VCIDepthFirstScheduler;
-
+using VCIGLTF;
 
 namespace VCI
 {
 #if !VRM_STOP_ASSETPOSTPROCESSOR
     public class vciAssetPostprocessor : AssetPostprocessor
     {
-        static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
+        private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
+            string[] movedAssets, string[] movedFromAssetPaths)
         {
-            foreach (string path in importedAssets)
+            foreach (var path in importedAssets)
             {
                 var ext = Path.GetExtension(path).ToLower();
-                if (ext == VCIVersion.EXTENSION)
-                {
-                    ImportVci(UnityPath.FromUnityPath(path));
-                }
+                if (ext == VCIVersion.EXTENSION) ImportVci(UnityPath.FromUnityPath(path));
             }
         }
 
-        static void ImportVci(UnityPath path)
+        private static void ImportVci(UnityPath path)
         {
-            if (!path.IsUnderAssetsFolder)
-            {
-                throw new Exception();
-            }
-            var importer = new VCI.VCIImporter();
+            if (!path.IsUnderAssetsFolder) throw new Exception();
+            var importer = new VCIImporter();
             importer.ParseGlb(File.ReadAllBytes(path.FullPath));
 
             var prefabPath = path.Parent.Child(path.FileNameWithoutExtension + ".prefab");
@@ -47,8 +39,9 @@ namespace VCI
                 importer.Load();
                 importer.SetupCorutine().CoroutinetoEnd();
                 importer.SetupPhysics();
+                importer.SetupAttachable();
                 importer.SaveAsAsset(prefabPath);
-                importer.Destroy(false);
+                importer.EditorDestroyRoot();
             };
         }
     }

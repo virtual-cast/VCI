@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using Object = UnityEngine.Object;
 #if UNITY_EDITOR
 using UnityEditor;
+
 #endif
 
 
@@ -12,7 +14,7 @@ namespace VCIGLTF
 {
     public class gltfExporter : IDisposable
     {
-        const string CONVERT_HUMANOID_KEY = UniGLTFVersion.MENU + "/Export";
+        private const string CONVERT_HUMANOID_KEY = UniGLTFVersion.MENU + "/Export";
 
 #if UNITY_EDITOR
         [MenuItem(CONVERT_HUMANOID_KEY, true, 1)]
@@ -26,14 +28,11 @@ namespace VCIGLTF
         {
             var go = Selection.activeObject as GameObject;
             var path = EditorUtility.SaveFilePanel(
-                    "Save glb",
-                    "",
-                    go.name + ".glb",
-                    "glb");
-            if (string.IsNullOrEmpty(path))
-            {
-                return;
-            }
+                "Save glb",
+                "",
+                go.name + ".glb",
+                "glb");
+            if (string.IsNullOrEmpty(path)) return;
 
             var gltf = new glTF();
             using (var exporter = new gltfExporter(gltf))
@@ -41,6 +40,7 @@ namespace VCIGLTF
                 exporter.Prepare(go);
                 exporter.Export();
             }
+
             var bytes = gltf.ToGlbBytes();
             File.WriteAllBytes(path, bytes);
 
@@ -52,41 +52,18 @@ namespace VCIGLTF
         }
 #endif
 
-        glTF glTF;
-        public glTF GLTF
-        {
-            get { return glTF; }
-        }
+        private glTF glTF;
+        public glTF GLTF => glTF;
 
-        public bool UseSparseAccessorForBlendShape
-        {
-            get;
-            set;
-        }
+        public bool UseSparseAccessorForBlendShape { get; set; }
 
-        public GameObject Copy
-        {
-            get;
-            protected set;
-        }
+        public GameObject Copy { get; protected set; }
 
-        public List<Mesh> Meshes
-        {
-            get;
-            private set;
-        }
+        public List<Mesh> Meshes { get; private set; }
 
-        public List<Transform> Nodes
-        {
-            get;
-            private set;
-        }
+        public List<Transform> Nodes { get; private set; }
 
-        public List<Material> Materials
-        {
-            get;
-            set;
-        }
+        public List<Material> Materials { get; set; }
 
         public TextureExportManager TextureManager;
 
@@ -100,10 +77,7 @@ namespace VCIGLTF
         /// </summary>
         protected virtual IEnumerable<string> ExtensionUsed
         {
-            get
-            {
-                yield return glTF_KHR_materials_unlit.ExtensionName;
-            }
+            get { yield return glTF_KHR_materials_unlit.ExtensionName; }
         }
 
         public gltfExporter(glTF gltf)
@@ -125,13 +99,9 @@ namespace VCIGLTF
         public void Dispose()
         {
             if (Application.isEditor)
-            {
-                GameObject.DestroyImmediate(Copy);
-            }
+                Object.DestroyImmediate(Copy);
             else
-            {
-                GameObject.Destroy(Copy);
-            }
+                Object.Destroy(Copy);
         }
 
         /// <summary>
@@ -140,7 +110,7 @@ namespace VCIGLTF
         /// <param name="go"></param>
         public virtual void Prepare(GameObject go)
         {
-            Copy = GameObject.Instantiate(go);
+            Copy = Object.Instantiate(go);
             Copy.transform.ReverseZRecursive();
 
             Nodes = Copy.transform.Traverse()
@@ -158,23 +128,28 @@ namespace VCIGLTF
             var bufferIndex = glTF.AddBuffer(bytesBuffer);
 
             #region Materials and Textures
-            var unityTextures = Materials.SelectMany(x => TextureIO.GetTextures(x)).Where(x => x.Texture != null).Distinct().ToList();
+
+            var unityTextures = Materials.SelectMany(x => TextureIO.GetTextures(x)).Where(x => x.Texture != null)
+                .Distinct().ToList();
 
             TextureManager = new TextureExportManager(unityTextures.Select(x => x.Texture));
 
             var materialExporter = CreateMaterialExporter();
             glTF.materials = Materials.Select(x => materialExporter.ExportMaterial(x, TextureManager)).ToList();
 
-            for (int i = 0; i < unityTextures.Count; ++i)
+            for (var i = 0; i < unityTextures.Count; ++i)
             {
                 var unityTexture = unityTextures[i];
-                TextureIO.ExportTexture(glTF, bufferIndex, TextureManager.GetExportTexture(i), unityTexture.TextureType);
+                TextureIO.ExportTexture(glTF, bufferIndex, TextureManager.GetExportTexture(i),
+                    unityTexture.TextureType);
             }
+
             #endregion
 
             if (Copy != null)
             {
                 #region Meshes
+
                 var unityMeshes = Nodes
                     .Select(x => new MeshWithRenderer
                     {
@@ -183,31 +158,29 @@ namespace VCIGLTF
                     })
                     .Where(x =>
                     {
-                        if (x.Mesh == null)
-                        {
-                            return false;
-                        }
+                        if (x.Mesh == null) return false;
                         if (x.Rendererer.sharedMaterials == null
-                        || x.Rendererer.sharedMaterials.Length == 0)
-                        {
+                            || x.Rendererer.sharedMaterials.Length == 0)
                             return false;
-                        }
 
                         return true;
                     })
                     .ToList();
                 MeshExporter.ExportMeshes(glTF, bufferIndex, unityMeshes, Materials, UseSparseAccessorForBlendShape);
                 Meshes = unityMeshes.Select(x => x.Mesh).ToList();
+
                 #endregion
 
                 #region Nodes and Skins
+
                 var unitySkins = Nodes
                     .Select(x => x.GetComponent<SkinnedMeshRenderer>()).Where(x =>
                         x != null
                         && x.bones != null
                         && x.bones.Length > 0)
                     .ToList();
-                glTF.nodes = Nodes.Select(x => ExportNode(x, Nodes, unityMeshes.Select(y => y.Rendererer).ToList(), unitySkins)).ToList();
+                glTF.nodes = Nodes.Select(x =>
+                    ExportNode(x, Nodes, unityMeshes.Select(y => y.Rendererer).ToList(), unitySkins)).ToList();
                 glTF.scenes = new List<gltfScene>
                 {
                     new gltfScene
@@ -237,26 +210,22 @@ namespace VCIGLTF
                         node.skin = skinIndex;
                     }
                 }
+
                 #endregion
 
 #if UNITY_EDITOR
+
                 #region Animations
 
                 var clips = new List<AnimationClip>();
                 var animator = Copy.GetComponent<Animator>();
                 var animation = Copy.GetComponent<Animation>();
                 if (animator != null)
-                {
                     clips = AnimationExporter.GetAnimationClips(animator);
-                }
-                else if (animation != null)
-                {
-                    clips = AnimationExporter.GetAnimationClips(animation);
-                }
+                else if (animation != null) clips = AnimationExporter.GetAnimationClips(animation);
 
                 if (clips.Any())
-                {
-                    foreach (AnimationClip clip in clips)
+                    foreach (var clip in clips)
                     {
                         var animationWithCurve = AnimationExporter.Export(clip, Copy.transform, Nodes);
 
@@ -267,7 +236,8 @@ namespace VCIGLTF
                             var inputAccessorIndex = glTF.ExtendBufferAndGetAccessorIndex(bufferIndex, kv.Value.Input);
                             sampler.input = inputAccessorIndex;
 
-                            var outputAccessorIndex = glTF.ExtendBufferAndGetAccessorIndex(bufferIndex, kv.Value.Output);
+                            var outputAccessorIndex =
+                                glTF.ExtendBufferAndGetAccessorIndex(bufferIndex, kv.Value.Output);
                             sampler.output = outputAccessorIndex;
 
                             // modify accessors
@@ -293,16 +263,19 @@ namespace VCIGLTF
                                     throw new NotImplementedException();
                             }
                         }
+
                         animationWithCurve.Animation.name = clip.name;
                         glTF.animations.Add(animationWithCurve.Animation);
                     }
-                }
+
                 #endregion
+
 #endif
             }
         }
 
-        static glTFNode ExportNode(Transform x, List<Transform> nodes, List<Renderer> renderers, List<SkinnedMeshRenderer> skins)
+        private static glTFNode ExportNode(Transform x, List<Transform> nodes, List<Renderer> renderers,
+            List<SkinnedMeshRenderer> skins)
         {
             var node = new glTFNode
             {
@@ -316,10 +289,7 @@ namespace VCIGLTF
             if (x.gameObject.activeInHierarchy)
             {
                 var meshRenderer = x.GetComponent<MeshRenderer>();
-                if (meshRenderer != null)
-                {
-                    node.mesh = renderers.IndexOf(meshRenderer);
-                }
+                if (meshRenderer != null) node.mesh = renderers.IndexOf(meshRenderer);
 
                 var skinnredMeshRenderer = x.GetComponent<SkinnedMeshRenderer>();
                 if (skinnredMeshRenderer != null)

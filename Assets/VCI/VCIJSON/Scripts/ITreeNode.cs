@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 
-
 namespace VCIJSON
 {
-    public interface ITreeNode<T, U> 
+    public interface ITreeNode<T, U>
         where T : ITreeNode<T, U>
     {
         bool IsValid { get; }

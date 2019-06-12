@@ -1,7 +1,6 @@
-﻿using NUnit.Framework;
-using UnityEngine;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
+using NUnit.Framework;
 
 namespace VCIJSON
 {
@@ -12,7 +11,8 @@ namespace VCIJSON
         {
             var formatter = new JsonFormatter(2);
             formatter.BeginMap();
-            formatter.Key("a"); formatter.Value(1);
+            formatter.Key("a");
+            formatter.Value(1);
             formatter.EndMap();
 
             //var json = formatter.ToString();

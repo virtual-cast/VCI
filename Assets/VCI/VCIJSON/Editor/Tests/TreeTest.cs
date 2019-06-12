@@ -1,7 +1,6 @@
-﻿using NUnit.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
-
+using NUnit.Framework;
 
 namespace VCIJSON.GenericTree
 {
@@ -10,7 +9,7 @@ namespace VCIJSON.GenericTree
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="U"></typeparam>
-    interface ITreeNode<T, U>
+    internal interface ITreeNode<T, U>
         where T : ITreeNode<T, U>
     {
         bool IsValid { get; }
@@ -35,7 +34,7 @@ namespace VCIJSON.GenericTree
     /// Generic tree implementation
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    struct TreeNode<T> : ITreeNode<TreeNode<T>, T>
+    internal struct TreeNode<T> : ITreeNode<TreeNode<T>, T>
         where T : ITreeItem
     {
         /// <summary>
@@ -43,31 +42,18 @@ namespace VCIJSON.GenericTree
         /// </summary>
         public readonly List<T> Values;
 
-        public bool IsValid
-        {
-            get
-            {
-                return Values != null;
-            }
-        }
+        public bool IsValid => Values != null;
 
         /// <summary>
         /// This node index
         /// </summary>
-        public int ValueIndex
-        {
-            get;
-            private set;
-        }
+        public int ValueIndex { get; private set; }
 
         public T Value
         {
             get
             {
-                if (Values == null)
-                {
-                    return default(T);
-                }
+                if (Values == null) return default(T);
                 return Values[ValueIndex];
             }
         }
@@ -76,36 +62,20 @@ namespace VCIJSON.GenericTree
         {
             get
             {
-                for (int i = 0; i < Values.Count; ++i)
-                {
+                for (var i = 0; i < Values.Count; ++i)
                     if (Values[i].ParentIndex == ValueIndex)
-                    {
                         yield return new TreeNode<T>(Values, i);
-                    }
-                }
             }
         }
 
-        public bool HasParent
-        {
-            get
-            {
-                return Value.ParentIndex >= 0 && Value.ParentIndex < Values.Count;
-            }
-        }
+        public bool HasParent => Value.ParentIndex >= 0 && Value.ParentIndex < Values.Count;
 
         public TreeNode<T> Parent
         {
             get
             {
-                if (Value.ParentIndex < 0)
-                {
-                    throw new Exception("this may root node");
-                }
-                if (Value.ParentIndex >= Values.Count)
-                {
-                    throw new IndexOutOfRangeException();
-                }
+                if (Value.ParentIndex < 0) throw new Exception("this may root node");
+                if (Value.ParentIndex >= Values.Count) throw new IndexOutOfRangeException();
                 return new TreeNode<T>(Values, Value.ParentIndex);
             }
         }
@@ -118,12 +88,11 @@ namespace VCIJSON.GenericTree
     }
 
 
-    class TreeTests
+    internal class TreeTests
     {
         [Test]
         public void TreeTest()
         {
-
         }
     }
 }

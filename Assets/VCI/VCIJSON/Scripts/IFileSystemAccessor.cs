@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Text;
 
-
 namespace VCIJSON
 {
     public interface IFileSystemAccessor
@@ -13,19 +12,16 @@ namespace VCIJSON
 
     public class FileSystemAccessor : IFileSystemAccessor
     {
-        string m_path;
-        string m_baseDir;
+        private string m_path;
+        private string m_baseDir;
+
         public FileSystemAccessor(string path)
         {
             m_path = path;
             if (Directory.Exists(path))
-            {
                 m_baseDir = path;
-            }
             else
-            {
                 m_baseDir = Path.GetDirectoryName(path);
-            }
         }
 
         public override string ToString()

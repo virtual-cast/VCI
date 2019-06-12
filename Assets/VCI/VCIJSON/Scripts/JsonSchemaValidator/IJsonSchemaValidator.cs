@@ -5,7 +5,7 @@ namespace VCIJSON
 {
     public class JsonSchemaValidationContext
     {
-        Stack<string> m_stack = new Stack<string>();
+        private Stack<string> m_stack = new Stack<string>();
 
         public bool EnableDiagnosisForNotRequiredFields = false;
 
@@ -39,16 +39,15 @@ namespace VCIJSON
 
     public class JsonSchemaValidationException : Exception
     {
-        public Exception Error
-        {
-            get; private set;
-        }
+        public Exception Error { get; private set; }
 
-        public JsonSchemaValidationException(JsonSchemaValidationContext context, string msg) : base(string.Format("[{0}] {1}", context, msg))
+        public JsonSchemaValidationException(JsonSchemaValidationContext context, string msg) : base(
+            string.Format("[{0}] {1}", context, msg))
         {
         }
 
-        public JsonSchemaValidationException(JsonSchemaValidationContext context, Exception ex) : base(string.Format("[{0}] {1}", context, ex))
+        public JsonSchemaValidationException(JsonSchemaValidationContext context, Exception ex) : base(
+            string.Format("[{0}] {1}", context, ex))
         {
             Error = ex;
         }
@@ -58,6 +57,7 @@ namespace VCIJSON
     public interface IJsonSchemaValidator
     {
         #region JsonSchema
+
         void Merge(IJsonSchemaValidator rhs);
 
         /// <summary>
@@ -70,9 +70,11 @@ namespace VCIJSON
         bool FromJsonSchema(IFileSystemAccessor fs, string key, ListTreeNode<JsonValue> value);
 
         void ToJsonScheama(IFormatter f);
+
         #endregion
 
         #region Serializer
+
         /// <summary>
         ///
         /// </summary>
@@ -83,6 +85,7 @@ namespace VCIJSON
         void Serialize<T>(IFormatter f, JsonSchemaValidationContext context, T value);
 
         void Deserialize<T, U>(ListTreeNode<T> src, ref U dst) where T : IListTreeItem, IValue<T>;
+
         #endregion
     }
 }

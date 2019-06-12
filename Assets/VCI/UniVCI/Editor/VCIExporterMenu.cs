@@ -1,42 +1,39 @@
-#pragma warning disable
-using System.IO;
-using VCIGLTF;
+﻿using System.IO;
 using UnityEditor;
 using UnityEngine;
-
+using VCIGLTF;
 
 namespace VCI
 {
     public static class VCIObjectExporterMenu
     {
         #region Export NonHumanoid
-        const string CONVERT_OBJECT_KEY = VCIVersion.MENU + "/Export VCI";
+
+        private const string CONVERT_OBJECT_KEY = VCIVersion.MENU + "/Export VCI";
 
         [MenuItem(CONVERT_OBJECT_KEY)]
-        private static void ExportObjectFromMenu()
+        public static void ExportObject()
         {
             var errorMessage = "";
             if (!Validate(out errorMessage))
             {
                 Debug.LogAssertion(errorMessage);
-                return;
-            }
-            
-            // save dialog
-            var root = Selection.activeObject as GameObject;
-            var path = EditorUtility.SaveFilePanel(
-                    "Save " + VCIVersion.EXTENSION,
-                    null,
-                    root.name + VCIVersion.EXTENSION,
-                    VCIVersion.EXTENSION.Substring(1));
-            if (string.IsNullOrEmpty(path))
-            {
+                EditorUtility.DisplayDialog("Error", errorMessage, "OK");
                 return;
             }
 
+            // save dialog
+            var root = Selection.activeObject as GameObject;
+            var path = EditorUtility.SaveFilePanel(
+                "Save " + VCIVersion.EXTENSION,
+                null,
+                root.name + VCIVersion.EXTENSION,
+                VCIVersion.EXTENSION.Substring(1));
+            if (string.IsNullOrEmpty(path)) return;
+
             // export
             var gltf = new glTF();
-            using (var exporter = new VCI.VCIExporter(gltf))
+            using (var exporter = new VCIExporter(gltf))
             {
                 exporter.Prepare(root);
                 exporter.Export();
@@ -49,6 +46,12 @@ namespace VCI
             {
                 AssetDatabase.ImportAsset(path.ToUnityRelativePath());
                 AssetDatabase.Refresh();
+            }
+
+            // Show the file in the explorer.
+            if (Application.platform == RuntimePlatform.WindowsEditor)
+            {
+                System.Diagnostics.Process.Start("explorer.exe", " /e,/select," + path.Replace("/", "\\"));
             }
         }
 
@@ -77,6 +80,7 @@ namespace VCI
             var isValid = VCIMetaValidator.Validate(vciObject, out errorMessage);
             return isValid;
         }
+
         #endregion
     }
 }

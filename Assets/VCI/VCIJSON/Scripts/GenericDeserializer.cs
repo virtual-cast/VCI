@@ -1,8 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
 
 namespace VCIJSON
 {
@@ -11,25 +10,16 @@ namespace VCIJSON
     {
         public static V[] GenericArrayDeserializer<V>(ListTreeNode<T> s)
         {
-            if (!s.IsArray())
-            {
-                throw new ArgumentException("not array: " + s.Value.ValueType);
-            }
+            if (!s.IsArray()) throw new ArgumentException("not array: " + s.Value.ValueType);
             var u = new V[s.GetArrayCount()];
-            int i = 0;
-            foreach (var x in s.ArrayItems())
-            {
-                x.Deserialize(ref u[i++]);
-            }
+            var i = 0;
+            foreach (var x in s.ArrayItems()) x.Deserialize(ref u[i++]);
             return u;
         }
 
         public static List<V> GenericListDeserializer<V>(ListTreeNode<T> s)
         {
-            if (!s.IsArray())
-            {
-                throw new ArgumentException("not array: " + s.Value.ValueType);
-            }
+            if (!s.IsArray()) throw new ArgumentException("not array: " + s.Value.ValueType);
             var u = new List<V>(s.GetArrayCount());
             foreach (var x in s.ArrayItems())
             {
@@ -37,6 +27,7 @@ namespace VCIJSON
                 x.Deserialize(ref e);
                 u.Add(e);
             }
+
             return u;
         }
 
@@ -45,16 +36,14 @@ namespace VCIJSON
             switch (s.Value.ValueType)
             {
                 case ValueNodeType.Object:
-                    {
-                        var u = new Dictionary<string, object>();
-                        foreach (var kv in s.ObjectItems())
-                        {
-                            //var e = default(object);
-                            //kv.Value.Deserialize(ref e);
-                            u.Add(kv.Key.GetString(), DefaultDictionaryDeserializer(kv.Value));
-                        }
-                        return u;
-                    }
+                {
+                    var u = new Dictionary<string, object>();
+                    foreach (var kv in s.ObjectItems())
+                        //var e = default(object);
+                        //kv.Value.Deserialize(ref e);
+                        u.Add(kv.Key.GetString(), DefaultDictionaryDeserializer(kv.Value));
+                    return u;
+                }
 
                 case ValueNodeType.Null:
                     return null;
@@ -91,11 +80,13 @@ namespace VCIJSON
                 GenericDeserializer<T, V>.Deserialize(kv.Value, ref value);
                 d.Add(kv.Key.GetString(), value);
             }
+
             return d;
         }
 
-        delegate void FieldSetter(ListTreeNode<T> s, object o);
-        static FieldSetter GetFieldDeserializer<V>(FieldInfo fi)
+        private delegate void FieldSetter(ListTreeNode<T> s, object o);
+
+        private static FieldSetter GetFieldDeserializer<V>(FieldInfo fi)
         {
             return (s, o) =>
             {
@@ -105,40 +96,25 @@ namespace VCIJSON
             };
         }
 
-        static Func<ListTreeNode<T>, U> GetDeserializer()
+        private static Func<ListTreeNode<T>, U> GetDeserializer()
         {
             // primitive
             {
                 var mi = typeof(ListTreeNode<T>).GetMethods().FirstOrDefault(x =>
                 {
-                    if (!x.Name.StartsWith("Get"))
-                    {
-                        return false;
-                    }
+                    if (!x.Name.StartsWith("Get")) return false;
 
-                    if (!x.Name.EndsWith(typeof(U).Name))
-                    {
-                        return false;
-                    }
+                    if (!x.Name.EndsWith(typeof(U).Name)) return false;
 
                     var parameters = x.GetParameters();
-                    if (parameters.Length != 0)
-                    {
-                        return false;
-                    }
+                    if (parameters.Length != 0) return false;
 
-                    if (x.ReturnType != typeof(U))
-                    {
-                        return false;
-                    }
+                    if (x.ReturnType != typeof(U)) return false;
 
                     return true;
                 });
 
-                if (mi != null)
-                {
-                    return GenericInvokeCallFactory.StaticFunc<ListTreeNode<T>, U>(mi);
-                }
+                if (mi != null) return GenericInvokeCallFactory.StaticFunc<ListTreeNode<T>, U>(mi);
             }
 
             var target = typeof(U);
@@ -162,19 +138,18 @@ namespace VCIJSON
                 }
 
                 if (target == typeof(Dictionary<string, object>))
-                {                   
+                {
                     var mi = typeof(GenericDeserializer<T, U>).GetMethod("DefaultDictionaryDeserializer",
-                    BindingFlags.Static | BindingFlags.Public);
-                    Func<ListTreeNode<T>, object> func = GenericInvokeCallFactory.StaticFunc<ListTreeNode<T>, object>(mi);
+                        BindingFlags.Static | BindingFlags.Public);
+                    var func = GenericInvokeCallFactory.StaticFunc<ListTreeNode<T>, object>(mi);
                     // object to Dictionary<string, object>
-                    return x => (U)func(x);
+                    return x => (U) func(x);
                 }
-                else
-                if (target.GetGenericTypeDefinition() == typeof(Dictionary<,>) &&
-                    target.GetGenericArguments()[0] == typeof(string))
+                else if (target.GetGenericTypeDefinition() == typeof(Dictionary<,>) &&
+                         target.GetGenericArguments()[0] == typeof(string))
                 {
                     var mi = typeof(GenericDeserializer<T, U>).GetMethod("DictionaryDeserializer",
-                    BindingFlags.Static | BindingFlags.Public);
+                        BindingFlags.Static | BindingFlags.Public);
                     var g = mi.MakeGenericMethod(target.GetGenericArguments()[1]);
                     return GenericInvokeCallFactory.StaticFunc<ListTreeNode<T>, U>(g);
                 }
@@ -212,7 +187,7 @@ namespace VCIJSON
                         var g = mi.MakeGenericMethod(x.FieldType);
                         return (FieldSetter)g.Invoke(null, new object[] { x });
                     });
-                    
+
                     return (S s) =>
                     {
                         if (!s.IsMap())
@@ -246,6 +221,7 @@ namespace VCIJSON
                 var d = GetDeserializer();
                 s_deserializer = new Deserializer(d);
             }
+
             value = s_deserializer(node);
         }
 

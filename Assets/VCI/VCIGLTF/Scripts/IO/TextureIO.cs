@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UniGLTF.ShaderPropExporter;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -93,7 +94,7 @@ namespace VCIGLTF
 
         public static IEnumerable<TextureExportItem> GetTextures(Material m)
         {
-            var props = UniGLTF.ShaderPropExporter.PreShaderPropExporter.GetPropsForSupportedShader(m.shader.name);
+            var props = PreShaderPropExporter.GetPropsForSupportedShader(m.shader.name);
             if (props == null)
             {
                 yield return new TextureExportItem(m.mainTexture, glTFTextureTypes.BaseColor);
@@ -102,7 +103,7 @@ namespace VCIGLTF
             foreach (var prop in props.Properties)
             {
 
-                if (prop.ShaderPropertyType == UniGLTF.ShaderPropExporter.ShaderPropertyType.TexEnv)
+                if (prop.ShaderPropertyType == ShaderPropertyType.TexEnv)
                 {
                     yield return new TextureExportItem(m.GetTexture(prop.Key), GetglTFTextureType(m.shader.name, prop.Key));
                 }

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿
 
 
 /*
@@ -63,7 +63,7 @@ value = 2
 
         [Test]
         public void TableTests()
-        { 
+        {
             {
                 var result = @"
 [table]

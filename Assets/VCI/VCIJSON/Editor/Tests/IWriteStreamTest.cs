@@ -1,8 +1,7 @@
-﻿using NUnit.Framework;
-using VCIJSON;
+﻿using System;
 using System.Linq;
 using System.Text;
-using System;
+using NUnit.Framework;
 
 namespace VCIJSON
 {
@@ -31,14 +30,14 @@ namespace VCIJSON
             var store = new BytesStore(1);
 
             store.WriteValues(1, 2, 3);
-            Assert.True(new Byte[] { 1, 2, 3 }.SequenceEqual(store.Bytes.ToEnumerable()));
+            Assert.True(new Byte[] {1, 2, 3}.SequenceEqual(store.Bytes.ToEnumerable()));
 
             store.Write(4);
-            Assert.True(new Byte[] { 1, 2, 3, 4 }.SequenceEqual(store.Bytes.ToEnumerable()));
+            Assert.True(new Byte[] {1, 2, 3, 4}.SequenceEqual(store.Bytes.ToEnumerable()));
 
             store.Clear();
             store.Write(5);
-            Assert.True(new Byte[] { 5 }.SequenceEqual(store.Bytes.ToEnumerable()));
+            Assert.True(new Byte[] {5}.SequenceEqual(store.Bytes.ToEnumerable()));
         }
     }
 }

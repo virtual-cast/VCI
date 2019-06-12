@@ -1,6 +1,5 @@
-﻿using NUnit.Framework;
-using System;
-
+﻿using System;
+using NUnit.Framework;
 
 namespace VCIJSON.MsgPack
 {
@@ -21,9 +20,10 @@ namespace VCIJSON.MsgPack
                 {
                     Assert.AreEqual(new byte[]
                     {
-                (byte)MsgPackType.FIX_EXT_4, (byte)-1, 0, 0, 0, 0
+                        (byte) MsgPackType.FIX_EXT_4, (byte) -1, 0, 0, 0, 0
                     }, bytes);
                 }
+
                 var parsed = MsgPackParser.Parse(bytes).GetValue();
                 Assert.AreEqual(time, parsed);
             }
@@ -40,10 +40,7 @@ namespace VCIJSON.MsgPack
 
             {
                 f.GetStore().Clear();
-                Assert.Catch(() =>
-                {
-                    f.Value(new DateTimeOffset());
-                });
+                Assert.Catch(() => { f.Value(new DateTimeOffset()); });
             }
         }
     }

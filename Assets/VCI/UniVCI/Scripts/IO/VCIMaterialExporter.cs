@@ -1,7 +1,6 @@
 ﻿using System;
-using VCIGLTF;
 using UnityEngine;
-
+using VCIGLTF;
 
 namespace VCI
 {
@@ -31,32 +30,35 @@ namespace VCI
             }
         }
 
-        static glTFMaterial Export_VRMUnlitTexture(Material m)
+        private static glTFMaterial Export_VRMUnlitTexture(Material m)
         {
             var material = glTF_KHR_materials_unlit.CreateDefault();
             material.alphaMode = "OPAQUE";
             return material;
         }
-        static glTFMaterial Export_VRMUnlitTransparent(Material m)
-        {
-            var material = glTF_KHR_materials_unlit.CreateDefault();
-            material.alphaMode = "BLEND";
-            return material;
-        }
-        static glTFMaterial Export_VRMUnlitCutout(Material m)
-        {
-            var material = glTF_KHR_materials_unlit.CreateDefault();
-            material.alphaMode = "MASK";
-            return material;
-        }
-        static glTFMaterial Export_VRMUnlitTransparentZWrite(Material m)
+
+        private static glTFMaterial Export_VRMUnlitTransparent(Material m)
         {
             var material = glTF_KHR_materials_unlit.CreateDefault();
             material.alphaMode = "BLEND";
             return material;
         }
 
-        static glTFMaterial Export_VRMMToon(Material m)
+        private static glTFMaterial Export_VRMUnlitCutout(Material m)
+        {
+            var material = glTF_KHR_materials_unlit.CreateDefault();
+            material.alphaMode = "MASK";
+            return material;
+        }
+
+        private static glTFMaterial Export_VRMUnlitTransparentZWrite(Material m)
+        {
+            var material = glTF_KHR_materials_unlit.CreateDefault();
+            material.alphaMode = "BLEND";
+            return material;
+        }
+
+        private static glTFMaterial Export_VRMMToon(Material m)
         {
             var material = glTF_KHR_materials_unlit.CreateDefault();
 
@@ -76,7 +78,7 @@ namespace VCI
                     break;
             }
 
-            switch ((int)m.GetFloat("_CullMode"))
+            switch ((int) m.GetFloat("_CullMode"))
             {
                 case 0:
                     material.doubleSided = true;

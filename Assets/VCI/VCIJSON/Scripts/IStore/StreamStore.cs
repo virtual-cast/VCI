@@ -4,10 +4,10 @@ using System.Text;
 
 namespace VCIJSON
 {
-    public class StreamStore: IStore
+    public class StreamStore : IStore
     {
-        Stream m_s;
-        BinaryWriter m_w;
+        private Stream m_s;
+        private BinaryWriter m_w;
 
         public StreamStore(Stream s)
         {
@@ -23,11 +23,8 @@ namespace VCIJSON
                 throw new NotImplementedException();
 #else
                 var ms = m_s as MemoryStream;
-                if (ms == null)
-                {
-                    throw new NotImplementedException();
-                }
-                return new ArraySegment<byte>(ms.GetBuffer(), 0, (int)ms.Position);
+                if (ms == null) throw new NotImplementedException();
+                return new ArraySegment<byte>(ms.GetBuffer(), 0, (int) ms.Position);
 #endif
             }
         }
@@ -62,7 +59,8 @@ namespace VCIJSON
             m_w.Write(bytes.Array, bytes.Offset, bytes.Count);
         }
 
-#region BigEndian
+        #region BigEndian
+
         public void WriteBigEndian(int value)
         {
             throw new NotImplementedException();
@@ -102,9 +100,11 @@ namespace VCIJSON
         {
             throw new NotImplementedException();
         }
-#endregion
 
-#region LittleEndian
+        #endregion
+
+        #region LittleEndian
+
         public void WriteLittleEndian(long value)
         {
             m_w.Write(value);
@@ -144,6 +144,7 @@ namespace VCIJSON
         {
             m_w.Write(value);
         }
-#endregion
+
+        #endregion
     }
 }

@@ -1,6 +1,6 @@
-﻿using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
+using NUnit.Framework;
 
 namespace VCIJSON.MsgPack
 {
@@ -21,7 +21,7 @@ namespace VCIJSON.MsgPack
         [Test]
         public void fix_str()
         {
-            for (int i = 1; i < 32; ++i)
+            for (var i = 1; i < 32; ++i)
             {
                 var str = String.Join("", Enumerable.Range(0, i).Select(_ => "0").ToArray());
                 var f = new MsgPackFormatter();
@@ -29,7 +29,7 @@ namespace VCIJSON.MsgPack
                 var bytes = f.GetStoreBytes();
 
                 var value = MsgPackParser.Parse(bytes);
-                Assert.AreEqual(i, ((String)value.GetValue()).Length);
+                Assert.AreEqual(i, ((String) value.GetValue()).Length);
             }
         }
     }

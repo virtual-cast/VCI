@@ -1,6 +1,5 @@
 ﻿using System;
 
-
 namespace VCIJSON
 {
     /// <summary>
@@ -11,42 +10,27 @@ namespace VCIJSON
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.2.1
         /// </summary>
-        public int? MultipleOf
-        {
-            get; set;
-        }
+        public int? MultipleOf { get; set; }
 
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.2.2
         /// </summary>
-        public int? Maximum
-        {
-            get; set;
-        }
+        public int? Maximum { get; set; }
 
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.2.3
         /// </summary>
-        public bool ExclusiveMaximum
-        {
-            get; set;
-        }
+        public bool ExclusiveMaximum { get; set; }
 
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.2.4
         /// </summary>
-        public int? Minimum
-        {
-            get; set;
-        }
+        public int? Minimum { get; set; }
 
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.2.5
         /// </summary>
-        public bool ExclusiveMinimum
-        {
-            get; set;
-        }
+        public bool ExclusiveMinimum { get; set; }
 
         public override int GetHashCode()
         {
@@ -63,6 +47,7 @@ namespace VCIJSON
                 Console.WriteLine("MultipleOf");
                 return false;
             }
+
             if (Maximum != rhs.Maximum)
             {
                 Console.WriteLine("Maximum");
@@ -120,24 +105,25 @@ namespace VCIJSON
 
         public void ToJsonScheama(IFormatter f)
         {
-            f.Key("type"); f.Value("integer");
+            f.Key("type");
+            f.Value("integer");
             if (Minimum.HasValue)
             {
-                f.Key("minimum"); f.Value(Minimum.Value);
+                f.Key("minimum");
+                f.Value(Minimum.Value);
             }
+
             if (Maximum.HasValue)
             {
-                f.Key("maximum"); f.Value(Maximum.Value);
+                f.Key("maximum");
+                f.Value(Maximum.Value);
             }
         }
 
         public void Merge(IJsonSchemaValidator obj)
         {
             var rhs = obj as JsonIntValidator;
-            if (rhs == null)
-            {
-                throw new ArgumentException();
-            }
+            if (rhs == null) throw new ArgumentException();
 
             MultipleOf = rhs.MultipleOf;
             Maximum = rhs.Maximum;
@@ -162,7 +148,8 @@ namespace VCIJSON
                         }
                         else
                         {
-                            return new JsonSchemaValidationException(c, string.Format("minimum: ! {0}>{1}", value, Minimum.Value));
+                            return new JsonSchemaValidationException(c,
+                                string.Format("minimum: ! {0}>{1}", value, Minimum.Value));
                         }
                     }
                     else
@@ -173,7 +160,8 @@ namespace VCIJSON
                         }
                         else
                         {
-                            return new JsonSchemaValidationException(c, string.Format("minimum: ! {0}>={1}", value, Minimum.Value));
+                            return new JsonSchemaValidationException(c,
+                                string.Format("minimum: ! {0}>={1}", value, Minimum.Value));
                         }
                     }
                 }
@@ -188,7 +176,8 @@ namespace VCIJSON
                         }
                         else
                         {
-                            return new JsonSchemaValidationException(c, string.Format("maximum: ! {0}<{1}", value, Maximum.Value));
+                            return new JsonSchemaValidationException(c,
+                                string.Format("maximum: ! {0}<{1}", value, Maximum.Value));
                         }
                     }
                     else
@@ -199,15 +188,15 @@ namespace VCIJSON
                         }
                         else
                         {
-                            return new JsonSchemaValidationException(c, string.Format("maximum: ! {0}<={1}", value, Maximum.Value));
+                            return new JsonSchemaValidationException(c,
+                                string.Format("maximum: ! {0}<={1}", value, Maximum.Value));
                         }
                     }
                 }
 
                 if (MultipleOf.HasValue && value % MultipleOf.Value != 0)
-                {
-                    return new JsonSchemaValidationException(c, string.Format("multipleOf: {0}%{1}", value, MultipleOf.Value));
-                }
+                    return new JsonSchemaValidationException(c,
+                        string.Format("multipleOf: {0}%{1}", value, MultipleOf.Value));
 
                 return null;
             }
@@ -222,7 +211,7 @@ namespace VCIJSON
             f.Serialize(GenericCast<T, int>.Cast(o));
         }
 
-        public void Deserialize<T, U>(ListTreeNode<T> src, ref U dst) 
+        public void Deserialize<T, U>(ListTreeNode<T> src, ref U dst)
             where T : IListTreeItem, IValue<T>
         {
             dst = GenericCast<int, U>.Cast(src.GetInt32());
@@ -237,42 +226,27 @@ namespace VCIJSON
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.2.1
         /// </summary>
-        public double? MultipleOf
-        {
-            get; set;
-        }
+        public double? MultipleOf { get; set; }
 
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.2.2
         /// </summary>
-        public double? Maximum
-        {
-            get; set;
-        }
+        public double? Maximum { get; set; }
 
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.2.3
         /// </summary>
-        public bool ExclusiveMaximum
-        {
-            get; set;
-        }
+        public bool ExclusiveMaximum { get; set; }
 
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.2.4
         /// </summary>
-        public double? Minimum
-        {
-            get; set;
-        }
+        public double? Minimum { get; set; }
 
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.2.5
         /// </summary>
-        public bool ExclusiveMinimum
-        {
-            get; set;
-        }
+        public bool ExclusiveMinimum { get; set; }
 
         public override int GetHashCode()
         {
@@ -328,14 +302,18 @@ namespace VCIJSON
 
         public void ToJsonScheama(IFormatter f)
         {
-            f.Key("type"); f.Value("number");
+            f.Key("type");
+            f.Value("number");
             if (Minimum.HasValue)
             {
-                f.Key("minimum"); f.Value(Minimum.Value);
+                f.Key("minimum");
+                f.Value(Minimum.Value);
             }
+
             if (Maximum.HasValue)
             {
-                f.Key("maximum"); f.Value(Maximum.Value);
+                f.Key("maximum");
+                f.Value(Maximum.Value);
             }
         }
 
@@ -355,7 +333,8 @@ namespace VCIJSON
                         }
                         else
                         {
-                            return new JsonSchemaValidationException(c, string.Format("minimum: ! {0}>{1}", value, Minimum.Value));
+                            return new JsonSchemaValidationException(c,
+                                string.Format("minimum: ! {0}>{1}", value, Minimum.Value));
                         }
                     }
                     else
@@ -366,7 +345,8 @@ namespace VCIJSON
                         }
                         else
                         {
-                            return new JsonSchemaValidationException(c, string.Format("minimum: ! {0}>={1}", value, Minimum.Value));
+                            return new JsonSchemaValidationException(c,
+                                string.Format("minimum: ! {0}>={1}", value, Minimum.Value));
                         }
                     }
                 }
@@ -381,7 +361,8 @@ namespace VCIJSON
                         }
                         else
                         {
-                            return new JsonSchemaValidationException(c, string.Format("maximum: ! {0}<{1}", value, Maximum.Value));
+                            return new JsonSchemaValidationException(c,
+                                string.Format("maximum: ! {0}<{1}", value, Maximum.Value));
                         }
                     }
                     else
@@ -392,7 +373,8 @@ namespace VCIJSON
                         }
                         else
                         {
-                            return new JsonSchemaValidationException(c, string.Format("maximum: ! {0}<={1}", value, Maximum.Value));
+                            return new JsonSchemaValidationException(c,
+                                string.Format("maximum: ! {0}<={1}", value, Maximum.Value));
                         }
                     }
                 }
@@ -403,10 +385,7 @@ namespace VCIJSON
                     return new JsonSchemaValidationException(c, string.Format("multipleOf: {0}%{1}", value, MultipleOf.Value));
                 }
                 */
-                if (MultipleOf.HasValue)
-                {
-                    throw new NotImplementedException();
-                }
+                if (MultipleOf.HasValue) throw new NotImplementedException();
 
                 return null;
             }
@@ -421,7 +400,7 @@ namespace VCIJSON
             f.Serialize(o);
         }
 
-        public void Deserialize<T, U>(ListTreeNode<T> src, ref U dst) 
+        public void Deserialize<T, U>(ListTreeNode<T> src, ref U dst)
             where T : IListTreeItem, IValue<T>
         {
             dst = GenericCast<double, U>.Cast(src.GetDouble());

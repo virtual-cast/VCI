@@ -2,24 +2,26 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-
 namespace VCIJSON
 {
     public class BytesStore : IStore
     {
         public BytesStore() : this(64)
-        { }
+        {
+        }
 
         public BytesStore(int size) : this(new Byte[size])
-        { }
+        {
+        }
 
         public BytesStore(Byte[] buffer)
         {
             m_buffer = buffer;
         }
 
-        Byte[] m_buffer;
-        void Require(int size)
+        private Byte[] m_buffer;
+
+        private void Require(int size)
         {
             if (m_buffer == null)
             {
@@ -27,10 +29,7 @@ namespace VCIJSON
                 return;
             }
 
-            if (m_pos + size < m_buffer.Length)
-            {
-                return;
-            }
+            if (m_pos + size < m_buffer.Length) return;
 
             var newSize = Math.Max(m_pos + size, m_buffer.Length * 2);
             //Console.WriteLine(newSize);
@@ -40,29 +39,24 @@ namespace VCIJSON
                 , m_buffer, 0, m_pos);
         }
 
-        int m_pos;
+        private int m_pos;
 
-        public ArraySegment<byte> Bytes
-        {
-            get
-            {
-                return new ArraySegment<byte>(m_buffer, 0, m_pos);
-            }
-        }
+        public ArraySegment<byte> Bytes => new ArraySegment<byte>(m_buffer, 0, m_pos);
 
         public void Clear()
         {
             m_pos = 0;
         }
 
-        char[] m_c = new char[1];
+        private char[] m_c = new char[1];
+
         public void Write(char c)
         {
             if (c <= 0x7F)
             {
                 // ascii
                 Require(1);
-                m_buffer[m_pos++] = (Byte)c;
+                m_buffer[m_pos++] = (Byte) c;
                 return;
             }
 
@@ -78,10 +72,7 @@ namespace VCIJSON
             Require(size);
             var byteSize = Encoding.UTF8.GetBytes(src, 0, src.Length
                 , m_buffer, m_pos);
-            if (size != byteSize)
-            {
-                throw new Exception();
-            }
+            if (size != byteSize) throw new Exception();
             m_pos += byteSize;
         }
 
@@ -96,7 +87,7 @@ namespace VCIJSON
         public void Write(sbyte value)
         {
             Require(Marshal.SizeOf(value));
-            m_buffer[m_pos++] = (Byte)value;
+            m_buffer[m_pos++] = (Byte) value;
         }
 
         public void Write(byte value)
@@ -106,6 +97,7 @@ namespace VCIJSON
         }
 
         #region LittleEndian
+
         public void WriteLittleEndian(short value)
         {
             Require(Marshal.SizeOf(value));
@@ -193,9 +185,11 @@ namespace VCIJSON
             m_buffer[m_pos++] = u.Byte6;
             m_buffer[m_pos++] = u.Byte7;
         }
+
         #endregion
 
         #region BigEndian
+
         public void WriteBigEndian(short value)
         {
             Require(Marshal.SizeOf(value));
@@ -283,6 +277,7 @@ namespace VCIJSON
             m_buffer[m_pos++] = u.Byte1;
             m_buffer[m_pos++] = u.Byte0;
         }
+
         #endregion
     }
 }

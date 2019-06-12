@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Linq;
-
+using System.Runtime.InteropServices;
 
 namespace VCIJSON
 {
-    public interface IUtf8String: IEnumerable<Byte>
+    public interface IUtf8String : IEnumerable<Byte>
     {
         int ByteLength { get; }
     }
@@ -18,20 +17,15 @@ namespace VCIJSON
     [StructLayout(LayoutKind.Explicit)]
     public struct Utf8String4 : IEquatable<Utf8String4>, IUtf8String
     {
-        [FieldOffset(0)]
-        uint _value;
+        [FieldOffset(0)] private uint _value;
 
-        [FieldOffset(0)]
-        byte _byte0;
+        [FieldOffset(0)] private byte _byte0;
 
-        [FieldOffset(1)]
-        byte _byte1;
+        [FieldOffset(1)] private byte _byte1;
 
-        [FieldOffset(2)]
-        byte _byte2;
+        [FieldOffset(2)] private byte _byte2;
 
-        [FieldOffset(3)]
-        byte _byte3;
+        [FieldOffset(3)] private byte _byte3;
 
         public int ByteLength
         {
@@ -45,7 +39,7 @@ namespace VCIJSON
             }
         }
 
-        static Utf8String4 Create(uint value)
+        private static Utf8String4 Create(uint value)
         {
             return new Utf8String4
             {
@@ -70,10 +64,7 @@ namespace VCIJSON
             if (!it.MoveNext()) return u;
             u._byte3 = it.Current;
 
-            if (!it.MoveNext())
-            {
-                throw new ArgumentOutOfRangeException();
-            }
+            if (!it.MoveNext()) throw new ArgumentOutOfRangeException();
 
             return u;
         }
@@ -92,17 +83,11 @@ namespace VCIJSON
         {
             if (obj == null) return false;
 
-            if (obj is Utf8String4)
-            {
-                return Equals((Utf8String4)obj);
-            }
+            if (obj is Utf8String4) return Equals((Utf8String4) obj);
 
             {
                 var s = obj as string;
-                if (s != null)
-                {
-                    return ToString() == s;
-                }
+                if (s != null) return ToString() == s;
             }
 
             return false;

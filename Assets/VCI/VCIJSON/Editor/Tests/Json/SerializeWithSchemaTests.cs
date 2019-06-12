@@ -4,13 +4,14 @@ namespace VCIJSON
 {
     public class SerializeWithSchemaTests
     {
-        [JsonSchema(Title="CheckConstraintsTest")]
+        [JsonSchema(Title = "CheckConstraintsTest")]
         public class CheckConstraintsTest
         {
-            [JsonSchema(Minimum = 0)]
-            public int X;
+            [JsonSchema(Minimum = 0)] public int X;
 
-            [JsonSchema(Minimum = 10, ExplicitIgnorableValue = 0)] // Not required, thus ignored when the value violates the constraints
+            [JsonSchema(Minimum = 10,
+                ExplicitIgnorableValue = 0)]
+            // Not required, thus ignored when the value violates the constraints
             public int Y;
         }
 
@@ -35,7 +36,7 @@ namespace VCIJSON
             Assert.AreEqual(expected, actual);
         }
 
-        [JsonSchema(Title="ObjectNestedTest")]
+        [JsonSchema(Title = "ObjectNestedTest")]
         public class ObjectNestedTest
         {
             public CheckConstraintsTest C;
@@ -168,8 +169,7 @@ namespace VCIJSON
 
         public class NestedRequiredTestParent
         {
-            [JsonSchema(Required = true)]
-            public NestedRequiredTestChild C;
+            [JsonSchema(Required = true)] public NestedRequiredTestChild C;
         }
 
         public class NestedRequiredTestChild

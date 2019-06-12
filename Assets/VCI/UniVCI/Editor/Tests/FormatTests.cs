@@ -1,8 +1,7 @@
-﻿using NUnit.Framework;
-using System.Linq;
+﻿using System.Linq;
+using NUnit.Framework;
 using VCIGLTF;
 using VCIJSON;
-
 
 namespace VCI
 {
@@ -60,7 +59,7 @@ namespace VCI
                 {
                     new glTF_VCAST_vci_embedded_script_source
                     {
-                        name="main.lua",
+                        name = "main.lua",
                     },
                 }
             };
@@ -80,8 +79,9 @@ namespace VCI
             {
                 colliders = new System.Collections.Generic.List<glTF_VCAST_vci_Collider>
                 {
-                    new glTF_VCAST_vci_Collider{
-                        center=new float[]{1, 2, 3},
+                    new glTF_VCAST_vci_Collider
+                    {
+                        center = new float[] {1, 2, 3},
                     }
                 }
             };
@@ -101,7 +101,8 @@ namespace VCI
             {
                 rigidbodies = new System.Collections.Generic.List<glTF_VCAST_vci_Rigidbody>
                 {
-                    new glTF_VCAST_vci_Rigidbody{
+                    new glTF_VCAST_vci_Rigidbody
+                    {
                         mass = 9.8f,
                     }
                 }
