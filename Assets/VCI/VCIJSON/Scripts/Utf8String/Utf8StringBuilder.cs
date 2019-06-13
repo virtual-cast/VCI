@@ -4,14 +4,14 @@ namespace VCIJSON
 {
     public class Utf8StringBuilder
     {
-        ByteBuffer m_buffer = new ByteBuffer();
+        private ByteBuffer m_buffer = new ByteBuffer();
 
         public void Ascii(char c)
         {
-            m_buffer.Push((byte)c);
+            m_buffer.Push((byte) c);
         }
 
-        static Encoding s_utf8 = new UTF8Encoding(false);
+        private static Encoding s_utf8 = new UTF8Encoding(false);
 
         public void Quote(string text)
         {

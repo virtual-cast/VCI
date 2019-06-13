@@ -1,6 +1,5 @@
 ﻿using System;
 
-
 namespace VCIJSON
 {
     public class JsonBoolValidator : IJsonSchemaValidator
@@ -29,7 +28,8 @@ namespace VCIJSON
 
         public void ToJsonScheama(IFormatter f)
         {
-            f.Key("type"); f.Value("boolean");
+            f.Key("type");
+            f.Value("boolean");
         }
 
         public JsonSchemaValidationException Validate<T>(JsonSchemaValidationContext c, T value)
@@ -42,7 +42,7 @@ namespace VCIJSON
             f.Serialize(value);
         }
 
-        public void Deserialize<T, U>(ListTreeNode<T> src, ref U dst) 
+        public void Deserialize<T, U>(ListTreeNode<T> src, ref U dst)
             where T : IListTreeItem, IValue<T>
         {
             dst = GenericCast<bool, U>.Cast(src.GetBoolean());

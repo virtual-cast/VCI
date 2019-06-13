@@ -6,11 +6,11 @@ using System.IO;
 using UniGLTF.ShaderPropExporter;
 using System.Collections.Generic;
 
-namespace VCIGLTF
+namespace UniGLTF
 {
     public static class ShaderPropMenu
     {
-#if VCI_DEVELOP
+#if VRM_DEVELOP
         [MenuItem("VRM/ShaderProperty/PreExport ShaderProps")]
 #endif
         public static void PreExport()

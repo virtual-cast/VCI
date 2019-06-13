@@ -1,5 +1,4 @@
 ﻿using NUnit.Framework;
-using VCIJSON.MsgPack;
 
 namespace VCIJSON
 {
@@ -30,9 +29,10 @@ namespace VCIJSON
             {
                 f.Clear();
                 f.Request("num3",
-                    3, true, "abc", false, (string)null, new[] { 1, 2 });
+                    3, true, "abc", false, (string) null, new[] {1, 2});
                 Assert.AreEqual(
-                    JsonParser.Parse("{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"num3\",\"params\":[3,true,\"abc\",false,null,[1,2]]}"),
+                    JsonParser.Parse(
+                        "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"num3\",\"params\":[3,true,\"abc\",false,null,[1,2]]}"),
                     JsonParser.Parse(new Utf8String(f.GetStoreBytes())));
             }
         }

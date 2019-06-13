@@ -1,34 +1,24 @@
 ﻿using System;
 
-
 namespace VCIJSON
 {
     public struct JsonValue : IListTreeItem, IValue<JsonValue>
     {
         public Utf8String Segment;
-        public ArraySegment<Byte> Bytes { get { return Segment.Bytes; } }
+        public ArraySegment<Byte> Bytes => Segment.Bytes;
+
         public void SetBytesCount(int count)
         {
             Segment = new Utf8String(new ArraySegment<byte>(Bytes.Array, Bytes.Offset, count));
         }
 
-        public ValueNodeType ValueType
-        {
-            get;
-            private set;
-        }
+        public ValueNodeType ValueType { get; private set; }
 
-        public int ParentIndex
-        {
-            get;
-            private set;
-        }
+        public int ParentIndex { get; private set; }
 
-        int _childCount;
-        public int ChildCount
-        {
-            get { return _childCount; }
-        }
+        private int _childCount;
+        public int ChildCount => _childCount;
+
         public void SetChildCount(int count)
         {
             _childCount = count;
@@ -72,37 +62,78 @@ namespace VCIJSON
             }
         }
 
-        static Utf8String s_true = Utf8String.From("true");
-        static Utf8String s_false = Utf8String.From("false");
+        private static Utf8String s_true = Utf8String.From("true");
+        private static Utf8String s_false = Utf8String.From("false");
 
         public Boolean GetBoolean()
         {
             if (Segment == s_true)
-            {
                 return true;
-            }
             else if (Segment == s_false)
-            {
                 return false;
-            }
             else
-            {
                 throw new DeserializationException("invalid boolean: " + Segment.ToString());
-            }
         }
 
-        public SByte GetSByte() { return Segment.ToSByte(); }
-        public Int16 GetInt16() { return Segment.ToInt16(); }
-        public Int32 GetInt32() { return Segment.ToInt32(); }
-        public Int64 GetInt64() { return Segment.ToInt64(); }
-        public Byte GetByte() { return Segment.ToByte(); }
-        public UInt16 GetUInt16() { return Segment.ToUInt16(); }
-        public UInt32 GetUInt32() { return Segment.ToUInt32(); }
-        public UInt64 GetUInt64() { return Segment.ToUInt64(); }
-        public Single GetSingle() { return Segment.ToSingle(); }
-        public Double GetDouble() { return Segment.ToDouble(); }
-        public String GetString() { return JsonString.Unquote(Segment.ToString()); }
-        public Utf8String GetUtf8String() { return JsonString.Unquote(Segment); }
+        public SByte GetSByte()
+        {
+            return Segment.ToSByte();
+        }
+
+        public Int16 GetInt16()
+        {
+            return Segment.ToInt16();
+        }
+
+        public Int32 GetInt32()
+        {
+            return Segment.ToInt32();
+        }
+
+        public Int64 GetInt64()
+        {
+            return Segment.ToInt64();
+        }
+
+        public Byte GetByte()
+        {
+            return Segment.ToByte();
+        }
+
+        public UInt16 GetUInt16()
+        {
+            return Segment.ToUInt16();
+        }
+
+        public UInt32 GetUInt32()
+        {
+            return Segment.ToUInt32();
+        }
+
+        public UInt64 GetUInt64()
+        {
+            return Segment.ToUInt64();
+        }
+
+        public Single GetSingle()
+        {
+            return Segment.ToSingle();
+        }
+
+        public Double GetDouble()
+        {
+            return Segment.ToDouble();
+        }
+
+        public String GetString()
+        {
+            return JsonString.Unquote(Segment.ToString());
+        }
+
+        public Utf8String GetUtf8String()
+        {
+            return JsonString.Unquote(Segment);
+        }
 
         public T GetValue<T>()
         {

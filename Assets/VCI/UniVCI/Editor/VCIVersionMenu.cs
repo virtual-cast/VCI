@@ -1,20 +1,18 @@
-#pragma warning disable
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
-using System.Text;
-using VCIGLTF;
-using VCIJSON;
 using UnityEditor;
 using UnityEngine;
-
+using VCIGLTF;
+using VCIJSON;
 
 namespace VCI
 {
     public static class VCIVersionMenu
     {
-        const string path = "Assets/VCI/UniVCI/Scripts/Format/VCIVersion.cs";
-        const string template = @"
+        private const string path = "Assets/VCI/UniVCI/Scripts/Format/VCIVersion.cs";
+
+        private const string template = @"
 namespace VCI
 {{
     public static partial class VCIVersion
@@ -32,7 +30,7 @@ namespace VCI
 #if VCI_DEVELOP
         [MenuItem(VCIVersion.MENU + "/Increment")]
 #endif
-        static void IncrementVersion()
+        private static void IncrementVersion()
         {
             var source = string.Format(template, VCIVersion.MAJOR, VCIVersion.MINOR + 1);
             File.WriteAllText(path, source);
@@ -42,30 +40,28 @@ namespace VCI
 #if VCI_DEVELOP
         [MenuItem(VCIVersion.MENU + "/Decrement")]
 #endif
-        static void DecrementVersion()
+        private static void DecrementVersion()
         {
             var source = string.Format(template, VCIVersion.MAJOR, VCIVersion.MINOR - 1);
             File.WriteAllText(path, source);
             AssetDatabase.Refresh();
         }
 
-        static string GetTitle(ListTreeNode<JsonValue> node)
+        private static string GetTitle(ListTreeNode<JsonValue> node)
         {
             try
             {
                 var titleNode = node["title"];
-                if (titleNode.IsString())
-                {
-                    return titleNode.GetString();
-                }
+                if (titleNode.IsString()) return titleNode.GetString();
             }
             catch (Exception)
             {
             }
+
             return "";
         }
 
-        static void TraverseItem(ListTreeNode<JsonValue> node, JsonFormatter f, FilePath dir)
+        private static void TraverseItem(ListTreeNode<JsonValue> node, JsonFormatter f, FilePath dir)
         {
             var title = GetTitle(node);
             if (string.IsNullOrEmpty(title))
@@ -91,6 +87,7 @@ namespace VCI
                         subFormatter.Key(_kv.Key.GetUtf8String());
                         Traverse(_kv.Value, subFormatter, dir);
                     }
+
                     subFormatter.EndMap();
 
                     var subJson = subFormatter.ToString();
@@ -100,15 +97,12 @@ namespace VCI
             }
         }
 
-        static void Traverse(ListTreeNode<JsonValue> node, JsonFormatter f, FilePath dir)
+        private static void Traverse(ListTreeNode<JsonValue> node, JsonFormatter f, FilePath dir)
         {
             if (node.IsArray())
             {
                 f.BeginList();
-                foreach (var x in node.ArrayItems())
-                {
-                    TraverseItem(x, f, dir);
-                }
+                foreach (var x in node.ArrayItems()) TraverseItem(x, f, dir);
                 f.EndList();
             }
             else if (node.IsMap())
@@ -119,6 +113,7 @@ namespace VCI
                     f.Key(kv.Key.GetUtf8String());
                     TraverseItem(kv.Value, f, dir);
                 }
+
                 f.EndMap();
             }
             else
@@ -127,13 +122,9 @@ namespace VCI
             }
         }
 
-        struct FilePath
+        private struct FilePath
         {
-            public string FullPath
-            {
-                get;
-                private set;
-            }
+            public string FullPath { get; private set; }
 
             public FilePath(string path)
             {
@@ -144,7 +135,7 @@ namespace VCI
             {
                 Debug.LogFormat("EnsureFolder: {0}", FullPath);
                 var splited = FullPath.Split('/');
-                for (int i = 0; i < splited.Length; ++i)
+                for (var i = 0; i < splited.Length; ++i)
                 {
                     var path = String.Join("/", splited.Take(i + 1).ToArray());
                     if (!Directory.Exists(path))
@@ -161,7 +152,7 @@ namespace VCI
             }
         }
 
-        static FilePath SplitAndWriteJson(ListTreeNode<JsonValue> parsed, FilePath dir, string name)
+        private static FilePath SplitAndWriteJson(ListTreeNode<JsonValue> parsed, FilePath dir, string name)
         {
             var f = new JsonFormatter(4);
             Traverse(parsed, f, dir);
@@ -173,7 +164,7 @@ namespace VCI
             return path;
         }
 
-        static void ExportJsonSchema(JsonSchema schema, string name)
+        private static void ExportJsonSchema(JsonSchema schema, string name)
         {
             var f = new JsonFormatter(2);
             schema.ToJson(f);
@@ -182,14 +173,14 @@ namespace VCI
             var dir = new FilePath(Application.dataPath + "/../specification/VCI/0.0/schema");
             dir.EnsureFolder();
 
-            var path = SplitAndWriteJson(JsonParser.Parse(json), dir, name);
+            SplitAndWriteJson(JsonParser.Parse(json), dir, name);
         }
 
 
 #if VCI_DEVELOP
         [MenuItem(VCIVersion.MENU + "/Export JsonSchema")]
 #endif
-        static void ExportJsonSchema()
+        private static void ExportJsonSchema()
         {
             ExportJsonSchema(JsonSchema.FromType<glTF_VCAST_vci_audio>(), "audio");
             ExportJsonSchema(JsonSchema.FromType<glTF_VCAST_vci_colliders>(), "collider");

@@ -1,49 +1,57 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-
 namespace VCI
 {
     [CustomEditor(typeof(VCISubItem))]
     public class VCISubItemEditor : Editor
     {
-        VCISubItem _target;
+        private SerializedProperty grabbable;
+        private SerializedProperty scalable;
+        private SerializedProperty uniform;
+        private SerializedProperty group;
 
-        void OnEnable()
+        private void OnEnable()
         {
-            _target = (VCISubItem)target;
+            grabbable = serializedObject.FindProperty("Grabbable");
+            scalable = serializedObject.FindProperty("Scalable");
+            uniform = serializedObject.FindProperty("UniformScaling");
+            group = serializedObject.FindProperty("GroupId");
         }
 
         public override void OnInspectorGUI()
         {
-            _target.Grabbable = EditorGUILayout.Toggle("Grabbable", _target.Grabbable);
-            EditorGUI.BeginDisabledGroup(!_target.Grabbable);
-            _target.Scalable = EditorGUILayout.Toggle("Scalable", _target.Scalable);
-            EditorGUI.BeginDisabledGroup(!_target.Scalable);
-            EditorGUI.indentLevel++;
-            _target.UniformScaling = EditorGUILayout.Toggle("UniformScaling", _target.UniformScaling);
-            EditorGUI.indentLevel--;
-            EditorGUI.EndDisabledGroup();
-            EditorGUI.EndDisabledGroup();
-
-            if (!_target.Grabbable)
+            serializedObject.Update();
             {
-                _target.Scalable = _target.UniformScaling = false;
-            }
-            else if (!_target.Scalable)
-            {
-                _target.UniformScaling = false;
-            }
+                EditorGUILayout.PropertyField(grabbable);
 
-            _target.GroupId = EditorGUILayout.IntField("GroupId", _target.GroupId);
-
-            if (Application.isPlaying)
-            {
-                if (GUILayout.Button("onUse"))
                 {
-                    _target.TriggerAction();
+                    EditorGUI.BeginDisabledGroup(!grabbable.boolValue);
+                    EditorGUILayout.PropertyField(scalable);
+                    {
+                        EditorGUI.BeginDisabledGroup(!scalable.boolValue);
+                        EditorGUI.indentLevel++;
+                        EditorGUILayout.PropertyField(uniform);
+                        EditorGUI.indentLevel--;
+                        EditorGUI.EndDisabledGroup();
+                    }
+                    EditorGUI.EndDisabledGroup();
                 }
+
+                if (!grabbable.boolValue)
+                    scalable.boolValue = uniform.boolValue = false;
+                else if (!scalable.boolValue) uniform.boolValue = false;
+
+                EditorGUILayout.PropertyField(group);
             }
+            serializedObject.ApplyModifiedProperties();
+
+#if UNITY_EDITOR
+            // debug 用
+            if (Application.isPlaying)
+                if (GUILayout.Button("onUse"))
+                    (target as VCISubItem).TriggerAction();
+#endif
         }
     }
 }

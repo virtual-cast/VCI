@@ -1,5 +1,4 @@
-﻿#pragma warning disable
-using System;
+﻿using System;
 
 namespace VCI
 {
@@ -12,12 +11,6 @@ namespace VCI
         // 当面UniVCIのバージョンと同じ
         public const int Minor = VCIVersion.MINOR;
 
-        public static string Version
-        {
-            get
-            {
-                return String.Format("{0}.{1}", Major, Minor);
-            }
-        }
+        public static string Version => String.Format("{0}.{1}", Major, Minor);
     }
 }

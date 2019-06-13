@@ -2,22 +2,18 @@
 using System.Linq;
 using System.Text;
 
-
 namespace VCIJSON
 {
     public static class JsonString
     {
         #region Quote
+
         public static void Escape(String s, IStore w)
         {
-            if (String.IsNullOrEmpty(s))
-            {
-                return;
-            }
+            if (String.IsNullOrEmpty(s)) return;
 
             var it = s.ToCharArray().Cast<char>().GetEnumerator();
             while (it.MoveNext())
-            {
                 switch (it.Current)
                 {
                     case '"':
@@ -53,18 +49,14 @@ namespace VCIJSON
                         w.Write(it.Current);
                         break;
                 }
-            }
         }
 
         public static void Escape(Utf8String s, IStore w)
         {
-            if (s.IsEmpty)
-            {
-                return;
-            }
+            if (s.IsEmpty) return;
 
             var it = s.GetIterator();
-            while(it.MoveNext())
+            while (it.MoveNext())
             {
                 var l = it.CurrentByteLength;
                 if (l == 1)
@@ -72,39 +64,40 @@ namespace VCIJSON
                     var b = it.Current;
                     switch (b)
                     {
-                        case (Byte)'"':
-                        case (Byte)'\\':
-                        case (Byte)'/':
+                        case (Byte) '"':
+                        case (Byte) '\\':
+                        case (Byte) '/':
                             // \\ prefix
-                            w.Write((Byte)'\\');
+                            w.Write((Byte) '\\');
                             w.Write(b);
                             break;
 
-                        case (Byte)'\b':
-                            w.Write((Byte)'\\');
-                            w.Write((Byte)'b');
+                        case (Byte) '\b':
+                            w.Write((Byte) '\\');
+                            w.Write((Byte) 'b');
                             break;
-                        case (Byte)'\f':
-                            w.Write((Byte)'\\');
-                            w.Write((Byte)'f');
+                        case (Byte) '\f':
+                            w.Write((Byte) '\\');
+                            w.Write((Byte) 'f');
                             break;
-                        case (Byte)'\n':
-                            w.Write((Byte)'\\');
-                            w.Write((Byte)'n');
+                        case (Byte) '\n':
+                            w.Write((Byte) '\\');
+                            w.Write((Byte) 'n');
                             break;
-                        case (Byte)'\r':
-                            w.Write((Byte)'\\');
-                            w.Write((Byte)'r');
+                        case (Byte) '\r':
+                            w.Write((Byte) '\\');
+                            w.Write((Byte) 'r');
                             break;
-                        case (Byte)'\t':
-                            w.Write((Byte)'\\');
-                            w.Write((Byte)'t');
+                        case (Byte) '\t':
+                            w.Write((Byte) '\\');
+                            w.Write((Byte) 't');
                             break;
 
                         default:
                             w.Write(b);
                             break;
                     }
+
                     // ascii
                 }
                 else if (l == 2)
@@ -148,9 +141,9 @@ namespace VCIJSON
 
         public static void Quote(Utf8String s, IStore w)
         {
-            w.Write((Byte)'"');
+            w.Write((Byte) '"');
             Escape(s, w);
-            w.Write((Byte)'"');
+            w.Write((Byte) '"');
         }
 
         /// <summary>
@@ -171,23 +164,22 @@ namespace VCIJSON
             Quote(s, sb);
             return new Utf8String(sb.Bytes);
         }
+
         #endregion
 
         #region Unquote
+
         public static int Unescape(string src, IStore w)
         {
-            int writeCount = 0;
+            var writeCount = 0;
             Action<Char> Write = c =>
             {
-                if (w != null)
-                {
-                    w.Write(c);
-                }
+                if (w != null) w.Write(c);
                 ++writeCount;
             };
 
-            int i = 0;
-            int length = src.Length - 1;
+            var i = 0;
+            var length = src.Length - 1;
             while (i < length)
             {
                 if (src[i] == '\\')
@@ -229,63 +221,58 @@ namespace VCIJSON
                 Write(src[i]);
                 i += 1;
             }
-            while (i <= length)
-            {
-                Write(src[i++]);
-            }
+
+            while (i <= length) Write(src[i++]);
 
             return writeCount;
         }
 
         public static int Unescape(Utf8String s, IStore w)
         {
-            int writeCount = 0;
+            var writeCount = 0;
             Action<Byte> Write = c =>
             {
-                if (w != null)
-                {
-                    w.Write(c);
-                }
+                if (w != null) w.Write(c);
                 ++writeCount;
             };
 
             var it = s.GetIterator();
-            while(it.MoveNext())
+            while (it.MoveNext())
             {
                 var l = it.CurrentByteLength;
                 if (l == 1)
                 {
-                    if (it.Current == (Byte)'\\')
+                    if (it.Current == (Byte) '\\')
                     {
                         var c = it.Second;
                         switch (c)
                         {
-                            case (Byte)'\\':
-                            case (Byte)'/':
-                            case (Byte)'"':
+                            case (Byte) '\\':
+                            case (Byte) '/':
+                            case (Byte) '"':
                                 // remove prefix
                                 Write(c);
                                 it.MoveNext();
                                 continue;
 
-                            case (Byte)'b':
-                                Write((Byte)'\b');
+                            case (Byte) 'b':
+                                Write((Byte) '\b');
                                 it.MoveNext();
                                 continue;
-                            case (Byte)'f':
-                                Write((Byte)'\f');
+                            case (Byte) 'f':
+                                Write((Byte) '\f');
                                 it.MoveNext();
                                 continue;
-                            case (Byte)'n':
-                                Write((Byte)'\n');
+                            case (Byte) 'n':
+                                Write((Byte) '\n');
                                 it.MoveNext();
                                 continue;
-                            case (Byte)'r':
-                                Write((Byte)'\r');
+                            case (Byte) 'r':
+                                Write((Byte) '\r');
                                 it.MoveNext();
                                 continue;
-                            case (Byte)'t':
-                                Write((Byte)'\t');
+                            case (Byte) 't':
+                                Write((Byte) '\t');
                                 it.MoveNext();
                                 continue;
                         }
@@ -367,6 +354,7 @@ namespace VCIJSON
                 return new Utf8String(sb.Bytes);
             }
         }
+
         #endregion
     }
 }

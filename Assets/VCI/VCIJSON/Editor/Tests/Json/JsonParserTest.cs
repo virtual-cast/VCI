@@ -1,7 +1,6 @@
-﻿using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
-
+using NUnit.Framework;
 
 namespace VCIJSON
 {
@@ -60,7 +59,7 @@ namespace VCIJSON
                 Assert.AreEqual(0, node.Value.Bytes.Offset);
                 Assert.AreEqual(1, node.Value.Bytes.Count);
                 Assert.True(node.IsInteger());
-                Assert.AreEqual(1, (int)node.GetDouble());
+                Assert.AreEqual(1, (int) node.GetDouble());
                 Assert.Catch(typeof(DeserializationException), () => node.GetBoolean());
             }
             {
@@ -68,26 +67,26 @@ namespace VCIJSON
                 Assert.AreEqual(1, node.Value.Bytes.Offset);
                 Assert.AreEqual(2, node.Value.Bytes.Count);
                 Assert.True(node.IsInteger());
-                Assert.AreEqual(22, (int)node.GetDouble());
+                Assert.AreEqual(22, (int) node.GetDouble());
             }
             {
                 var node = JsonParser.Parse(" 3.3 ");
                 Assert.AreEqual(1, node.Value.Bytes.Offset);
                 Assert.AreEqual(3, node.Value.Bytes.Count);
                 Assert.True(node.IsFloat());
-                Assert.AreEqual(3, (int)node.GetDouble());
-                Assert.AreEqual(3.3f, (float)node.GetDouble());
+                Assert.AreEqual(3, (int) node.GetDouble());
+                Assert.AreEqual(3.3f, (float) node.GetDouble());
             }
             {
                 var node = JsonParser.Parse(" -4.44444444444444444444 ");
                 Assert.True(node.IsFloat());
-                Assert.AreEqual(-4, (int)node.GetDouble());
+                Assert.AreEqual(-4, (int) node.GetDouble());
                 Assert.AreEqual(-4.44444444444444444444, node.GetDouble());
             }
             {
                 var node = JsonParser.Parse(" -5e-4 ");
                 Assert.True(node.IsFloat());
-                Assert.AreEqual(0, (int)node.GetDouble());
+                Assert.AreEqual(0, (int) node.GetDouble());
                 Assert.AreEqual(-5e-4, node.GetDouble());
             }
             {
@@ -237,7 +236,8 @@ namespace VCIJSON
         public void NestedObjectTest()
         {
             {
-                var json = "{\"key\":{ \"nestedKey\": \"nestedValue\" }, \"key2\": { \"nestedKey2\": \"nestedValue2\" } }";
+                var json =
+                    "{\"key\":{ \"nestedKey\": \"nestedValue\" }, \"key2\": { \"nestedKey2\": \"nestedValue2\" } }";
                 var node = JsonParser.Parse(json);
                 Assert.True(node.IsMap());
 

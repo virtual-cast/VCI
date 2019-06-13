@@ -1,11 +1,12 @@
 ﻿using System;
 
-
 namespace VCIJSON
 {
     public class TreeValueException : ArgumentException
     {
-        protected TreeValueException(string msg) : base(msg) { }
+        protected TreeValueException(string msg) : base(msg)
+        {
+        }
     }
 
     /// <summary>
@@ -13,7 +14,9 @@ namespace VCIJSON
     /// </summary>
     public class ParserException : TreeValueException
     {
-        public ParserException(string msg) : base(msg) { }
+        public ParserException(string msg) : base(msg)
+        {
+        }
     }
 
     /// <summary>
@@ -21,7 +24,9 @@ namespace VCIJSON
     /// </summary>
     public class DeserializationException : TreeValueException
     {
-        public DeserializationException(string msg) : base(msg) { }
+        public DeserializationException(string msg) : base(msg)
+        {
+        }
     }
 
     /// <summary>
@@ -29,6 +34,8 @@ namespace VCIJSON
     /// </summary>
     public class FormatterException : TreeValueException
     {
-        public FormatterException(string msg) : base(msg) { }
+        public FormatterException(string msg) : base(msg)
+        {
+        }
     }
 }

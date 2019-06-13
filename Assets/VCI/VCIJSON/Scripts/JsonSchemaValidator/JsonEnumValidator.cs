@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-
 namespace VCIJSON
 {
     public static class JsonEnumValidator
@@ -11,27 +10,24 @@ namespace VCIJSON
         public static IJsonSchemaValidator Create(ListTreeNode<JsonValue> value)
         {
             foreach (var x in value.ArrayItems())
-            {
                 if (x.IsInteger() || x.IsFloat())
                 {
                     return JsonIntEnumValidator.Create(value.ArrayItems()
                         .Where(y => y.IsInteger() || y.IsFloat())
                         .Select(y => y.GetInt32())
-                        );
+                    );
                 }
                 else if (x.IsString())
                 {
-
                     return JsonStringEnumValidator.Create(value.ArrayItems()
-                        .Where(y => y.IsString())
-                        .Select(y => y.GetString())
+                            .Where(y => y.IsString())
+                            .Select(y => y.GetString())
                         , EnumSerializationType.AsString
-                        );
+                    );
                 }
                 else
                 {
                 }
-            }
 
             throw new NotImplementedException();
         }
@@ -41,47 +37,35 @@ namespace VCIJSON
             foreach (var x in composition)
             {
                 if (x.Validator is JsonStringEnumValidator)
-                {
                     return JsonStringEnumValidator.Create(composition
-                        .Select(y => y.Validator as JsonStringEnumValidator)
-                        .Where(y => y != null)
-                        .SelectMany(y => y.Values),
+                            .Select(y => y.Validator as JsonStringEnumValidator)
+                            .Where(y => y != null)
+                            .SelectMany(y => y.Values),
                         type
-                        );
-                }
+                    );
                 if (x.Validator is JsonIntEnumValidator)
-                {
                     return JsonIntEnumValidator.Create(composition
                         .Select(y => y.Validator as JsonIntEnumValidator)
                         .Where(y => y != null)
                         .SelectMany(y => y.Values)
-                        );
-                }
+                    );
             }
 
             throw new NotImplementedException();
         }
 
-        static IEnumerable<string> GetStringValues(Type t, object[] excludes, Func<String, String> filter)
+        private static IEnumerable<string> GetStringValues(Type t, object[] excludes, Func<String, String> filter)
         {
             foreach (var x in Enum.GetValues(t))
-            {
                 if (excludes == null || !excludes.Contains(x))
-                {
                     yield return filter(x.ToString());
-                }
-            }
         }
 
-        static IEnumerable<int> GetIntValues(Type t, object[] excludes)
+        private static IEnumerable<int> GetIntValues(Type t, object[] excludes)
         {
             foreach (var x in Enum.GetValues(t))
-            {
                 if (excludes == null || !excludes.Contains(x))
-                {
-                    yield return (int)x;
-                }
-            }
+                    yield return (int) x;
         }
 
         public static IJsonSchemaValidator Create(Type t, EnumSerializationType serializationType, object[] excludes)
@@ -95,10 +79,12 @@ namespace VCIJSON
                     return JsonStringEnumValidator.Create(GetStringValues(t, excludes, x => x), serializationType);
 
                 case EnumSerializationType.AsLowerString:
-                    return JsonStringEnumValidator.Create(GetStringValues(t, excludes, x => x.ToLower()), serializationType);
+                    return JsonStringEnumValidator.Create(GetStringValues(t, excludes, x => x.ToLower()),
+                        serializationType);
 
                 case EnumSerializationType.AsUpperString:
-                    return JsonStringEnumValidator.Create(GetStringValues(t, excludes, x => x.ToUpper()), serializationType);
+                    return JsonStringEnumValidator.Create(GetStringValues(t, excludes, x => x.ToUpper()),
+                        serializationType);
 
                 default:
                     throw new NotImplementedException();
@@ -109,14 +95,8 @@ namespace VCIJSON
         {
             foreach (var x in values)
             {
-                if (x is string)
-                {
-                    return JsonStringEnumValidator.Create(values.Select(y => (string)y), type);
-                }
-                if (x is int)
-                {
-                    return JsonIntEnumValidator.Create(values.Select(y => (int)y));
-                }
+                if (x is string) return JsonStringEnumValidator.Create(values.Select(y => (string) y), type);
+                if (x is int) return JsonIntEnumValidator.Create(values.Select(y => (int) y));
             }
 
             throw new NotImplementedException();
@@ -125,14 +105,11 @@ namespace VCIJSON
 
     public class JsonStringEnumValidator : IJsonSchemaValidator
     {
-        EnumSerializationType SerializationType;
+        private EnumSerializationType SerializationType;
 
-        public String[] Values
-        {
-            get; set;
-        }
+        public String[] Values { get; set; }
 
-        JsonStringEnumValidator(IEnumerable<string> values, EnumSerializationType type)
+        private JsonStringEnumValidator(IEnumerable<string> values, EnumSerializationType type)
         {
             SerializationType = type;
             switch (SerializationType)
@@ -177,12 +154,8 @@ namespace VCIJSON
             var l = Values.OrderBy(x => x).GetEnumerator();
             var r = rhs.Values.OrderBy(x => x).GetEnumerator();
             while (l.MoveNext() && r.MoveNext())
-            {
                 if (l.Current != r.Current)
-                {
                     return false;
-                }
-            }
             return true;
         }
 
@@ -198,59 +171,41 @@ namespace VCIJSON
 
         public void ToJsonScheama(IFormatter f)
         {
-            f.Key("type"); f.Value("string");
+            f.Key("type");
+            f.Value("string");
             f.Key("enum");
             f.BeginList(Values.Length);
-            foreach (var x in Values)
-            {
-                f.Value(x);
-            }
+            foreach (var x in Values) f.Value(x);
             f.EndList();
         }
 
         public JsonSchemaValidationException Validate<T>(JsonSchemaValidationContext c, T o)
         {
-            if (o == null)
-            {
-                return new JsonSchemaValidationException(c, "null");
-            }
+            if (o == null) return new JsonSchemaValidationException(c, "null");
 
             var t = o.GetType();
             string value = null;
             if (t.IsEnum)
-            {
                 value = Enum.GetName(t, o);
-            }
             else
-            {
                 value = GenericCast<T, string>.Cast(o);
-            }
 
             if (SerializationType == EnumSerializationType.AsLowerString)
-            {
                 value = value.ToLower();
-            }
-            else if (SerializationType == EnumSerializationType.AsUpperString)
-            {
-                value = value.ToUpper();
-            }
+            else if (SerializationType == EnumSerializationType.AsUpperString) value = value.ToUpper();
 
             if (Values.Contains(value))
-            {
                 return null;
-            }
             else
-            {
                 return new JsonSchemaValidationException(c, string.Format("{0} is not valid enum", o));
-            }
         }
 
         public static class GenericSerializer<T>
         {
-            delegate void Serializer(JsonStringEnumValidator v,
+            private delegate void Serializer(JsonStringEnumValidator v,
                 IFormatter f, JsonSchemaValidationContext c, T o);
 
-            static Serializer s_serializer;
+            private static Serializer s_serializer;
 
             public static void Serialize(JsonStringEnumValidator validator,
                 IFormatter f, JsonSchemaValidationContext c, T o)
@@ -259,42 +214,29 @@ namespace VCIJSON
                 {
                     var t = typeof(T);
                     if (t.IsEnum)
-                    {
                         s_serializer = (vv, ff, cc, oo) =>
                         {
                             var value = Enum.GetName(t, oo);
                             if (vv.SerializationType == EnumSerializationType.AsLowerString)
-                            {
                                 value = value.ToLower();
-                            }
                             else if (vv.SerializationType == EnumSerializationType.AsUpperString)
-                            {
                                 value = value.ToUpper();
-                            }
                             ff.Value(value);
                         };
-                    }
                     else if (t == typeof(string))
-                    {
                         s_serializer = (vv, ff, cc, oo) =>
                         {
                             var value = GenericCast<T, string>.Cast(oo);
                             if (vv.SerializationType == EnumSerializationType.AsLowerString)
-                            {
                                 value = value.ToLower();
-                            }
                             else if (vv.SerializationType == EnumSerializationType.AsUpperString)
-                            {
                                 value = value.ToUpper();
-                            }
                             ff.Value(value);
                         };
-                    }
                     else
-                    {
                         throw new NotImplementedException();
-                    }
                 }
+
                 s_serializer(validator, f, c, o);
             }
         }
@@ -304,11 +246,13 @@ namespace VCIJSON
             GenericSerializer<T>.Serialize(this, f, c, o);
         }
 
-        static class GenericDeserializer<T, U>
+        private static class GenericDeserializer<T, U>
             where T : IListTreeItem, IValue<T>
         {
-            delegate U Deserializer(ListTreeNode<T> src);
-            static Deserializer s_d;
+            private delegate U Deserializer(ListTreeNode<T> src);
+
+            private static Deserializer s_d;
+
             public static void Deserialize(ListTreeNode<T> src, ref U t)
             {
                 if (s_d == null)
@@ -318,7 +262,7 @@ namespace VCIJSON
                         // enum from string
                         var mi = typeof(Enum).GetMethods(BindingFlags.Static | BindingFlags.Public).First(
                             x => x.Name == "Parse" && x.GetParameters().Length == 3
-                            );
+                        );
 
                         var enumParse = GenericInvokeCallFactory.StaticFunc<Type, string, bool, object>(mi);
                         s_d = x =>
@@ -332,6 +276,7 @@ namespace VCIJSON
                         s_d = x => GenericCast<string, U>.Cast(x.GetString());
                     }
                 }
+
                 t = s_d(src);
             }
         }
@@ -345,10 +290,7 @@ namespace VCIJSON
 
     public class JsonIntEnumValidator : IJsonSchemaValidator
     {
-        public int[] Values
-        {
-            get; set;
-        }
+        public int[] Values { get; set; }
 
         public static JsonIntEnumValidator Create(IEnumerable<int> values)
         {
@@ -373,12 +315,8 @@ namespace VCIJSON
             var l = Values.OrderBy(x => x).GetEnumerator();
             var r = rhs.Values.OrderBy(x => x).GetEnumerator();
             while (l.MoveNext() && r.MoveNext())
-            {
                 if (l.Current != r.Current)
-                {
                     return false;
-                }
-            }
             return true;
         }
 
@@ -394,19 +332,16 @@ namespace VCIJSON
 
         public void ToJsonScheama(IFormatter f)
         {
-            f.Key("type"); f.Value("integer");
+            f.Key("type");
+            f.Value("integer");
         }
 
         public JsonSchemaValidationException Validate<T>(JsonSchemaValidationContext c, T o)
         {
             if (Values.Contains(GenericCast<T, int>.Cast(o)))
-            {
                 return null;
-            }
             else
-            {
                 return new JsonSchemaValidationException(c, string.Format("{0} is not valid enum", o));
-            }
         }
 
         public void Serialize<T>(IFormatter f, JsonSchemaValidationContext c, T o)
@@ -414,20 +349,16 @@ namespace VCIJSON
             f.Serialize(GenericCast<T, int>.Cast(o));
         }
 
-        static class GenericDeserializer<T, U>
+        private static class GenericDeserializer<T, U>
             where T : IListTreeItem, IValue<T>
         {
-            delegate U Deserializer(ListTreeNode<T> src);
+            private delegate U Deserializer(ListTreeNode<T> src);
 
-            static Deserializer s_d;
+            private static Deserializer s_d;
 
             public static void Deserialize(ListTreeNode<T> src, ref U dst)
             {
-                if (s_d == null)
-                {
-                    // enum from int
-                    s_d = s => GenericCast<int, U>.Cast(s.GetInt32());
-                }
+                if (s_d == null) s_d = s => GenericCast<int, U>.Cast(s.GetInt32());
                 dst = s_d(src);
             }
         }

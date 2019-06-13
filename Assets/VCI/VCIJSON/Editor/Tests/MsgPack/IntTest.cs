@@ -1,6 +1,5 @@
-﻿using NUnit.Framework;
-using System;
-
+﻿using System;
+using NUnit.Framework;
 
 namespace VCIJSON.MsgPack
 {
@@ -15,7 +14,7 @@ namespace VCIJSON.MsgPack
                 var f = new MsgPackFormatter();
                 f.Value(i);
                 var bytes = f.GetStoreBytes();
-                Assert.AreEqual(new Byte[] { i }, bytes.ToEnumerable());
+                Assert.AreEqual(new Byte[] {i}, bytes.ToEnumerable());
 
                 var j = MsgPackParser.Parse(bytes).GetValue();
                 Assert.AreEqual(i, j);
@@ -45,9 +44,10 @@ namespace VCIJSON.MsgPack
                 var f = new MsgPackFormatter();
                 f.Value(i);
                 var bytes = f.GetStoreBytes();
-                Assert.AreEqual(new Byte[]{
-                        0xcc, 0x93,
-                        }, bytes.ToEnumerable());
+                Assert.AreEqual(new Byte[]
+                {
+                    0xcc, 0x93,
+                }, bytes.ToEnumerable());
 
                 var j = MsgPackParser.Parse(bytes).GetValue();
                 Assert.AreEqual(i, j);
@@ -63,9 +63,10 @@ namespace VCIJSON.MsgPack
                 var f = new MsgPackFormatter();
                 f.Value(i);
                 var bytes = f.GetStoreBytes();
-                Assert.AreEqual(new Byte[]{
-                        0xcc, 0x93,
-                        }, bytes.ToEnumerable());
+                Assert.AreEqual(new Byte[]
+                {
+                    0xcc, 0x93,
+                }, bytes.ToEnumerable());
 
                 var j = MsgPackParser.Parse(bytes).GetValue();
                 Assert.AreEqual(i, j);
@@ -81,9 +82,10 @@ namespace VCIJSON.MsgPack
                 var f = new MsgPackFormatter();
                 f.Value(i);
                 var bytes = f.GetStoreBytes();
-                Assert.AreEqual(new Byte[]{
-                        0xcd, 0x01, 0x13
-                        }, bytes.ToEnumerable());
+                Assert.AreEqual(new Byte[]
+                {
+                    0xcd, 0x01, 0x13
+                }, bytes.ToEnumerable());
 
                 var j = MsgPackParser.Parse(bytes).GetValue();
                 Assert.AreEqual(i, j);
@@ -99,9 +101,10 @@ namespace VCIJSON.MsgPack
                 var f = new MsgPackFormatter();
                 f.Value(i);
                 var bytes = f.GetStoreBytes();
-                Assert.AreEqual(new Byte[]{
-                        0xce, 0x00, 0x01, 0x00, 0x13
-                        }, bytes.ToEnumerable());
+                Assert.AreEqual(new Byte[]
+                {
+                    0xce, 0x00, 0x01, 0x00, 0x13
+                }, bytes.ToEnumerable());
 
                 var j = MsgPackParser.Parse(bytes).GetValue();
                 Assert.AreEqual(i, j);
@@ -118,9 +121,10 @@ namespace VCIJSON.MsgPack
                 var f = new MsgPackFormatter();
                 f.Value(i);
                 var bytes = f.GetStoreBytes();
-                Assert.AreEqual(new Byte[]{
-                        0xcf, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x13
-                        }, bytes.ToEnumerable());
+                Assert.AreEqual(new Byte[]
+                {
+                    0xcf, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x13
+                }, bytes.ToEnumerable());
 
                 var j = MsgPackParser.Parse(bytes).GetValue();
                 Assert.AreEqual(i, j);
@@ -137,9 +141,10 @@ namespace VCIJSON.MsgPack
                 f.Value(i);
                 var bytes = f.GetStoreBytes();
 
-                Assert.AreEqual(new Byte[]{
-                        0xd0, 0xc0,
-                        }, bytes.ToEnumerable());
+                Assert.AreEqual(new Byte[]
+                {
+                    0xd0, 0xc0,
+                }, bytes.ToEnumerable());
 
                 var j = MsgPackParser.Parse(bytes).GetValue();
                 Assert.AreEqual(i, j);
@@ -149,13 +154,14 @@ namespace VCIJSON.MsgPack
         [Test]
         public void int128Test()
         {
-            int i = 128;
+            var i = 128;
             var f = new MsgPackFormatter();
             f.Value(i);
             var bytes = f.GetStoreBytes();
-            Assert.AreEqual(new Byte[]{
-                        0xcc, 0x80,
-                        }, bytes.ToEnumerable());
+            Assert.AreEqual(new Byte[]
+            {
+                0xcc, 0x80,
+            }, bytes.ToEnumerable());
             var j = MsgPackParser.Parse(bytes).GetValue();
             Assert.AreEqual(i, j);
         }
@@ -170,9 +176,10 @@ namespace VCIJSON.MsgPack
                 f.Value(i);
                 var bytes = f.GetStoreBytes();
 
-                Assert.AreEqual(new Byte[]{
-                        0xd1, 0xFF, 0x6a
-                        }, bytes.ToEnumerable());
+                Assert.AreEqual(new Byte[]
+                {
+                    0xd1, 0xFF, 0x6a
+                }, bytes.ToEnumerable());
 
                 var j = MsgPackParser.Parse(bytes).GetValue();
                 Assert.AreEqual(i, j);
@@ -183,15 +190,16 @@ namespace VCIJSON.MsgPack
         public void int32()
         {
             {
-                Int32 i = -35000;
+                var i = -35000;
 
                 var f = new MsgPackFormatter();
                 f.Value(i);
                 var bytes = f.GetStoreBytes();
 
-                Assert.AreEqual(new Byte[]{
-                        0xd2, 0xff, 0xff, 0x77, 0x48
-                        }, bytes.ToEnumerable());
+                Assert.AreEqual(new Byte[]
+                {
+                    0xd2, 0xff, 0xff, 0x77, 0x48
+                }, bytes.ToEnumerable());
 
                 var j = MsgPackParser.Parse(bytes).GetValue();
                 Assert.AreEqual(i, j);
@@ -202,15 +210,16 @@ namespace VCIJSON.MsgPack
         public void int64()
         {
             {
-                Int64 i = -2147483650;
+                var i = -2147483650;
 
                 var f = new MsgPackFormatter();
                 f.Value(i);
                 var bytes = f.GetStoreBytes();
 
-                Assert.AreEqual(new Byte[]{
-                        0xd3, 0xff, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xfe
-                        }, bytes.ToEnumerable());
+                Assert.AreEqual(new Byte[]
+                {
+                    0xd3, 0xff, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xfe
+                }, bytes.ToEnumerable());
 
                 var j = MsgPackParser.Parse(bytes).GetValue();
                 Assert.AreEqual(i, j);

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 
 namespace VCIJSON
 {
@@ -156,7 +155,9 @@ namespace VCIJSON
         */
 
 #else
+
         #region Signed
+
         public static Int16 NetworkByteWordToSignedNativeByteOrder(ArraySegment<Byte> bytes)
         {
             if (BitConverter.IsLittleEndian)
@@ -180,6 +181,7 @@ namespace VCIJSON
                 return value.Signed;
             }
         }
+
         public static Int32 NetworkByteDWordToSignedNativeByteOrder(ArraySegment<Byte> bytes)
         {
             if (BitConverter.IsLittleEndian)
@@ -207,6 +209,7 @@ namespace VCIJSON
                 return value.Signed;
             }
         }
+
         public static Int64 NetworkByteQWordToSignedNativeByteOrder(ArraySegment<Byte> bytes)
         {
             if (BitConverter.IsLittleEndian)
@@ -242,8 +245,11 @@ namespace VCIJSON
                 return value.Signed;
             }
         }
+
         #endregion
+
         #region Unsigned
+
         public static UInt16 NetworkByteWordToUnsignedNativeByteOrder(ArraySegment<Byte> bytes)
         {
             if (BitConverter.IsLittleEndian)
@@ -267,6 +273,7 @@ namespace VCIJSON
                 return value.Unsigned;
             }
         }
+
         public static UInt32 NetworkByteDWordToUnsignedNativeByteOrder(ArraySegment<Byte> bytes)
         {
             if (BitConverter.IsLittleEndian)
@@ -294,6 +301,7 @@ namespace VCIJSON
                 return value.Unsigned;
             }
         }
+
         public static UInt64 NetworkByteQWordToUnsignedNativeByteOrder(ArraySegment<Byte> bytes)
         {
             if (BitConverter.IsLittleEndian)
@@ -329,8 +337,11 @@ namespace VCIJSON
                 return value.Unsigned;
             }
         }
+
         #endregion
+
         #region Floating
+
         public static Single NetworkByteDWordToFloatNativeByteOrder(ArraySegment<Byte> bytes)
         {
             if (BitConverter.IsLittleEndian)
@@ -358,6 +369,7 @@ namespace VCIJSON
                 return value.Float;
             }
         }
+
         public static Double NetworkByteQWordToFloatNativeByteOrder(ArraySegment<Byte> bytes)
         {
             if (BitConverter.IsLittleEndian)
@@ -393,13 +405,16 @@ namespace VCIJSON
                 return value.Float;
             }
         }
+
         #endregion
+
 #endif
 
         public static Int16 ToNetworkByteOrder(this Int16 value)
         {
             return ByteUnion.WordValue.Create(value).HostToNetworkOrder().Signed;
         }
+
         public static UInt16 ToNetworkByteOrder(this UInt16 value)
         {
             return ByteUnion.WordValue.Create(value).HostToNetworkOrder().Unsigned;
@@ -409,10 +424,12 @@ namespace VCIJSON
         {
             return ByteUnion.DWordValue.Create(value).HostToNetworkOrder().Signed;
         }
+
         public static UInt32 ToNetworkByteOrder(this UInt32 value)
         {
             return ByteUnion.DWordValue.Create(value).HostToNetworkOrder().Unsigned;
         }
+
         public static Single ToNetworkByteOrder(this Single value)
         {
             return ByteUnion.DWordValue.Create(value).HostToNetworkOrder().Float;
@@ -422,10 +439,12 @@ namespace VCIJSON
         {
             return ByteUnion.QWordValue.Create(value).HostToNetworkOrder().Signed;
         }
+
         public static UInt64 ToNetworkByteOrder(this UInt64 value)
         {
             return ByteUnion.QWordValue.Create(value).HostToNetworkOrder().Unsigned;
         }
+
         public static Double ToNetworkByteOrder(this Double value)
         {
             return ByteUnion.QWordValue.Create(value).HostToNetworkOrder().Float;

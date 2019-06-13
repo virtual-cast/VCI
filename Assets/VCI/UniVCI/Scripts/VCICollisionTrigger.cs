@@ -1,5 +1,4 @@
-using UnityEngine;
-
+﻿using UnityEngine;
 
 namespace VCI
 {
@@ -15,12 +14,18 @@ namespace VCI
         public EnterStatus Status;
         public string Item; // self
         public string Hit; // hit
+
         #region Trigger
+
         public bool IsTrigger;
+
         #endregion
+
         #region Collision
+
         public ContactPoint[] Contacts;
         public Vector3 Impulse;
+
         #endregion
 
         public static VCICollisionTrigger Create(VCISubItem item, EnterStatus status, Collision c)

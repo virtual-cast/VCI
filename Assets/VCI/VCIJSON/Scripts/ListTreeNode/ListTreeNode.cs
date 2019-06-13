@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-
 namespace VCIJSON
 {
     public struct ListTreeNode<T> : ITreeNode<ListTreeNode<T>, T>
@@ -16,12 +15,9 @@ namespace VCIJSON
 
         public override bool Equals(object obj)
         {
-            if (!(obj is ListTreeNode<T>))
-            {
-                return false;
-            }
+            if (!(obj is ListTreeNode<T>)) return false;
 
-            var rhs = (ListTreeNode<T>)obj;
+            var rhs = (ListTreeNode<T>) obj;
 
             if ((Value.ValueType == ValueNodeType.Integer || Value.ValueType == ValueNodeType.Null)
                 && (rhs.Value.ValueType == ValueNodeType.Integer || rhs.Value.ValueType == ValueNodeType.Number))
@@ -52,12 +48,13 @@ namespace VCIJSON
                     return this.ArrayItems().SequenceEqual(rhs.ArrayItems());
 
                 case ValueNodeType.Object:
-                    {
-                        //var l = ObjectItems().ToDictionary(x => x.Key, x => x.Value);
-                        //var r = rhs.ObjectItems().ToDictionary(x => x.Key, x => x.Value);
-                        //return l.Equals(r);
-                        return this.ObjectItems().OrderBy(x => x.Key.GetUtf8String()).SequenceEqual(rhs.ObjectItems().OrderBy(x => x.Key.GetUtf8String()));
-                    }
+                {
+                    //var l = ObjectItems().ToDictionary(x => x.Key, x => x.Value);
+                    //var r = rhs.ObjectItems().ToDictionary(x => x.Key, x => x.Value);
+                    //return l.Equals(r);
+                    return this.ObjectItems().OrderBy(x => x.Key.GetUtf8String())
+                        .SequenceEqual(rhs.ObjectItems().OrderBy(x => x.Key.GetUtf8String()));
+                }
             }
 
             return false;
@@ -81,7 +78,7 @@ namespace VCIJSON
                     {
                         sb.Append(",");
                     }
-                    sb.Append(x.ToString());                    
+                    sb.Append(x.ToString());
                 }
                 */
                 sb.Append("]");
@@ -117,11 +114,13 @@ namespace VCIJSON
             }
         }
 
-        IEnumerable<string> ToString(string indent, int level, bool value = false)
+        private IEnumerable<string> ToString(string indent, int level, bool value = false)
         {
             if (this.IsArray())
             {
-                if (!value) for (int i = 0; i < level; ++i) yield return indent;
+                if (!value)
+                    for (var i = 0; i < level; ++i)
+                        yield return indent;
                 yield return "[\n";
 
                 var isFirst = true;
@@ -129,30 +128,23 @@ namespace VCIJSON
                 foreach (var x in this.ArrayItems())
                 {
                     if (isFirst)
-                    {
                         isFirst = false;
-                    }
                     else
-                    {
                         yield return ",\n";
-                    }
 
-                    foreach (var y in x.ToString(indent, childLevel))
-                    {
-                        yield return y;
-                    }
-                }
-                if (!isFirst)
-                {
-                    yield return "\n";
+                    foreach (var y in x.ToString(indent, childLevel)) yield return y;
                 }
 
-                for (int i = 0; i < level; ++i) yield return indent;
+                if (!isFirst) yield return "\n";
+
+                for (var i = 0; i < level; ++i) yield return indent;
                 yield return "]";
             }
             else if (this.IsMap())
             {
-                if (!value) for (int i = 0; i < level; ++i) yield return indent;
+                if (!value)
+                    for (var i = 0; i < level; ++i)
+                        yield return indent;
                 yield return "{\n";
 
                 var isFirst = true;
@@ -160,35 +152,28 @@ namespace VCIJSON
                 foreach (var kv in this.ObjectItems())
                 {
                     if (isFirst)
-                    {
                         isFirst = false;
-                    }
                     else
-                    {
                         yield return ",\n";
-                    }
 
                     // key
-                    for (int i = 0; i < childLevel; ++i) yield return indent;
+                    for (var i = 0; i < childLevel; ++i) yield return indent;
                     yield return kv.Key.ToString();
                     yield return ": ";
 
-                    foreach (var y in kv.Value.ToString(indent, childLevel, true))
-                    {
-                        yield return y;
-                    }
-                }
-                if (!isFirst)
-                {
-                    yield return "\n";
+                    foreach (var y in kv.Value.ToString(indent, childLevel, true)) yield return y;
                 }
 
-                for (int i = 0; i < level; ++i) yield return indent;
+                if (!isFirst) yield return "\n";
+
+                for (var i = 0; i < level; ++i) yield return indent;
                 yield return "}";
             }
             else
             {
-                if (!value) for (int i = 0; i < level; ++i) yield return indent;
+                if (!value)
+                    for (var i = 0; i < level; ++i)
+                        yield return indent;
                 yield return Value.ToString();
             }
         }
@@ -208,21 +193,20 @@ namespace VCIJSON
                 case ValueNodeType.Integer:
                 case ValueNodeType.String:
                     if (!Equals(rhs))
-                    {
-                        yield return JsonDiff.Create(this, JsonDiffType.ValueChanged, string.Format("{0} => {1}", Value, rhs.Value));
-                    }
+                        yield return JsonDiff.Create(this, JsonDiffType.ValueChanged,
+                            string.Format("{0} => {1}", Value, rhs.Value));
                     yield break;
             }
 
             if (Value.ValueType != rhs.Value.ValueType)
             {
-                yield return JsonDiff.Create(this, JsonDiffType.ValueChanged, string.Format("{0} => {1}", Value.ValueType, rhs.Value));
+                yield return JsonDiff.Create(this, JsonDiffType.ValueChanged,
+                    string.Format("{0} => {1}", Value.ValueType, rhs.Value));
                 yield break;
             }
 
             if (Value.ValueType == ValueNodeType.Object)
             {
-
                 var l = this.ObjectItems().ToDictionary(x => x.Key, x => x.Value);
                 var r = rhs.ObjectItems().ToDictionary(x => x.Key, x => x.Value);
 
@@ -233,10 +217,7 @@ namespace VCIJSON
                     {
                         r.Remove(kv.Key);
                         // Found
-                        foreach (var y in kv.Value.Diff(x))
-                        {
-                            yield return y;
-                        }
+                        foreach (var y in kv.Value.Diff(x)) yield return y;
                     }
                     else
                     {
@@ -246,10 +227,8 @@ namespace VCIJSON
                 }
 
                 foreach (var kv in r)
-                {
                     // Addded
                     yield return JsonDiff.Create(kv.Value, JsonDiffType.KeyAdded, kv.Value.Value.ToString());
-                }
             }
             else if (Value.ValueType == ValueNodeType.Array)
             {
@@ -260,26 +239,14 @@ namespace VCIJSON
                     var lll = ll.MoveNext();
                     var rrr = rr.MoveNext();
                     if (lll && rrr)
-                    {
-                        // found
                         foreach (var y in ll.Current.Diff(rr.Current))
-                        {
                             yield return y;
-                        }
-                    }
                     else if (lll)
-                    {
                         yield return JsonDiff.Create(ll.Current, JsonDiffType.KeyRemoved, ll.Current.Value.ToString());
-                    }
                     else if (rrr)
-                    {
                         yield return JsonDiff.Create(rr.Current, JsonDiffType.KeyAdded, rr.Current.Value.ToString());
-                    }
                     else
-                    {
-                        // end
                         break;
-                    }
                 }
             }
             else
@@ -291,19 +258,15 @@ namespace VCIJSON
         /// <summary>
         /// Whole tree nodes
         /// </summary>
-        List<T> m_Values;
-        public bool IsValid
-        {
-            get
-            {
-                return m_Values != null;
-            }
-        }
+        private List<T> m_Values;
+
+        public bool IsValid => m_Values != null;
 
         /// <summary>
         /// This node index
         /// </summary>
-        int _valueIndex;
+        private int _valueIndex;
+
         public int ValueIndex
         {
             get
@@ -313,95 +276,56 @@ namespace VCIJSON
             }
         }
 
-        public ListTreeNode<T> Prev
-        {
-            get
-            {
-                return new ListTreeNode<T>(m_Values, ValueIndex - 1);
-            }
-        }
+        public ListTreeNode<T> Prev => new ListTreeNode<T>(m_Values, ValueIndex - 1);
 
         public T Value
         {
             get
             {
-                if (m_Values == null)
-                {
-                    return default(T);
-                }
+                if (m_Values == null) return default(T);
                 return m_Values[ValueIndex];
             }
         }
+
         public void SetValue(T value)
         {
             m_Values[ValueIndex] = value;
         }
 
         #region Children
-        public int ChildCount
-        {
-            get { return Value.ChildCount; }
-        }
+
+        public int ChildCount => Value.ChildCount;
 
         public IEnumerable<ListTreeNode<T>> Children
         {
             get
             {
-                int count = 0;
-                for (int i = ValueIndex; count < ChildCount && i < m_Values.Count; ++i)
-                {
+                var count = 0;
+                for (var i = ValueIndex; count < ChildCount && i < m_Values.Count; ++i)
                     if (m_Values[i].ParentIndex == ValueIndex)
                     {
                         ++count;
                         yield return new ListTreeNode<T>(m_Values, i);
                     }
-                }
             }
         }
 
-        public ListTreeNode<T> this[String key]
-        {
-            get
-            {
-                return this[Utf8String.From(key)];
-            }
-        }
+        public ListTreeNode<T> this[String key] => this[Utf8String.From(key)];
 
-        public ListTreeNode<T> this[Utf8String key]
-        {
-            get
-            {
-                return this.GetObjectItem(key);
-            }
-        }
+        public ListTreeNode<T> this[Utf8String key] => this.GetObjectItem(key);
 
-        public ListTreeNode<T> this[int index]
-        {
-            get
-            {
-                return this.GetArrrayItem(index);
-            }
-        }
+        public ListTreeNode<T> this[int index] => this.GetArrrayItem(index);
+
         #endregion
-        public bool HasParent
-        {
-            get
-            {
-                return Value.ParentIndex >= 0 && Value.ParentIndex < m_Values.Count;
-            }
-        }
+
+        public bool HasParent => Value.ParentIndex >= 0 && Value.ParentIndex < m_Values.Count;
+
         public ListTreeNode<T> Parent
         {
             get
             {
-                if (Value.ParentIndex < 0)
-                {
-                    throw new Exception("no parent");
-                }
-                if (Value.ParentIndex >= m_Values.Count)
-                {
-                    throw new IndexOutOfRangeException();
-                }
+                if (Value.ParentIndex < 0) throw new Exception("no parent");
+                if (Value.ParentIndex >= m_Values.Count) throw new IndexOutOfRangeException();
                 return new ListTreeNode<T>(m_Values, Value.ParentIndex);
             }
         }
@@ -413,6 +337,7 @@ namespace VCIJSON
         }
 
         #region JsonPointer
+
         public ListTreeNode<T> AddKey(Utf8String key)
         {
             return AddValue(default(T).Key(key, ValueIndex));
@@ -435,12 +360,13 @@ namespace VCIJSON
             {
                 IncrementChildCount();
             }
+
             var index = m_Values.Count;
             m_Values.Add(value);
             return new ListTreeNode<T>(m_Values, index);
         }
 
-        void IncrementChildCount()
+        private void IncrementChildCount()
         {
             var value = Value;
             value.SetChildCount(value.ChildCount + 1);
@@ -453,6 +379,7 @@ namespace VCIJSON
             value.SetBytesCount(count);
             SetValue(value);
         }
+
         #endregion
     }
 }

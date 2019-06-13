@@ -9,45 +9,37 @@ namespace VCIJSON
         public string Schema; // http://json-schema.org/draft-04/schema
 
         #region Annotations
-        string m_title;
+
+        private string m_title;
+
         public string Title
         {
             get { return m_title; }
             private set
             {
                 if (value == null)
-                {
                     m_title = "";
-                }
                 else
-                {
                     m_title = value.Trim();
-                }
             }
         }
 
-        string m_desc;
+        private string m_desc;
+
         public string Description
         {
             get { return m_desc; }
             private set
             {
                 if (value == null)
-                {
                     m_desc = "";
-                }
                 else
-                {
                     m_desc = value.Trim();
-                }
             }
         }
 
-        public object Default
-        {
-            get;
-            private set;
-        }
+        public object Default { get; private set; }
+
         #endregion
 
         public IJsonSchemaValidator Validator { get; set; }
@@ -87,20 +79,11 @@ namespace VCIJSON
 
         public static bool operator ==(JsonSchema obj1, JsonSchema obj2)
         {
-            if (ReferenceEquals(obj1, obj2))
-            {
-                return true;
-            }
+            if (ReferenceEquals(obj1, obj2)) return true;
 
-            if (ReferenceEquals(obj1, null))
-            {
-                return false;
-            }
+            if (ReferenceEquals(obj1, null)) return false;
 
-            if (ReferenceEquals(obj2, null))
-            {
-                return false;
-            }
+            if (ReferenceEquals(obj2, null)) return false;
 
             return obj1.Equals(obj2);
         }
@@ -111,6 +94,7 @@ namespace VCIJSON
         }
 
         #region FromType
+
         public static JsonSchema FromType<T>()
         {
             return FromType(typeof(T), null, null);
@@ -119,7 +103,7 @@ namespace VCIJSON
         public static JsonSchema FromType(Type t,
             BaseJsonSchemaAttribute a = null, // field attribute
             ItemJsonSchemaAttribute ia = null
-            )
+        )
         {
             // class attribute
             var aa = t.GetCustomAttributes(typeof(JsonSchemaAttribute), true)
@@ -131,30 +115,20 @@ namespace VCIJSON
             else
             {
                 if (aa == null)
-                {
                     a = new JsonSchemaAttribute();
-                }
                 else
-                {
                     a = aa;
-                }
             }
 
             if (ia == null)
-            {
                 ia = t.GetCustomAttributes(typeof(ItemJsonSchemaAttribute), true)
                     .FirstOrDefault() as ItemJsonSchemaAttribute;
-            }
 
             IJsonSchemaValidator validator = null;
-            bool skipComparison = a.SkipSchemaComparison;
-            if (t == typeof(object))
-            {
-                skipComparison = true;
-            }
+            var skipComparison = a.SkipSchemaComparison;
+            if (t == typeof(object)) skipComparison = true;
 
             if (a.EnumValues != null)
-            {
                 try
                 {
                     validator = JsonEnumValidator.Create(a.EnumValues, a.EnumSerializationType);
@@ -163,15 +137,10 @@ namespace VCIJSON
                 {
                     throw new Exception(String.Join(", ", a.EnumValues.Select(x => x.ToString()).ToArray()));
                 }
-            }
             else if (t.IsEnum)
-            {
                 validator = JsonEnumValidator.Create(t, a.EnumSerializationType, a.EnumExcludes);
-            }
             else
-            {
                 validator = JsonSchemaValidatorFactory.Create(t, a, ia);
-            }
 
             var schema = new JsonSchema
             {
@@ -185,14 +154,16 @@ namespace VCIJSON
 
             return schema;
         }
+
         #endregion
 
         #region FromJson
-        static ValueNodeType ParseValueType(string type)
+
+        private static ValueNodeType ParseValueType(string type)
         {
             try
             {
-                return (ValueNodeType)Enum.Parse(typeof(ValueNodeType), type, true);
+                return (ValueNodeType) Enum.Parse(typeof(ValueNodeType), type, true);
             }
             catch (ArgumentException)
             {
@@ -200,9 +171,9 @@ namespace VCIJSON
             }
         }
 
-        Stack<string> m_context = new Stack<string>();
+        private Stack<string> m_context = new Stack<string>();
 
-        static Utf8String s_ref = Utf8String.From("$ref");
+        private static Utf8String s_ref = Utf8String.From("$ref");
 
         public void Parse(IFileSystemAccessor fs, ListTreeNode<JsonValue> root, string Key)
         {
@@ -211,7 +182,6 @@ namespace VCIJSON
             var compositionType = default(CompositionType);
             var composition = new List<JsonSchema>();
             foreach (var kv in root.ObjectItems())
-            {
                 switch (kv.Key.GetString())
                 {
                     case "$schema":
@@ -219,18 +189,19 @@ namespace VCIJSON
                         break;
 
                     case "$ref":
-                        {
-                            var refFs = fs.Get(kv.Value.GetString());
+                    {
+                        var refFs = fs.Get(kv.Value.GetString());
 
-                            // parse JSON
-                            var json = refFs.ReadAllText();
-                            var refRoot = JsonParser.Parse(json);
+                        // parse JSON
+                        var json = refFs.ReadAllText();
+                        var refRoot = JsonParser.Parse(json);
 
-                            Parse(refFs, refRoot, "$ref");
-                        }
+                        Parse(refFs, refRoot, "$ref");
+                    }
                         break;
 
                     #region Annotation
+
                     case "title":
                         Title = kv.Value.GetString();
                         break;
@@ -242,15 +213,14 @@ namespace VCIJSON
                     case "default":
                         Default = kv.Value;
                         break;
+
                     #endregion
 
                     #region Validation
+
                     // http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.1
                     case "type":
-                        if (Validator == null)
-                        {
-                            Validator = JsonSchemaValidatorFactory.Create(kv.Value.GetString());
-                        }
+                        if (Validator == null) Validator = JsonSchemaValidatorFactory.Create(kv.Value.GetString());
                         break;
 
                     case "enum":
@@ -259,9 +229,11 @@ namespace VCIJSON
 
                     case "const":
                         break;
+
                     #endregion
 
                     #region Composite
+
                     // http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.7
                     case "oneOf":
                         break;
@@ -271,25 +243,26 @@ namespace VCIJSON
 
                     case "anyOf": // composition
                     case "allOf": // composition
-                        {
-                            compositionType = (CompositionType)Enum.Parse(typeof(CompositionType), kv.Key.GetString(), true);
-                            foreach (var item in kv.Value.ArrayItems())
+                    {
+                        compositionType =
+                            (CompositionType) Enum.Parse(typeof(CompositionType), kv.Key.GetString(), true);
+                        foreach (var item in kv.Value.ArrayItems())
+                            if (item.ContainsKey(s_ref))
                             {
-                                if (item.ContainsKey(s_ref))
-                                {
-                                    var sub = JsonSchema.ParseFromPath(fs.Get(item[s_ref].GetString()));
-                                    composition.Add(sub);
-                                }
-                                else
-                                {
-                                    var sub = new JsonSchema();
-                                    sub.Parse(fs, item, compositionType.ToString());
-                                    composition.Add(sub);
-                                }
+                                var sub = ParseFromPath(fs.Get(item[s_ref].GetString()));
+                                composition.Add(sub);
                             }
-                            Composite(compositionType, composition);
-                        }
+                            else
+                            {
+                                var sub = new JsonSchema();
+                                sub.Parse(fs, item, compositionType.ToString());
+                                composition.Add(sub);
+                            }
+
+                        Composite(compositionType, composition);
+                    }
                         break;
+
                     #endregion
 
                     // http://json-schema.org/latest/json-schema-validation.html#rfc.section.7
@@ -297,6 +270,7 @@ namespace VCIJSON
                         break;
 
                     #region Gltf
+
                     case "gltf_detailedDescription":
                         break;
 
@@ -305,30 +279,23 @@ namespace VCIJSON
 
                     case "gltf_uriType":
                         break;
+
                     #endregion
 
                     default:
-                        {
-                            if (Validator != null)
-                            {
-                                if (Validator.FromJsonSchema(fs, kv.Key.GetString(), kv.Value))
-                                {
-                                    continue;
-                                }
-                            }
-                            throw new NotImplementedException(string.Format("unknown key: {0}", kv.Key));
-                        }
+                    {
+                        if (Validator != null)
+                            if (Validator.FromJsonSchema(fs, kv.Key.GetString(), kv.Value))
+                                continue;
+                        throw new NotImplementedException(string.Format("unknown key: {0}", kv.Key));
+                    }
                 }
-            }
             m_context.Pop();
 
-            if (Validator == null)
-            {
-                SkipComparison = true;
-            }
+            if (Validator == null) SkipComparison = true;
         }
 
-        void Composite(CompositionType compositionType, List<JsonSchema> composition)
+        private void Composite(CompositionType compositionType, List<JsonSchema> composition)
         {
             switch (compositionType)
             {
@@ -337,36 +304,26 @@ namespace VCIJSON
                     {
                         // inheritance
                         if (Validator == null)
-                        {
-                            //Validator = JsonSchemaValidatorFactory.Create(composition[0].Validator.ValueNodeType);
                             Validator = composition[0].Validator;
-                        }
                         else
-                        {
                             Validator.Merge(composition[0].Validator);
-                        }
                     }
                     else
                     {
                         throw new NotImplementedException();
                     }
+
                     break;
 
                 case CompositionType.AnyOf:
                     if (Validator == null)
                     {
                         if (composition.Count == 1)
-                        {
                             throw new NotImplementedException();
-                            //Validator = composition[0].Validator;
-                        }
                         else
-                        {
-                            // extend enum
-                            // enum, enum..., type
                             Validator = JsonEnumValidator.Create(composition, EnumSerializationType.AsString);
-                        }
                     }
+
                     //throw new NotImplementedException();
                     break;
 
@@ -386,23 +343,19 @@ namespace VCIJSON
             schema.Parse(fs, root, "__ParseFromPath__" + fs.ToString());
             return schema;
         }
+
         #endregion
 
         public void Serialize<T>(IFormatter f, T o, JsonSchemaValidationContext c = null)
         {
             if (c == null)
-            {
                 c = new JsonSchemaValidationContext(o)
                 {
                     EnableDiagnosisForNotRequiredFields = true,
                 };
-            }
 
             var ex = Validator.Validate(c, o);
-            if (ex != null)
-            {
-                throw ex;
-            }
+            if (ex != null) throw ex;
 
             Validator.Serialize(f, c, o);
         }
@@ -410,24 +363,28 @@ namespace VCIJSON
         public void ToJson(IFormatter f)
         {
             f.BeginMap(2);
-            if (!string.IsNullOrEmpty(Title)) { f.Key("title"); f.Value(Title); }
-            if (!string.IsNullOrEmpty(Description)) { f.Key("description"); f.Value(Description); }
+            if (!string.IsNullOrEmpty(Title))
+            {
+                f.Key("title");
+                f.Value(Title);
+            }
+
+            if (!string.IsNullOrEmpty(Description))
+            {
+                f.Key("description");
+                f.Value(Description);
+            }
+
             Validator.ToJsonScheama(f);
             f.EndMap();
         }
 
         public bool IsExplicitlyIgnorableValue<T>(T obj)
         {
-            if (obj == null)
-            {
-                return ExplicitIgnorableValue == null;
-            }
+            if (obj == null) return ExplicitIgnorableValue == null;
 
             var iter = obj as System.Collections.ICollection;
-            if (ExplicitIgnorableItemLength != -1 && iter != null)
-            {
-                return iter.Count == ExplicitIgnorableItemLength;
-            }
+            if (ExplicitIgnorableItemLength != -1 && iter != null) return iter.Count == ExplicitIgnorableItemLength;
 
             return obj.Equals(ExplicitIgnorableValue);
         }

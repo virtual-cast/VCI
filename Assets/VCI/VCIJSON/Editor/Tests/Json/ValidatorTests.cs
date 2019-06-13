@@ -1,5 +1,5 @@
-﻿using NUnit.Framework;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using NUnit.Framework;
 
 namespace VCIJSON
 {
@@ -141,7 +141,7 @@ namespace VCIJSON
             var c = new JsonSchemaValidationContext("test");
 
             {
-                var v = JsonStringEnumValidator.Create(new string[] { "a", "b" }, EnumSerializationType.AsString);
+                var v = JsonStringEnumValidator.Create(new string[] {"a", "b"}, EnumSerializationType.AsString);
                 Assert.Null(v.Validate(c, "a"));
                 Assert.NotNull(v.Validate(c, "c"));
             }
@@ -156,7 +156,7 @@ namespace VCIJSON
 
             {
                 var v = new JsonIntEnumValidator();
-                v.Values = new int[] { 1, 2 };
+                v.Values = new int[] {1, 2};
                 Assert.Null(v.Validate(c, 1));
                 Assert.NotNull(v.Validate(c, 3));
             }
@@ -172,21 +172,21 @@ namespace VCIJSON
             {
                 var v = new JsonArrayValidator();
                 v.MaxItems = 1;
-                Assert.Null(v.Validate(c, new object[] { 0 }));
-                Assert.NotNull(v.Validate(c, new object[] { 0, 1 }));
+                Assert.Null(v.Validate(c, new object[] {0}));
+                Assert.NotNull(v.Validate(c, new object[] {0, 1}));
             }
 
             {
                 var v = new JsonArrayValidator();
                 v.MinItems = 1;
-                Assert.Null(v.Validate(c, new object[] { 0 }));
+                Assert.Null(v.Validate(c, new object[] {0}));
                 Assert.NotNull(v.Validate(c, new object[] { }));
             }
 
             Assert.True(c.IsEmpty());
         }
 
-        class Hoge
+        private class Hoge
         {
             [JsonSchema(Required = true, Minimum = 1)]
             public int Value;
@@ -198,17 +198,16 @@ namespace VCIJSON
             var c = new JsonSchemaValidationContext("test");
             {
                 var s = JsonSchema.FromType<Hoge>();
-                Assert.Null(s.Validator.Validate(c, new Hoge { Value = 1 }));
-                Assert.NotNull(s.Validator.Validate(c, new Hoge { Value = 0 }));
+                Assert.Null(s.Validator.Validate(c, new Hoge {Value = 1}));
+                Assert.NotNull(s.Validator.Validate(c, new Hoge {Value = 0}));
             }
 
             Assert.True(c.IsEmpty());
         }
 
-        class NotRequired
+        private class NotRequired
         {
-            [JsonSchema(Minimum = 1)]
-            public int Value;
+            [JsonSchema(Minimum = 1)] public int Value;
         }
 
         [Test]
@@ -222,7 +221,7 @@ namespace VCIJSON
 
                 var s = JsonSchema.FromType<NotRequired>();
                 // An error is not returned because Value is not 'Required' and the diagnosis is not enabled
-                Assert.Null(s.Validator.Validate(c, new NotRequired { Value = 0 }));
+                Assert.Null(s.Validator.Validate(c, new NotRequired {Value = 0}));
 
                 Assert.True(c.IsEmpty());
             }
@@ -234,13 +233,13 @@ namespace VCIJSON
                 };
 
                 var s = JsonSchema.FromType<NotRequired>();
-                Assert.NotNull(s.Validator.Validate(c, new NotRequired { Value = 0 }));
+                Assert.NotNull(s.Validator.Validate(c, new NotRequired {Value = 0}));
 
                 Assert.True(c.IsEmpty());
             }
         }
 
-        class NotRequiredWithIgnorable
+        private class NotRequiredWithIgnorable
         {
             [JsonSchema(Minimum = 2, ExplicitIgnorableValue = -1)]
             public int Value;
@@ -257,7 +256,7 @@ namespace VCIJSON
 
                 var s = JsonSchema.FromType<NotRequiredWithIgnorable>();
                 // An error is not returned because Value is not 'Required' and the diagnosis is not enabled
-                Assert.Null(s.Validator.Validate(c, new NotRequiredWithIgnorable { Value = 0 }));
+                Assert.Null(s.Validator.Validate(c, new NotRequiredWithIgnorable {Value = 0}));
 
                 Assert.True(c.IsEmpty());
             }
@@ -269,7 +268,7 @@ namespace VCIJSON
                 };
 
                 var s = JsonSchema.FromType<NotRequiredWithIgnorable>();
-                Assert.NotNull(s.Validator.Validate(c, new NotRequiredWithIgnorable { Value = 0 }));
+                Assert.NotNull(s.Validator.Validate(c, new NotRequiredWithIgnorable {Value = 0}));
 
                 Assert.True(c.IsEmpty());
             }
@@ -282,7 +281,7 @@ namespace VCIJSON
 
                 var s = JsonSchema.FromType<NotRequiredWithIgnorable>();
                 // An error is NOT returned even though diagnosis is enabled because of an ignorable value is matched
-                Assert.Null(s.Validator.Validate(c, new NotRequiredWithIgnorable { Value = -1 }));
+                Assert.Null(s.Validator.Validate(c, new NotRequiredWithIgnorable {Value = -1}));
 
                 Assert.True(c.IsEmpty());
             }
@@ -317,7 +316,7 @@ namespace VCIJSON
             Assert.True(c.IsEmpty());
         }
 
-        class HasDictionary
+        private class HasDictionary
         {
             public Dictionary<string, float> primitiveProperties = new Dictionary<string, float>();
             // TODO: fix
@@ -337,7 +336,7 @@ namespace VCIJSON
             Assert.True(c.IsEmpty());
         }
 
-        class HasArrayOBject
+        private class HasArrayOBject
         {
             [ItemJsonSchema(Minimum = 0.0, Maximum = 1.0)]
             public float[] xs;
@@ -354,15 +353,15 @@ namespace VCIJSON
 
                 var s = JsonSchema.FromType<HasArrayOBject>();
 
-                Assert.Null(s.Validator.Validate(c, new HasArrayOBject { xs = new float[] { } }));
-                Assert.Null(s.Validator.Validate(c, new HasArrayOBject { xs = new float[] { 0.5f } }));
-                Assert.NotNull(s.Validator.Validate(c, new HasArrayOBject { xs = new float[] { 1.5f } }));
+                Assert.Null(s.Validator.Validate(c, new HasArrayOBject {xs = new float[] { }}));
+                Assert.Null(s.Validator.Validate(c, new HasArrayOBject {xs = new float[] {0.5f}}));
+                Assert.NotNull(s.Validator.Validate(c, new HasArrayOBject {xs = new float[] {1.5f}}));
 
                 Assert.True(c.IsEmpty());
             }
         }
 
-        class HasListObject
+        private class HasListObject
         {
             [ItemJsonSchema(Minimum = 0.0, Maximum = 1.0)]
             public List<float> xs;
@@ -379,18 +378,17 @@ namespace VCIJSON
 
                 var s = JsonSchema.FromType<HasListObject>();
 
-                Assert.Null(s.Validator.Validate(c, new HasListObject { xs = new List<float> { } }));
-                Assert.Null(s.Validator.Validate(c, new HasListObject { xs = new List<float> { 0.5f } }));
-                Assert.NotNull(s.Validator.Validate(c, new HasListObject { xs = new List<float> { 1.5f } }));
+                Assert.Null(s.Validator.Validate(c, new HasListObject {xs = new List<float> { }}));
+                Assert.Null(s.Validator.Validate(c, new HasListObject {xs = new List<float> {0.5f}}));
+                Assert.NotNull(s.Validator.Validate(c, new HasListObject {xs = new List<float> {1.5f}}));
 
                 Assert.True(c.IsEmpty());
             }
         }
 
-        class HasRequiredListObject
+        private class HasRequiredListObject
         {
-            [JsonSchema(Required = true, MinItems = 1)]
-            [ItemJsonSchema(Minimum = 0)]
+            [JsonSchema(Required = true, MinItems = 1)] [ItemJsonSchema(Minimum = 0)]
             public int[] xs;
         }
 
@@ -406,18 +404,17 @@ namespace VCIJSON
                 var s = JsonSchema.FromType<HasRequiredListObject>();
 
                 Assert.NotNull(s.Validator.Validate(c, new HasRequiredListObject()));
-                Assert.NotNull(s.Validator.Validate(c, new HasRequiredListObject { xs = new int[] {} }));
-                Assert.NotNull(s.Validator.Validate(c, new HasRequiredListObject { xs = new int[] { -1 } }));
-                Assert.Null(s.Validator.Validate(c, new HasRequiredListObject { xs = new int[] { 0 } }));
+                Assert.NotNull(s.Validator.Validate(c, new HasRequiredListObject {xs = new int[] { }}));
+                Assert.NotNull(s.Validator.Validate(c, new HasRequiredListObject {xs = new int[] {-1}}));
+                Assert.Null(s.Validator.Validate(c, new HasRequiredListObject {xs = new int[] {0}}));
 
                 Assert.True(c.IsEmpty());
             }
         }
 
-        class HasRequiredStringObject
+        private class HasRequiredStringObject
         {
-            [JsonSchema(Required = true)]
-            public string s;
+            [JsonSchema(Required = true)] public string s;
         }
 
         [Test]
@@ -432,7 +429,7 @@ namespace VCIJSON
                 var s = JsonSchema.FromType<HasRequiredStringObject>();
 
                 Assert.NotNull(s.Validator.Validate(c, new HasRequiredStringObject()));
-                Assert.Null(s.Validator.Validate(c, new HasRequiredStringObject { s = "" }));
+                Assert.Null(s.Validator.Validate(c, new HasRequiredStringObject {s = ""}));
 
                 Assert.True(c.IsEmpty());
             }

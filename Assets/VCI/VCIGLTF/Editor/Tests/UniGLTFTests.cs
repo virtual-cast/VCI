@@ -166,7 +166,7 @@ namespace VCIGLTF
 
             var json = model.ToJson();
             Assert.AreEqual(@"{""name"":""mesh"",""primitives"":[{""mode"":0,""indices"":-1,""attributes"":{""POSITION"":0},""material"":0}]}", json);
-            //Debug.Log(json);
+            Debug.Log(json);
 
             var c = new JsonSchemaValidationContext("")
             {
@@ -196,7 +196,7 @@ namespace VCIGLTF
 
             var json = model.ToJson();
             Assert.AreEqual(@"{""mode"":0,""indices"":-1,""attributes"":{""POSITION"":0},""material"":0,""extras"":{""targetNames"":[""aaa""]}}", json);
-            //Debug.Log(json);
+            Debug.Log(json);
 
             var c = new JsonSchemaValidationContext("")
             {
@@ -216,7 +216,7 @@ namespace VCIGLTF
 
             var json = model.ToJson();
             Assert.AreEqual(@"{""POSITION"":0}", json);
-            //Debug.Log(json);
+            Debug.Log(json);
 
             var c = new JsonSchemaValidationContext("")
             {
@@ -236,7 +236,7 @@ namespace VCIGLTF
 
             var json = model.ToJson();
             Assert.AreEqual(@"{""index"":1,""texCoord"":0}", json);
-            //Debug.Log(json);
+            Debug.Log(json);
 
             var c = new JsonSchemaValidationContext("")
             {
@@ -272,7 +272,7 @@ namespace VCIGLTF
 
             var json = model.ToJson();
             Assert.AreEqual(@"{""name"":""a"",""emissiveFactor"":[0.5,0.5,0.5],""doubleSided"":false}", json);
-            //Debug.Log(json);
+            Debug.Log(json);
 
             var c = new JsonSchemaValidationContext("")
             {
@@ -407,7 +407,7 @@ namespace VCIGLTF
 
             var json = model.ToJson();
             Assert.AreEqual(@"{""name"":""a"",""skin"":0}", json);
-            //Debug.Log(json);
+            Debug.Log(json);
 
             var c = new JsonSchemaValidationContext("")
             {
@@ -466,7 +466,7 @@ namespace VCIGLTF
 
             var json = model.ToJson();
             Assert.AreEqual(@"{""inverseBindMatrices"":-1,""joints"":[1]}", json);
-            //Debug.Log(json);
+            Debug.Log(json);
 
             var c = new JsonSchemaValidationContext("")
             {
@@ -488,7 +488,7 @@ namespace VCIGLTF
             var json = model.ToJson();
             // "name" = "", not excluded
             Assert.AreEqual(@"{""inverseBindMatrices"":-1,""joints"":[1]}", json);
-            //Debug.Log(json);
+            Debug.Log(json);
 
             var c = new JsonSchemaValidationContext("")
             {

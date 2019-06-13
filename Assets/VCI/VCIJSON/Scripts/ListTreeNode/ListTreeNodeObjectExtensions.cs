@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 
-
 namespace VCIJSON
 {
     public static class IValueNodeObjectExtensions
     {
-        public static IEnumerable<KeyValuePair<ListTreeNode<T>, ListTreeNode<T>>> ObjectItems<T>(this ListTreeNode<T> self)
+        public static IEnumerable<KeyValuePair<ListTreeNode<T>, ListTreeNode<T>>> ObjectItems<T>(
+            this ListTreeNode<T> self)
             where T : IListTreeItem, IValue<T>
         {
             if (!self.IsMap()) throw new DeserializationException("is not object");
@@ -39,12 +39,8 @@ namespace VCIJSON
 
         {
             foreach (var kv in self.ObjectItems())
-            {
                 if (kv.Key.GetUtf8String() == key)
-                {
                     return kv.Value;
-                }
-            }
             throw new KeyNotFoundException();
         }
 
@@ -65,12 +61,8 @@ namespace VCIJSON
             where T : IListTreeItem, IValue<T>
         {
             foreach (var kv in self.ObjectItems())
-            {
                 if (node.ValueIndex == kv.Value.ValueIndex)
-                {
                     return kv.Key.GetUtf8String();
-                }
-            }
             throw new KeyNotFoundException();
         }
     }

@@ -1,11 +1,11 @@
-﻿#if VCI_DEVELOP
+﻿#if VRM_DEVELOP
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
 
 
-namespace VCIGLTF
+namespace UniGLTF
 {
     public static class UniGLTFVersionMenu
     {

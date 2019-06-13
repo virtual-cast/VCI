@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 
-
 namespace VCIJSON
 {
-    public class RpcDispatcher<T> 
+    public class RpcDispatcher<T>
         where T : IListTreeItem, IValue<T>
     {
-        delegate void Callback(int id, ListTreeNode<T> args, IRpc f);
-        Dictionary<string, Callback> m_map = new Dictionary<string, Callback>();
+        private delegate void Callback(int id, ListTreeNode<T> args, IRpc f);
+
+        private Dictionary<string, Callback> m_map = new Dictionary<string, Callback>();
 
         #region Action
+
         public void Register<A0>(string method, Action<A0> action)
         {
             m_map.Add(method, (id, args, f) =>
@@ -26,7 +27,7 @@ namespace VCIJSON
                     action(a0);
                     f.ResponseSuccess(id);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     f.ResponseError(id, ex);
                 }
@@ -37,9 +38,11 @@ namespace VCIJSON
         {
             throw new NotImplementedException();
         }
+
         #endregion
 
         #region Func
+
         public void Register<A0, A1, R>(string method, Func<A0, A1, R> action)
         {
             m_map.Add(method, (id, args, f) =>
@@ -59,21 +62,19 @@ namespace VCIJSON
                     var r = action(a0, a1);
                     f.ResponseSuccess(id, r);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     f.ResponseError(id, ex);
                 }
             });
         }
+
         #endregion
 
         public void Call(IRpc f, int id, string method, ListTreeNode<T> args)
         {
             Callback callback;
-            if (!m_map.TryGetValue(method, out callback))
-            {
-                throw new KeyNotFoundException();
-            }
+            if (!m_map.TryGetValue(method, out callback)) throw new KeyNotFoundException();
             callback(id, args, f);
         }
     }

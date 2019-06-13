@@ -5,6 +5,7 @@ using System.Text;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
+
 #endif
 
 
@@ -13,20 +14,19 @@ namespace VCIJSON
     public static partial class GenericExpressionCallFactory
     {
 #if UNITY_EDITOR && VCI_DEVELOP
-        const int NET35MAX = 4;
-        const int ARGS = 6;
-        const string GENERATE_PATH = "/VCI/VCIJSON/Scripts/GenericCallUtility/GenericExpressionCallFactory.g.cs";
+        private const int NET35MAX = 4;
+        private const int ARGS = 6;
 
-        static System.Collections.Generic.IEnumerable<string> GetArgs(string prefix, int n)
+        private const string GENERATE_PATH =
+            "/VCI/VCIJSON/Scripts/GenericCallUtility/GenericExpressionCallFactory.g.cs";
+
+        private static System.Collections.Generic.IEnumerable<string> GetArgs(string prefix, int n)
         {
-            for (int i = 0; i < n; ++i)
-            {
-                yield return prefix + i;
-            }
+            for (var i = 0; i < n; ++i) yield return prefix + i;
         }
 
         [MenuItem("VCI/VCIJSON/Generate GenericExpressionCallFactory")]
-        static void Generate()
+        private static void Generate()
         {
             var sb = new StringBuilder();
             using (var w = new StringWriter(sb))
@@ -44,7 +44,7 @@ namespace VCIJSON
     {
 ");
                 // Create
-                for (int i = 1; i <= ARGS && i<NET35MAX; ++i)
+                for (var i = 1; i <= ARGS && i < NET35MAX; ++i)
                 {
                     var g = String.Join(", ", GetArgs("A", i).ToArray());
                     var a = String.Join(", ", GetArgs("a", i).ToArray());
@@ -55,7 +55,7 @@ namespace VCIJSON
             var self = Expression.Parameter(m.DeclaringType, m.Name);
             var args = m.GetParameters().Select(x => Expression.Parameter(x.ParameterType, x.Name)).ToArray();
             var call = Expression.Call(self, m, args);
-            return 
+            return
                 (Action<S, $0>)Expression.Lambda(call, new[] { self }.Concat(args).ToArray()).Compile();
         }
 ".Replace("$0", g).Replace("$1", a);
@@ -64,7 +64,7 @@ namespace VCIJSON
                 }
 
                 // CreateWithThis
-                for (int i = 1; i <= ARGS && i<=NET35MAX; ++i)
+                for (var i = 1; i <= ARGS && i <= NET35MAX; ++i)
                 {
                     var g = String.Join(", ", GetArgs("A", i).ToArray());
 
@@ -97,7 +97,7 @@ namespace VCIJSON
             {
                 call = Expression.Call(self, m, args);
             }
-            return 
+            return
                 (Action<$0>)Expression.Lambda(call, args).Compile();
         }
 ".Replace("$0", g);

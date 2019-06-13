@@ -1,15 +1,13 @@
-#pragma warning disable 0649
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using System.Collections.Generic;
-
 
 namespace VCIJSON
 {
     public class JsonSerializerTests
     {
-        struct Point
+        private struct Point
         {
             public float X;
             public float Y;
@@ -22,17 +20,17 @@ namespace VCIJSON
             }
         }
 
-        enum HogeFuga
+        private enum HogeFuga
         {
             Hoge,
             Fuga,
         }
 
-        struct EnumTest
+        private struct EnumTest
         {
             public HogeFuga EnumDefault;
 
-            [JsonSchema(EnumSerializationType =EnumSerializationType.AsInt)]
+            [JsonSchema(EnumSerializationType = EnumSerializationType.AsInt)]
             public HogeFuga EnumAsInt;
 
             [JsonSchema(EnumSerializationType = EnumSerializationType.AsString)]
@@ -43,7 +41,8 @@ namespace VCIJSON
         }
 
         #region Serializer
-        static void SerializeValue<T>(T value, string json)
+
+        private static void SerializeValue<T>(T value, string json)
         {
             var b = new BytesStore();
             var f = new JsonFormatter(b);
@@ -65,27 +64,34 @@ namespace VCIJSON
             SerializeValue(false, "false");
             SerializeValue("ascii", "\"ascii\"");
 
-            SerializeValue(new[] { 1 }, "[1]");
-            SerializeValue(new[] { 1.1f }, "[1.1]");
-            SerializeValue(new[] { 1.2 }, "[1.2]");
-            SerializeValue(new[] { true, false }, "[true,false]");
-            SerializeValue(new[] { "ascii" }, "[\"ascii\"]");
-            SerializeValue(new List<int> { 1 }, "[1]");
+            SerializeValue(new[] {1}, "[1]");
+            SerializeValue(new[] {1.1f}, "[1.1]");
+            SerializeValue(new[] {1.2}, "[1.2]");
+            SerializeValue(new[] {true, false}, "[true,false]");
+            SerializeValue(new[] {"ascii"}, "[\"ascii\"]");
+            SerializeValue(new List<int> {1}, "[1]");
             //SerializeValue(new object[] { null, 1, "a" }, "[null,1,\"a\"]");
 
             SerializeValue(new Dictionary<string, object> { }, "{}");
-            SerializeValue(new Dictionary<string, object> { { "a", 1 } }, "{\"a\":1}");
-            SerializeValue(new Dictionary<string, object> { { "a",
-                    new Dictionary<string, object>{
-                    } } }, "{\"a\":{}}");
+            SerializeValue(new Dictionary<string, object> {{"a", 1}}, "{\"a\":1}");
+            SerializeValue(new Dictionary<string, object>
+            {
+                {
+                    "a",
+                    new Dictionary<string, object>
+                    {
+                    }
+                }
+            }, "{\"a\":{}}");
 
-            SerializeValue(new Point { X = 1 }, "{\"X\":1,\"Y\":0}");
+            SerializeValue(new Point {X = 1}, "{\"X\":1,\"Y\":0}");
 
             SerializeValue(HogeFuga.Fuga, "1");
 
-            SerializeValue(new EnumTest(), "{\"EnumDefault\":0,\"EnumAsInt\":0,\"EnumAsString\":\"Hoge\",\"EnumAsLowerString\":\"hoge\"}");
+            SerializeValue(new EnumTest(),
+                "{\"EnumDefault\":0,\"EnumAsInt\":0,\"EnumAsString\":\"Hoge\",\"EnumAsLowerString\":\"hoge\"}");
 
-            SerializeValue((object)new Point { X = 1 }, "{\"X\":1,\"Y\":0}");
+            SerializeValue((object) new Point {X = 1}, "{\"X\":1,\"Y\":0}");
         }
 
         [Test]
@@ -94,7 +100,7 @@ namespace VCIJSON
             var p = new Point
             {
                 X = 1,
-                Vector = new float[] { 1, 2, 3 }
+                Vector = new float[] {1, 2, 3}
             };
 
             var f = new JsonFormatter();
@@ -111,7 +117,8 @@ namespace VCIJSON
         #endregion
 
         #region Deserialize
-        static void DeserializeValue<T>(T value, string json)
+
+        private static void DeserializeValue<T>(T value, string json)
         {
             var parsed = JsonParser.Parse(json);
 
@@ -131,22 +138,23 @@ namespace VCIJSON
             DeserializeValue(false, "false");
             DeserializeValue("ascii", "\"ascii\"");
 
-            DeserializeValue(new[] { 1 }, "[1]");
-            DeserializeValue(new[] { 1.1f }, "[1.1]");
-            DeserializeValue(new[] { 1.2 }, "[1.2]");
-            DeserializeValue(new[] { true, false }, "[true,false]");
-            DeserializeValue(new[] { "ascii" }, "[\"ascii\"]");
-            DeserializeValue(new List<int> { 1 }, "[1]");
+            DeserializeValue(new[] {1}, "[1]");
+            DeserializeValue(new[] {1.1f}, "[1.1]");
+            DeserializeValue(new[] {1.2}, "[1.2]");
+            DeserializeValue(new[] {true, false}, "[true,false]");
+            DeserializeValue(new[] {"ascii"}, "[\"ascii\"]");
+            DeserializeValue(new List<int> {1}, "[1]");
             //DeserializeValue(new object[] { null, 1, "a" }, "[null,1,\"a\"]");
 
-            DeserializeValue(new Point { X = 1 }, "{\"X\":1,\"Y\":0}");
+            DeserializeValue(new Point {X = 1}, "{\"X\":1,\"Y\":0}");
 
             DeserializeValue(HogeFuga.Fuga, "1");
 
-            DeserializeValue(new EnumTest(), "{\"EnumDefault\":0,\"EnumAsInt\":0,\"EnumAsString\":\"Hoge\",\"EnumAsLowerString\":\"hoge\"}");
+            DeserializeValue(new EnumTest(),
+                "{\"EnumDefault\":0,\"EnumAsInt\":0,\"EnumAsString\":\"Hoge\",\"EnumAsLowerString\":\"hoge\"}");
         }
 
-        class DictionaryValue: IEquatable<DictionaryValue>
+        private class DictionaryValue : IEquatable<DictionaryValue>
         {
             public Dictionary<string, object> Dict = new Dictionary<string, object>();
 
@@ -159,44 +167,41 @@ namespace VCIJSON
             {
                 var rhs = obj as DictionaryValue;
                 if (rhs != null)
-                {
                     return Equals(rhs);
-                }
                 else
-                {
                     return base.Equals(obj);
-                }
             }
 
             public bool Equals(DictionaryValue other)
             {
-                if(Dict==null && other.Dict == null)
-                {
+                if (Dict == null && other.Dict == null)
                     return true;
-                }
-                else if(Dict==null || other.Dict==null)
-                {
+                else if (Dict == null || other.Dict == null)
                     return false;
-                }
                 else
-                {
                     return Dict.OrderBy(x => x.Key).SequenceEqual(other.Dict.OrderBy(x => x.Key));
-                }
             }
         }
 
         [Test]
         public void JsonDictionaryDeserializerTest()
-        { 
+        {
             DeserializeValue(new Dictionary<string, object> { }, "{}");
-            DeserializeValue(new Dictionary<string, object> { { "a", 1 } }, "{\"a\":1}");
-            DeserializeValue(new Dictionary<string, object> { { "a",
-                    new Dictionary<string, object>{
-                    } } }, "{\"a\":{}}");
+            DeserializeValue(new Dictionary<string, object> {{"a", 1}}, "{\"a\":1}");
+            DeserializeValue(new Dictionary<string, object>
+            {
+                {
+                    "a",
+                    new Dictionary<string, object>
+                    {
+                    }
+                }
+            }, "{\"a\":{}}");
 
             // fix dictionary member deserialization
             DeserializeValue(new DictionaryValue(), "{\"Dict\": {}}");
         }
+
         #endregion
     }
 }

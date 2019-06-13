@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
-
 namespace VCIJSON
 {
     /// <summary>
@@ -14,28 +13,19 @@ namespace VCIJSON
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.4.1
         /// </summary>
-        public JsonSchema Items
-        {
-            get; set;
-        }
+        public JsonSchema Items { get; set; }
 
         // additionalItems
 
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.4.3
         /// </summary>
-        public int? MaxItems
-        {
-            get; set;
-        }
+        public int? MaxItems { get; set; }
 
         /// <summary>
         /// http://json-schema.org/latest/json-schema-validation.html#rfc.section.6.4.4
         /// </summary>
-        public int? MinItems
-        {
-            get; set;
-        }
+        public int? MinItems { get; set; }
 
         // uniqueItems
 
@@ -78,6 +68,7 @@ namespace VCIJSON
                         sub.Parse(fs, value, "items");
                         Items = sub;
                     }
+
                     return true;
 
                 case "additionalItems":
@@ -101,11 +92,11 @@ namespace VCIJSON
             return false;
         }
 
-        static class GenericCounter<T>
+        private static class GenericCounter<T>
         {
-            delegate int Counter(T value);
+            private delegate int Counter(T value);
 
-            static Counter s_counter;
+            private static Counter s_counter;
 
             public static int Count(T value)
             {
@@ -115,19 +106,13 @@ namespace VCIJSON
                     if (t.IsArray)
                     {
                         var pi = t.GetProperty("Length");
-                        var compiled = (Func<T, int>)((T array) =>
-                        {
-                            return (int)pi.GetValue(array, null);
-                        });
+                        var compiled = (Func<T, int>) ((T array) => { return (int) pi.GetValue(array, null); });
                         s_counter = new Counter(compiled);
                     }
                     else if (t.GetIsGenericList())
                     {
                         var pi = t.GetProperty("Count");
-                        var compiled = (Func<T, int>)((T list) =>
-                        {
-                            return (int)pi.GetValue(list, null);
-                        });
+                        var compiled = (Func<T, int>) ((T list) => { return (int) pi.GetValue(list, null); });
                         s_counter = new Counter(compiled);
                     }
                     else
@@ -135,16 +120,14 @@ namespace VCIJSON
                         throw new NotImplementedException();
                     }
                 }
+
                 return s_counter(value);
             }
         }
 
         public JsonSchemaValidationException Validate<T>(JsonSchemaValidationContext context, T o)
         {
-            if (o == null)
-            {
-                return new JsonSchemaValidationException(context, "null");
-            }
+            if (o == null) return new JsonSchemaValidationException(context, "null");
 
             var count = GenericCounter<T>.Count(o);
 
@@ -155,85 +138,69 @@ namespace VCIJSON
             }*/
 
             if (MaxItems.HasValue && count > MaxItems.Value)
-            {
                 return new JsonSchemaValidationException(context, "maxOtems");
-            }
 
             if (MinItems.HasValue && count < MinItems.Value)
-            {
                 return new JsonSchemaValidationException(context, "minItems");
-            }
 
-            if (Items == null)
-            {
-                return null; // There are no json schema for items, success
-            }
+            if (Items == null) return null; // There are no json schema for items, success
 
             var v = Items.Validator;
             var t = o.GetType();
             IEnumerable iter = null;
             if (t.IsArray)
-            {
                 iter = o as Array;
-            }
             else if (t.GetIsGenericList())
-            {
                 iter = o as IList;
-            }
             else
-            {
                 return new JsonSchemaValidationException(context, "non iterable object");
-            }
 
-            foreach(var e in iter)
+            foreach (var e in iter)
             {
                 var ex = v.Validate(context, e);
-                if (ex != null)
-                {
-                    return ex;
-                }
-            };
+                if (ex != null) return ex;
+            }
+
+            ;
 
             return null;
         }
 
-        static void ArraySerializer<U>(IJsonSchemaValidator v, IFormatter f, JsonSchemaValidationContext c, U[] array)
+        private static void ArraySerializer<U>(IJsonSchemaValidator v, IFormatter f, JsonSchemaValidationContext c,
+            U[] array)
         {
             f.BeginList(array.Length);
             {
                 //int i = 0;
                 foreach (var x in array)
-                {
                     //using (c.Push(i++))
-                    {
-                        v.Serialize(f, c, x);
-                    }
+                {
+                    v.Serialize(f, c, x);
                 }
             }
             f.EndList();
         }
 
-        static void ListSerializer<U>(IJsonSchemaValidator v, IFormatter f, JsonSchemaValidationContext c, List<U> list)
+        private static void ListSerializer<U>(IJsonSchemaValidator v, IFormatter f, JsonSchemaValidationContext c,
+            List<U> list)
         {
             f.BeginList(list.Count);
             {
                 //int i = 0;
                 foreach (var x in list)
-                {
                     //using (c.Push(i++))
-                    {
-                        v.Serialize(f, c, x);
-                    }
+                {
+                    v.Serialize(f, c, x);
                 }
             }
             f.EndList();
         }
 
-        static class GenericSerializer<T>
+        private static class GenericSerializer<T>
         {
-            delegate void Serializer(IJsonSchemaValidator v, IFormatter f, JsonSchemaValidationContext c, T o);
+            private delegate void Serializer(IJsonSchemaValidator v, IFormatter f, JsonSchemaValidationContext c, T o);
 
-            static Serializer s_serializer;
+            private static Serializer s_serializer;
 
             public static void Serialize(IJsonSchemaValidator v, IFormatter f, JsonSchemaValidationContext c, T o)
             {
@@ -260,17 +227,18 @@ namespace VCIJSON
                     }
 
                     var compiled = (Action<
-                        IJsonSchemaValidator, 
-                        IFormatter, 
-                        JsonSchemaValidationContext, 
-                        T>)
+                            IJsonSchemaValidator,
+                            IFormatter,
+                            JsonSchemaValidationContext,
+                            T>)
                         GenericInvokeCallFactory.StaticAction<
-                            IJsonSchemaValidator, 
-                            IFormatter, 
-                            JsonSchemaValidationContext, 
+                            IJsonSchemaValidator,
+                            IFormatter,
+                            JsonSchemaValidationContext,
                             T>(g);
                     s_serializer = new Serializer(compiled);
                 }
+
                 s_serializer(v, f, c, o);
             }
         }
@@ -282,7 +250,8 @@ namespace VCIJSON
 
         public void ToJsonScheama(IFormatter f)
         {
-            f.Key("type"); f.Value("array");
+            f.Key("type");
+            f.Value("array");
 
             if (Items != null)
             {

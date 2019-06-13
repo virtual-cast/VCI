@@ -1,6 +1,5 @@
-﻿using NUnit.Framework;
-using System;
-
+﻿using System;
+using NUnit.Framework;
 
 namespace VCIJSON.MsgPack
 {
@@ -14,7 +13,7 @@ namespace VCIJSON.MsgPack
                 var f = new MsgPackFormatter();
                 f.Null();
                 var bytes = f.GetStoreBytes();
-                Assert.AreEqual(new Byte[] { 0xC0 }, bytes.ToEnumerable());
+                Assert.AreEqual(new Byte[] {0xC0}, bytes.ToEnumerable());
 
                 var parsed = MsgPackParser.Parse(bytes);
                 Assert.True(parsed.IsNull());
@@ -27,7 +26,7 @@ namespace VCIJSON.MsgPack
             var f = new MsgPackFormatter();
             f.Value(true);
             var bytes = f.GetStoreBytes();
-            Assert.AreEqual(new Byte[] { 0xC3 }, bytes.ToEnumerable());
+            Assert.AreEqual(new Byte[] {0xC3}, bytes.ToEnumerable());
 
             var value = MsgPackParser.Parse(bytes);
             var j = value.GetBoolean();
@@ -40,7 +39,7 @@ namespace VCIJSON.MsgPack
             var f = new MsgPackFormatter();
             f.Value(false);
             var bytes = f.GetStoreBytes();
-            Assert.AreEqual(new Byte[] { 0xC2 }, bytes.ToEnumerable());
+            Assert.AreEqual(new Byte[] {0xC2}, bytes.ToEnumerable());
 
             var value = MsgPackParser.Parse(bytes);
             var j = value.GetBoolean();

@@ -1,6 +1,5 @@
 ﻿using System;
 
-
 namespace VCIJSON
 {
     public interface IFormatter

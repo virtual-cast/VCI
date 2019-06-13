@@ -1,23 +1,19 @@
 ﻿using System;
 using System.Reflection;
 
-
 namespace VCIJSON
 {
-    struct GenericConstructor<T, U>
+    internal struct GenericConstructor<T, U>
         where T : IListTreeItem, IValue<T>
     {
-        static V[] ArrayCreator<V>(ListTreeNode<T> src)
+        private static V[] ArrayCreator<V>(ListTreeNode<T> src)
         {
-            if (!src.IsArray())
-            {
-                throw new ArgumentException("value is not array");
-            }
+            if (!src.IsArray()) throw new ArgumentException("value is not array");
             var count = src.GetArrayCount();
             return new V[count];
         }
 
-        static Func<ListTreeNode<T>, U> GetCreator()
+        private static Func<ListTreeNode<T>, U> GetCreator()
         {
             var t = typeof(U);
             if (t.IsArray)
@@ -29,16 +25,13 @@ namespace VCIJSON
             }
 
             {
-                return _s =>
-                {
-                    return Activator.CreateInstance<U>();
-                };
+                return _s => { return Activator.CreateInstance<U>(); };
             }
         }
 
-        delegate U Creator(ListTreeNode<T> src);
+        private delegate U Creator(ListTreeNode<T> src);
 
-        static Creator s_creator;
+        private static Creator s_creator;
 
         public U Create(ListTreeNode<T> src)
         {
@@ -47,6 +40,7 @@ namespace VCIJSON
                 var d = GetCreator();
                 s_creator = new Creator(d);
             }
+
             return s_creator(src);
         }
     }

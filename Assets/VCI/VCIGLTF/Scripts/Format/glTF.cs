@@ -317,10 +317,6 @@ namespace VCIGLTF
         {
             get
             {
-                if(scene<0 || scene >= scenes.Count)
-                {
-                    return new int[] { };
-                }
                 return scenes[scene].nodes;
             }
         }

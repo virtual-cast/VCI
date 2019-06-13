@@ -4,25 +4,21 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
-
 namespace VCIJSON
 {
     public class JsonFormatter : IFormatter, IRpc
     {
-        IStore m_w;
-        protected IStore Store
-        {
-            get { return m_w; }
-        }
+        private IStore m_w;
+        protected IStore Store => m_w;
 
-        enum Current
+        private enum Current
         {
             ROOT,
             ARRAY,
             OBJECT
         }
 
-        class Context
+        private class Context
         {
             public Current Current;
             public int Count;
@@ -34,22 +30,20 @@ namespace VCIJSON
             }
         }
 
-        Stack<Context> m_stack = new Stack<Context>();
+        private Stack<Context> m_stack = new Stack<Context>();
 
-        string m_indent;
-        void Indent()
+        private string m_indent;
+
+        private void Indent()
         {
             if (!string.IsNullOrEmpty(m_indent))
             {
                 m_w.Write('\n');
-                for (int i = 0; i < m_stack.Count - 1; ++i)
-                {
-                    m_w.Write(m_indent);
-                }
+                for (var i = 0; i < m_stack.Count - 1; ++i) m_w.Write(m_indent);
             }
         }
 
-        string m_colon;
+        private string m_colon;
 
         public JsonFormatter(int indent = 0)
             : this(new BytesStore(128), indent)
@@ -88,37 +82,32 @@ namespace VCIJSON
             switch (top.Current)
             {
                 case Current.ROOT:
-                    {
-                        if (top.Count != 0) throw new FormatterException("multiple root value");
-                    }
+                {
+                    if (top.Count != 0) throw new FormatterException("multiple root value");
+                }
                     break;
 
                 case Current.ARRAY:
-                    {
-                        if (top.Count != 0)
-                        {
-                            m_w.Write(',');
-                        }
-                    }
+                {
+                    if (top.Count != 0) m_w.Write(',');
+                }
                     break;
 
                 case Current.OBJECT:
+                {
+                    if (top.Count % 2 == 0)
                     {
-                        if (top.Count % 2 == 0)
-                        {
-                            if (!isKey) throw new FormatterException("key exptected");
-                            if (top.Count != 0)
-                            {
-                                m_w.Write(',');
-                            }
-                        }
-                        else
-                        {
-                            if (isKey) throw new FormatterException("key not exptected");
-                        }
+                        if (!isKey) throw new FormatterException("key exptected");
+                        if (top.Count != 0) m_w.Write(',');
                     }
+                    else
+                    {
+                        if (isKey) throw new FormatterException("key not exptected");
+                    }
+                }
                     break;
             }
+
             top.Count += 1;
             /*
             {
@@ -129,7 +118,8 @@ namespace VCIJSON
             m_stack.Push(top);
         }
 
-        static Utf8String s_null = Utf8String.From("null");
+        private static Utf8String s_null = Utf8String.From("null");
+
         public void Null()
         {
             CommaCheck();
@@ -145,10 +135,7 @@ namespace VCIJSON
 
         public void EndList()
         {
-            if (m_stack.Peek().Current != Current.ARRAY)
-            {
-                throw new InvalidOperationException();
-            }
+            if (m_stack.Peek().Current != Current.ARRAY) throw new InvalidOperationException();
             m_w.Write(']');
             m_stack.Pop();
         }
@@ -162,10 +149,7 @@ namespace VCIJSON
 
         public void EndMap()
         {
-            if (m_stack.Peek().Current != Current.OBJECT)
-            {
-                throw new InvalidOperationException();
-            }
+            if (m_stack.Peek().Current != Current.OBJECT) throw new InvalidOperationException();
             m_stack.Pop();
             Indent();
             m_w.Write('}');
@@ -187,18 +171,16 @@ namespace VCIJSON
             _Value(key, false);
         }
 
-        void _Value(Utf8String key, bool isKey)
+        private void _Value(Utf8String key, bool isKey)
         {
             CommaCheck(isKey);
-            if (isKey)
-            {
-                Indent();
-            }
+            if (isKey) Indent();
             JsonString.Quote(key, m_w);
         }
 
-        static Utf8String s_true = Utf8String.From("true");
-        static Utf8String s_false = Utf8String.From("false");
+        private static Utf8String s_true = Utf8String.From("true");
+        private static Utf8String s_false = Utf8String.From("false");
+
         public void Value(Boolean x)
         {
             CommaCheck();
@@ -210,16 +192,19 @@ namespace VCIJSON
             CommaCheck();
             m_w.Write(x.ToString());
         }
+
         public void Value(Int16 x)
         {
             CommaCheck();
             m_w.Write(x.ToString());
         }
+
         public void Value(Int32 x)
         {
             CommaCheck();
             m_w.Write(x.ToString());
         }
+
         public void Value(Int64 x)
         {
             CommaCheck();
@@ -231,16 +216,19 @@ namespace VCIJSON
             CommaCheck();
             m_w.Write(x.ToString());
         }
+
         public void Value(UInt16 x)
         {
             CommaCheck();
             m_w.Write(x.ToString());
         }
+
         public void Value(UInt32 x)
         {
             CommaCheck();
             m_w.Write(x.ToString());
         }
+
         public void Value(UInt64 x)
         {
             CommaCheck();
@@ -252,6 +240,7 @@ namespace VCIJSON
             CommaCheck();
             m_w.Write(x.ToString("R", CultureInfo.InvariantCulture));
         }
+
         public void Value(Double x)
         {
             CommaCheck();
@@ -279,19 +268,23 @@ namespace VCIJSON
         }
 
         #region IRpc
-        int m_nextRequestId = 1;
 
-        static Utf8String s_jsonrpc = Utf8String.From("jsonrpc");
-        static Utf8String s_20 = Utf8String.From("2.0");
-        static Utf8String s_method = Utf8String.From("method");
-        static Utf8String s_params = Utf8String.From("params");
+        private int m_nextRequestId = 1;
+
+        private static Utf8String s_jsonrpc = Utf8String.From("jsonrpc");
+        private static Utf8String s_20 = Utf8String.From("2.0");
+        private static Utf8String s_method = Utf8String.From("method");
+        private static Utf8String s_params = Utf8String.From("params");
 
         public void Notify(Utf8String method)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_method); Value(method);
-            Key(s_params); BeginList();
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_method);
+            Value(method);
+            Key(s_params);
+            BeginList();
             {
             }
             EndList();
@@ -301,9 +294,12 @@ namespace VCIJSON
         public void Notify<A0>(Utf8String method, A0 a0)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_method); Value(method);
-            Key(s_params); BeginList();
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_method);
+            Value(method);
+            Key(s_params);
+            BeginList();
             {
                 this.Serialize(a0);
             }
@@ -314,9 +310,12 @@ namespace VCIJSON
         public void Notify<A0, A1>(Utf8String method, A0 a0, A1 a1)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_method); Value(method);
-            Key(s_params); BeginList();
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_method);
+            Value(method);
+            Key(s_params);
+            BeginList();
             {
                 this.Serialize(a0);
                 this.Serialize(a1);
@@ -328,9 +327,12 @@ namespace VCIJSON
         public void Notify<A0, A1, A2>(Utf8String method, A0 a0, A1 a1, A2 a2)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_method); Value(method);
-            Key(s_params); BeginList();
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_method);
+            Value(method);
+            Key(s_params);
+            BeginList();
             {
                 this.Serialize(a0);
                 this.Serialize(a1);
@@ -343,9 +345,12 @@ namespace VCIJSON
         public void Notify<A0, A1, A2, A3>(Utf8String method, A0 a0, A1 a1, A2 a2, A3 a3)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_method); Value(method);
-            Key(s_params); BeginList();
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_method);
+            Value(method);
+            Key(s_params);
+            BeginList();
             {
                 this.Serialize(a0);
                 this.Serialize(a1);
@@ -359,9 +364,12 @@ namespace VCIJSON
         public void Notify<A0, A1, A2, A3, A4>(Utf8String method, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_method); Value(method);
-            Key(s_params); BeginList();
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_method);
+            Value(method);
+            Key(s_params);
+            BeginList();
             {
                 this.Serialize(a0);
                 this.Serialize(a1);
@@ -376,9 +384,12 @@ namespace VCIJSON
         public void Notify<A0, A1, A2, A3, A4, A5>(Utf8String method, A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_method); Value(method);
-            Key(s_params); BeginList();
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_method);
+            Value(method);
+            Key(s_params);
+            BeginList();
             {
                 this.Serialize(a0);
                 this.Serialize(a1);
@@ -391,15 +402,19 @@ namespace VCIJSON
             EndMap();
         }
 
-        static Utf8String s_id = Utf8String.From("id");
+        private static Utf8String s_id = Utf8String.From("id");
 
         public void Request(Utf8String method)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_id); Value(m_nextRequestId++);
-            Key(s_method); Value(method);
-            Key(s_params); BeginList();
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_id);
+            Value(m_nextRequestId++);
+            Key(s_method);
+            Value(method);
+            Key(s_params);
+            BeginList();
             {
             }
             EndList();
@@ -410,10 +425,14 @@ namespace VCIJSON
             A0 a0)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_id); Value(m_nextRequestId++);
-            Key(s_method); Value(method);
-            Key(s_params); BeginList();
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_id);
+            Value(m_nextRequestId++);
+            Key(s_method);
+            Value(method);
+            Key(s_params);
+            BeginList();
             {
                 this.Serialize(a0);
             }
@@ -425,10 +444,14 @@ namespace VCIJSON
             A0 a0, A1 a1)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_id); Value(m_nextRequestId++);
-            Key(s_method); Value(method);
-            Key(s_params); BeginList();
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_id);
+            Value(m_nextRequestId++);
+            Key(s_method);
+            Value(method);
+            Key(s_params);
+            BeginList();
             {
                 this.Serialize(a0);
                 this.Serialize(a1);
@@ -441,10 +464,14 @@ namespace VCIJSON
             A0 a0, A1 a1, A2 a2)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_id); Value(m_nextRequestId++);
-            Key(s_method); Value(method);
-            Key(s_params); BeginList();
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_id);
+            Value(m_nextRequestId++);
+            Key(s_method);
+            Value(method);
+            Key(s_params);
+            BeginList();
             {
                 this.Serialize(a0);
                 this.Serialize(a1);
@@ -458,10 +485,14 @@ namespace VCIJSON
             A0 a0, A1 a1, A2 a2, A3 a3)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_id); Value(m_nextRequestId++);
-            Key(s_method); Value(method);
-            Key(s_params); BeginList();
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_id);
+            Value(m_nextRequestId++);
+            Key(s_method);
+            Value(method);
+            Key(s_params);
+            BeginList();
             {
                 this.Serialize(a0);
                 this.Serialize(a1);
@@ -476,10 +507,14 @@ namespace VCIJSON
             A0 a0, A1 a1, A2 a2, A3 a3, A4 a4)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_id); Value(m_nextRequestId++);
-            Key(s_method); Value(method);
-            Key(s_params); BeginList();
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_id);
+            Value(m_nextRequestId++);
+            Key(s_method);
+            Value(method);
+            Key(s_params);
+            BeginList();
             {
                 this.Serialize(a0);
                 this.Serialize(a1);
@@ -495,10 +530,14 @@ namespace VCIJSON
             A0 a0, A1 a1, A2 a2, A3 a3, A4 a4, A5 a5)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_id); Value(m_nextRequestId++);
-            Key(s_method); Value(method);
-            Key(s_params); BeginList();
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_id);
+            Value(m_nextRequestId++);
+            Key(s_method);
+            Value(method);
+            Key(s_params);
+            BeginList();
             {
                 this.Serialize(a0);
                 this.Serialize(a1);
@@ -511,36 +550,46 @@ namespace VCIJSON
             EndMap();
         }
 
-        static Utf8String s_error = Utf8String.From("error");
+        private static Utf8String s_error = Utf8String.From("error");
 
         public void ResponseError(int id, Exception error)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_id); Value(id);
-            Key(s_error); this.Serialize(error);
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_id);
+            Value(id);
+            Key(s_error);
+            this.Serialize(error);
             EndMap();
         }
 
-        static Utf8String s_result = Utf8String.From("result");
+        private static Utf8String s_result = Utf8String.From("result");
 
         public void ResponseSuccess(int id)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_id); Value(id);
-            Key(s_result); Null();
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_id);
+            Value(id);
+            Key(s_result);
+            Null();
             EndMap();
         }
 
         public void ResponseSuccess<T>(int id, T result)
         {
             BeginMap();
-            Key(s_jsonrpc); Value(s_20);
-            Key(s_id); Value(id);
-            Key(s_result); this.Serialize(result);
+            Key(s_jsonrpc);
+            Value(s_20);
+            Key(s_id);
+            Value(id);
+            Key(s_result);
+            this.Serialize(result);
             EndMap();
         }
+
         #endregion
     }
 }

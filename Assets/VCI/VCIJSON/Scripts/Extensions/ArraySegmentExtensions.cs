@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
-
+using System.Linq;
 
 namespace VCIJSON
 {
@@ -9,11 +8,11 @@ namespace VCIJSON
     {
         public static T[] ArrayOrCopy<T>(this ArraySegment<T> self)
         {
-            if (self.Array == null || self.Count==0)
+            if (self.Array == null || self.Count == 0)
             {
                 return new T[] { };
             }
-            else if(self.Offset==0 && self.Count==self.Array.Length)
+            else if (self.Offset == 0 && self.Count == self.Array.Length)
             {
                 return self.Array;
             }
@@ -32,19 +31,13 @@ namespace VCIJSON
 
         public static void Set<T>(this ArraySegment<T> self, int index, T value)
         {
-            if (index < 0 || index >= self.Count)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
+            if (index < 0 || index >= self.Count) throw new ArgumentOutOfRangeException();
             self.Array[self.Offset + index] = value;
         }
 
         public static T Get<T>(this ArraySegment<T> self, int index)
         {
-            if (index < 0 || index >= self.Count)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
+            if (index < 0 || index >= self.Count) throw new ArgumentOutOfRangeException();
             return self.Array[self.Offset + index];
         }
 
@@ -62,10 +55,7 @@ namespace VCIJSON
         {
             var array = new T[n];
             var x = n - 1;
-            for (int i = 0; i < n; ++i, --x)
-            {
-                array[i] = self.Get(x);
-            }
+            for (var i = 0; i < n; ++i, --x) array[i] = self.Get(x);
             return array;
         }
 

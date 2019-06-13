@@ -116,10 +116,7 @@ namespace VCIDepthFirstScheduler
                     {
                         if (status == ExecutionStatus.Error)
                         {
-                            if (x != null)
-                            {
-                                throw x.GetError();
-                            }
+                            throw x.GetError();
                         }
                         break;
                     }

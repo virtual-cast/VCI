@@ -1,11 +1,10 @@
 ﻿using System;
 
-
 namespace VCIJSON
 {
     public struct ActionDisposer : IDisposable
     {
-        Action m_action;
+        private Action m_action;
 
         public ActionDisposer(Action action)
         {

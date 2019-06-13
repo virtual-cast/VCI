@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using VCIJSON;
 using UnityEngine;
+using VCIJSON;
 
 
 /// <summary>
@@ -11,8 +11,9 @@ using UnityEngine;
 namespace VCIGLTF
 {
     #region meta
+
     /// <summary>
-    /// gltf.extension 
+    /// gltf.extension
     /// </summary>
     public partial class glTF_extensions : ExtensionsBase<glTF_extensions>
     {
@@ -25,10 +26,7 @@ namespace VCIGLTF
     [Serializable]
     public class glTF_VCAST_vci_meta
     {
-        public static string ExtensionName
-        {
-            get { return "VCAST_vci"; }
-        }
+        public static string ExtensionName => "VCAST_vci";
 
         public enum LicenseType
         {
@@ -76,7 +74,9 @@ namespace VCIGLTF
         public int thumbnail = -1;
 
         #region Distribution License
-        [JsonSchema(Description = "Model Data License type", EnumSerializationType = EnumSerializationType.AsLowerString)]
+
+        [JsonSchema(Description = "Model Data License type",
+            EnumSerializationType = EnumSerializationType.AsLowerString)]
         public LicenseType modelDataLicenseType;
 
         [JsonSchema(Description = "If Other is selected, put the URL link of the license document here.")]
@@ -87,9 +87,11 @@ namespace VCIGLTF
 
         [JsonSchema(Description = "If Other is selected, put the URL link of the license document here.")]
         public string scriptOtherLicenseUrl;
+
         #endregion
 
         #region Script
+
         [JsonSchema(Description = "Script write protected")]
         public bool scriptWriteProtected;
 
@@ -98,11 +100,34 @@ namespace VCIGLTF
 
         [JsonSchema(Description = "Script Format", EnumSerializationType = EnumSerializationType.AsString)]
         public ScriptFormat scriptFormat;
+
         #endregion
     }
+
+    #endregion
+
+    #region Attachable
+
+    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
+    {
+        public glTF_VCAST_vci_attachable VCAST_vci_attachable;
+    }
+
+    /// <summary>
+    /// Extension root
+    /// </summary>
+    [Serializable]
+    public class glTF_VCAST_vci_attachable
+    {
+        public List<string> attachableHumanBodyBones = new List<string>();
+
+        public float attachableDistance = 0.0f;
+    }
+
     #endregion
 
     #region audio
+
     /// <summary>
     /// gltf.extension
     /// </summary>
@@ -132,14 +157,16 @@ namespace VCIGLTF
         [JsonSchema(Required = true, Minimum = 0)]
         public int bufferView = -1;
 
-        [JsonSchema(EnumValues = new object[] { "audio/wav" }, EnumSerializationType = EnumSerializationType.AsString)]
+        [JsonSchema(EnumValues = new object[] {"audio/wav"}, EnumSerializationType = EnumSerializationType.AsString)]
         public string mimeType;
     }
+
     #endregion
 
     #region script
+
     /// <summary>
-    /// gltf.extension 
+    /// gltf.extension
     /// </summary>
     public partial class glTF_extensions : ExtensionsBase<glTF_extensions>
     {
@@ -148,11 +175,8 @@ namespace VCIGLTF
 
     public class EnumStringValueAttribute : Attribute
     {
-        public string Value
-        {
-            get;
-            private set;
-        }
+        public string Value { get; private set; }
+
         public EnumStringValueAttribute(string value)
         {
             Value = value;
@@ -173,8 +197,7 @@ namespace VCIGLTF
 
     public enum ScriptMimeType
     {
-        [EnumStringValue("x-application/lua")]
-        X_APPLICATION_LUA,
+        [EnumStringValue("x-application/lua")] X_APPLICATION_LUA,
     }
 
     public enum TargetEngine
@@ -188,8 +211,7 @@ namespace VCIGLTF
     [Serializable]
     public class glTF_VCAST_vci_embedded_script_source
     {
-        [JsonSchema(Description = "main.lua")]
-        public string name;
+        [JsonSchema(Description = "main.lua")] public string name;
 
         [JsonSchema(EnumSerializationType = EnumSerializationType.AsLowerString)]
         public ScriptMimeType mimeType; // "x-application/lua",
@@ -200,9 +222,11 @@ namespace VCIGLTF
         [JsonSchema(Required = true, Minimum = 0)]
         public int source = -1;
     }
+
     #endregion
 
     #region material
+
     /// <summary>
     /// gltf.extension
     /// </summary>
@@ -222,9 +246,11 @@ namespace VCIGLTF
         /// </summary>
         public List<VCI.glTF_VCI_Material> materials;
     }
+
     #endregion
 
     #region collider
+
     /// <summary>
     /// node.extension
     /// </summary>
@@ -253,66 +279,66 @@ namespace VCIGLTF
         private const string CapsuleColliderName = "capsule";
 
         [JsonSchema(Required = true, EnumSerializationType = EnumSerializationType.AsString,
-            EnumValues = new object[] { BoxColliderName, SphereColliderName, CapsuleColliderName })]
+            EnumValues = new object[] {BoxColliderName, SphereColliderName, CapsuleColliderName})]
         public string type;
 
-        [JsonSchema(MinItems = 3, MaxItems = 3)] public float[] center;
+        [JsonSchema(MinItems = 3, MaxItems = 3)]
+        public float[] center;
 
-        [JsonSchema(MinItems = 1, MaxItems = 3)] public float[] shape;
+        [JsonSchema(MinItems = 1, MaxItems = 3)]
+        public float[] shape;
 
-        [JsonSchema(Description = @"This collider is used for grab")] public bool grabable;
+        [JsonSchema(Description = @"This collider is used for grab")]
+        public bool grabable;
 
-        [JsonSchema(Description = @"Use gravity")] public bool useGravity;
+        [JsonSchema(Description = @"Use gravity")]
+        public bool useGravity;
 
-        [JsonSchema(Description = @"Is Trigger")] public bool isTrigger;
+        [JsonSchema(Description = @"Is Trigger")]
+        public bool isTrigger;
 
-        [JsonSchema(Description = @"Physic Material")] public glTF_VCAST_vci_PhysicMaterial physicMaterial;
+        [JsonSchema(Description = @"Physic Material")]
+        public glTF_VCAST_vci_PhysicMaterial physicMaterial;
 
         public static Collider AddColliderComponent(GameObject go, glTF_VCAST_vci_Collider collider)
         {
             switch (collider.type)
             {
                 case BoxColliderName:
-                    {
-                        var unityCollider = go.AddComponent<BoxCollider>();
-                        unityCollider.center = new Vector3(collider.center[0], collider.center[1], collider.center[2])
-                            .ReverseZ();
-                        unityCollider.size = new Vector3(collider.shape[0], collider.shape[1], collider.shape[2]);
-                        unityCollider.isTrigger = collider.isTrigger;
-                        if (collider.physicMaterial != null)
-                        {
-                            glTF_VCAST_vci_PhysicMaterial.AddPhysicMaterial(unityCollider, collider.physicMaterial);
-                        }
-                        return unityCollider;
-                    }
+                {
+                    var unityCollider = go.AddComponent<BoxCollider>();
+                    unityCollider.center = new Vector3(collider.center[0], collider.center[1], collider.center[2])
+                        .ReverseZ();
+                    unityCollider.size = new Vector3(collider.shape[0], collider.shape[1], collider.shape[2]);
+                    unityCollider.isTrigger = collider.isTrigger;
+                    if (collider.physicMaterial != null)
+                        glTF_VCAST_vci_PhysicMaterial.AddPhysicMaterial(unityCollider, collider.physicMaterial);
+                    return unityCollider;
+                }
                 case CapsuleColliderName:
-                    {
-                        var unityCollider = go.AddComponent<CapsuleCollider>();
-                        unityCollider.center = new Vector3(collider.center[0], collider.center[1], collider.center[2])
-                            .ReverseZ();
-                        unityCollider.radius = collider.shape[0];
-                        unityCollider.height = collider.shape[1];
-                        unityCollider.direction = (int)collider.shape[2];
-                        unityCollider.isTrigger = collider.isTrigger;
-                        if (collider.physicMaterial != null)
-                        {
-                            glTF_VCAST_vci_PhysicMaterial.AddPhysicMaterial(unityCollider, collider.physicMaterial);
-                        }
-                        return unityCollider;
-                    }
+                {
+                    var unityCollider = go.AddComponent<CapsuleCollider>();
+                    unityCollider.center = new Vector3(collider.center[0], collider.center[1], collider.center[2])
+                        .ReverseZ();
+                    unityCollider.radius = collider.shape[0];
+                    unityCollider.height = collider.shape[1];
+                    unityCollider.direction = (int) collider.shape[2];
+                    unityCollider.isTrigger = collider.isTrigger;
+                    if (collider.physicMaterial != null)
+                        glTF_VCAST_vci_PhysicMaterial.AddPhysicMaterial(unityCollider, collider.physicMaterial);
+                    return unityCollider;
+                }
                 default:
-                    {
-                        var unityCollider = go.AddComponent<SphereCollider>();
-                        unityCollider.center = new Vector3(collider.center[0], collider.center[1], collider.center[2])
-                            .ReverseZ();
-                        unityCollider.radius = collider.shape[0];
-                        unityCollider.isTrigger = collider.isTrigger;
-                        if (collider.physicMaterial != null)
-                        {
-                            glTF_VCAST_vci_PhysicMaterial.AddPhysicMaterial(unityCollider, collider.physicMaterial);
-                        }
-                        return unityCollider;
-                    }
+                {
+                    var unityCollider = go.AddComponent<SphereCollider>();
+                    unityCollider.center = new Vector3(collider.center[0], collider.center[1], collider.center[2])
+                        .ReverseZ();
+                    unityCollider.radius = collider.shape[0];
+                    unityCollider.isTrigger = collider.isTrigger;
+                    if (collider.physicMaterial != null)
+                        glTF_VCAST_vci_PhysicMaterial.AddPhysicMaterial(unityCollider, collider.physicMaterial);
+                    return unityCollider;
+                }
             }
         }
 
@@ -328,9 +354,8 @@ namespace VCIGLTF
                 collider.shape = box.size.ToArray();
                 collider.isTrigger = box.isTrigger;
                 if (unityCollider.sharedMaterial != null)
-                {
-                    collider.physicMaterial = glTF_VCAST_vci_PhysicMaterial.GetglTFPhysicMaterial(unityCollider.sharedMaterial);
-                }
+                    collider.physicMaterial =
+                        glTF_VCAST_vci_PhysicMaterial.GetglTFPhysicMaterial(unityCollider.sharedMaterial);
                 return collider;
             }
             else if (type == typeof(CapsuleCollider))
@@ -344,9 +369,8 @@ namespace VCIGLTF
                 collider.shape[2] = capsule.direction;
                 collider.isTrigger = capsule.isTrigger;
                 if (unityCollider.sharedMaterial != null)
-                {
-                    collider.physicMaterial = glTF_VCAST_vci_PhysicMaterial.GetglTFPhysicMaterial(unityCollider.sharedMaterial);
-                }
+                    collider.physicMaterial =
+                        glTF_VCAST_vci_PhysicMaterial.GetglTFPhysicMaterial(unityCollider.sharedMaterial);
                 return collider;
             }
             else if (type == typeof(SphereCollider))
@@ -358,9 +382,8 @@ namespace VCIGLTF
                 collider.shape[0] = sphere.radius;
                 collider.isTrigger = sphere.isTrigger;
                 if (unityCollider.sharedMaterial != null)
-                {
-                    collider.physicMaterial = glTF_VCAST_vci_PhysicMaterial.GetglTFPhysicMaterial(unityCollider.sharedMaterial);
-                }
+                    collider.physicMaterial =
+                        glTF_VCAST_vci_PhysicMaterial.GetglTFPhysicMaterial(unityCollider.sharedMaterial);
                 return collider;
             }
             else
@@ -386,10 +409,11 @@ namespace VCIGLTF
         public float bounciness;
 
         [JsonSchema(Required = true, EnumSerializationType = EnumSerializationType.AsString,
-            EnumValues = new object[] { AverageCombine, MinimumCombine, MaximumCombine, MultiplyCombine })]
+            EnumValues = new object[] {AverageCombine, MinimumCombine, MaximumCombine, MultiplyCombine})]
         public string frictionCombine;
+
         [JsonSchema(Required = true, EnumSerializationType = EnumSerializationType.AsString,
-            EnumValues = new object[] { AverageCombine, MinimumCombine, MaximumCombine, MultiplyCombine })]
+            EnumValues = new object[] {AverageCombine, MinimumCombine, MaximumCombine, MultiplyCombine})]
         public string bounceCombine;
 
         public static PhysicMaterialCombine GetCombineFromString(string combine)
@@ -432,8 +456,8 @@ namespace VCIGLTF
             physicMaterial.dynamicFriction = material.dynamicFriction;
             physicMaterial.staticFriction = material.staticFriction;
             physicMaterial.bounciness = material.bounciness;
-            physicMaterial.frictionCombine = glTF_VCAST_vci_PhysicMaterial.GetCombineFromString(material.frictionCombine);
-            physicMaterial.bounceCombine = glTF_VCAST_vci_PhysicMaterial.GetCombineFromString(material.bounceCombine);
+            physicMaterial.frictionCombine = GetCombineFromString(material.frictionCombine);
+            physicMaterial.bounceCombine = GetCombineFromString(material.bounceCombine);
             collider.sharedMaterial = physicMaterial;
         }
 
@@ -443,14 +467,16 @@ namespace VCIGLTF
             result.dynamicFriction = material.dynamicFriction;
             result.staticFriction = material.staticFriction;
             result.bounciness = material.bounciness;
-            result.frictionCombine = glTF_VCAST_vci_PhysicMaterial.GetStringFromCombine(material.frictionCombine);
-            result.bounceCombine = glTF_VCAST_vci_PhysicMaterial.GetStringFromCombine(material.bounceCombine);
+            result.frictionCombine = GetStringFromCombine(material.frictionCombine);
+            result.bounceCombine = GetStringFromCombine(material.bounceCombine);
             return result;
         }
     }
+
     #endregion
 
     #region rigidbody
+
     /// <summary>
     /// node.extension
     /// </summary>
@@ -465,9 +491,9 @@ namespace VCIGLTF
     [Serializable]
     public class glTF_VCAST_vci_rigidbody
     {
-        [JsonSchema(MinItems = 1)]
-        public List<glTF_VCAST_vci_Rigidbody> rigidbodies;
+        [JsonSchema(MinItems = 1)] public List<glTF_VCAST_vci_Rigidbody> rigidbodies;
     }
+
     /// <summary>
     /// Rigidbody info
     /// </summary>
@@ -480,19 +506,16 @@ namespace VCIGLTF
         public bool useGravity = true;
         public bool isKinematic = false;
 
-        static class InterpolateString
+        private static class InterpolateString
         {
             public const string None = "none";
             public const string Interpolate = "interpolate";
             public const string Extrapolate = "extrapolate";
 
 
-            public static UnityEngine.RigidbodyInterpolation GetInterpolationFromString(string name)
+            public static RigidbodyInterpolation GetInterpolationFromString(string name)
             {
-                if (string.IsNullOrEmpty(name))
-                {
-                    return RigidbodyInterpolation.None;
-                }
+                if (string.IsNullOrEmpty(name)) return RigidbodyInterpolation.None;
 
                 switch (name.ToLower())
                 {
@@ -523,7 +546,8 @@ namespace VCIGLTF
             }
         }
 
-        [JsonSchema(Required = true, EnumValues = new object[] {
+        [JsonSchema(Required = true, EnumValues = new object[]
+        {
             InterpolateString.None,
             InterpolateString.Interpolate,
             InterpolateString.Extrapolate
@@ -531,18 +555,15 @@ namespace VCIGLTF
         public string interpolate;
 
 
-        static class CollisionDetectionModeString
+        private static class CollisionDetectionModeString
         {
             public const string Discrete = "discrete";
             public const string Continuous = "continuous";
             public const string ContinuousDynamic = "continuousdynamic";
 
-            public static UnityEngine.CollisionDetectionMode GetDetectionModeFromString(string name)
+            public static CollisionDetectionMode GetDetectionModeFromString(string name)
             {
-                if (string.IsNullOrEmpty(name))
-                {
-                    return CollisionDetectionMode.Discrete;
-                }
+                if (string.IsNullOrEmpty(name)) return CollisionDetectionMode.Discrete;
 
                 switch (name.ToLower())
                 {
@@ -573,7 +594,8 @@ namespace VCIGLTF
             }
         }
 
-        [JsonSchema(Required = true, EnumValues = new object[] {
+        [JsonSchema(Required = true, EnumValues = new object[]
+        {
             CollisionDetectionModeString.Discrete,
             CollisionDetectionModeString.Continuous,
             CollisionDetectionModeString.ContinuousDynamic
@@ -589,31 +611,32 @@ namespace VCIGLTF
         public bool freezeRotationZ = false;
 
 
-
         public static Rigidbody AddRigidbodyComponent(GameObject go, glTF_VCAST_vci_Rigidbody rigidbody)
         {
-            Rigidbody result = go.GetOrAddComponent<Rigidbody>();
+            var result = go.GetOrAddComponent<Rigidbody>();
             result.mass = rigidbody.mass;
             result.drag = rigidbody.drag;
             result.angularDrag = rigidbody.angularDrag;
             result.useGravity = rigidbody.useGravity;
             result.isKinematic = rigidbody.isKinematic;
             result.interpolation = InterpolateString.GetInterpolationFromString(rigidbody.interpolate);
-            result.collisionDetectionMode = CollisionDetectionModeString.GetDetectionModeFromString(rigidbody.collisionDetection);
+            result.collisionDetectionMode =
+                CollisionDetectionModeString.GetDetectionModeFromString(rigidbody.collisionDetection);
             result.constraints = GetConstraints(rigidbody);
             return result;
         }
 
         public static glTF_VCAST_vci_Rigidbody GetglTfRigidbodyFromUnityRigidbody(Rigidbody rigidbody)
         {
-            glTF_VCAST_vci_Rigidbody result = new glTF_VCAST_vci_Rigidbody();
+            var result = new glTF_VCAST_vci_Rigidbody();
             result.mass = rigidbody.mass;
             result.drag = rigidbody.drag;
             result.angularDrag = rigidbody.angularDrag;
             result.useGravity = rigidbody.useGravity;
             result.isKinematic = rigidbody.isKinematic;
             result.interpolate = InterpolateString.GetStringFromInterpolation(rigidbody.interpolation);
-            result.collisionDetection = CollisionDetectionModeString.GetStringFromCollisionDetectionMode(rigidbody.collisionDetectionMode);
+            result.collisionDetection =
+                CollisionDetectionModeString.GetStringFromCollisionDetectionMode(rigidbody.collisionDetectionMode);
             result.freezePositionX = rigidbody.constraints.HasFlag(RigidbodyConstraints.FreezePositionX);
             result.freezePositionY = rigidbody.constraints.HasFlag(RigidbodyConstraints.FreezePositionY);
             result.freezePositionZ = rigidbody.constraints.HasFlag(RigidbodyConstraints.FreezePositionZ);
@@ -626,19 +649,20 @@ namespace VCIGLTF
         private static RigidbodyConstraints GetConstraints(glTF_VCAST_vci_Rigidbody rigidbody)
         {
             return
-            ((rigidbody.freezePositionX) ? RigidbodyConstraints.FreezePositionX : 0) |
-            ((rigidbody.freezePositionY) ? RigidbodyConstraints.FreezePositionY : 0) |
-            ((rigidbody.freezePositionZ) ? RigidbodyConstraints.FreezePositionZ : 0) |
-            ((rigidbody.freezeRotationX) ? RigidbodyConstraints.FreezeRotationX : 0) |
-            ((rigidbody.freezeRotationY) ? RigidbodyConstraints.FreezeRotationY : 0) |
-            ((rigidbody.freezeRotationZ) ? RigidbodyConstraints.FreezeRotationZ : 0)
-             ;
-
+                (rigidbody.freezePositionX ? RigidbodyConstraints.FreezePositionX : 0) |
+                (rigidbody.freezePositionY ? RigidbodyConstraints.FreezePositionY : 0) |
+                (rigidbody.freezePositionZ ? RigidbodyConstraints.FreezePositionZ : 0) |
+                (rigidbody.freezeRotationX ? RigidbodyConstraints.FreezeRotationX : 0) |
+                (rigidbody.freezeRotationY ? RigidbodyConstraints.FreezeRotationY : 0) |
+                (rigidbody.freezeRotationZ ? RigidbodyConstraints.FreezeRotationZ : 0)
+                ;
         }
     }
+
     #endregion
 
     #region joint
+
     /// <summary>
     /// node.extension
     /// </summary>
@@ -653,8 +677,7 @@ namespace VCIGLTF
     [Serializable]
     public class glTF_VCAST_vci_joints
     {
-        [JsonSchema(MinItems = 1)]
-        public List<glTF_VCAST_vci_joint> joints;
+        [JsonSchema(MinItems = 1)] public List<glTF_VCAST_vci_joint> joints;
     }
 
     /// <summary>
@@ -671,7 +694,8 @@ namespace VCIGLTF
         }
 
 
-        [JsonSchema(Required = true, EnumValues = new object[] {
+        [JsonSchema(Required = true, EnumValues = new object[]
+        {
             JointString.Fixed,
             JointString.Hinge,
             JointString.Spring
@@ -710,6 +734,7 @@ namespace VCIGLTF
             public float tolerance;
             public float targetPosition;
         }
+
         public bool useSpring;
         public Spring spring = new Spring();
 
@@ -724,14 +749,14 @@ namespace VCIGLTF
             public float bounceMinVelocity = 0.2f;
             public float contactDistance;
         }
+
         public bool useLimits;
         public Limits limits = new Limits();
 
 
-
         public static Joint AddJointComponent(GameObject go, glTF_VCAST_vci_joint joint, List<Transform> nodes)
         {
-            Joint result = GetJoint(go, joint);
+            var result = GetJoint(go, joint);
             if (joint.nodeIndex != -1)
             {
                 var rigidbody = nodes[joint.nodeIndex].GetComponent<Rigidbody>();
@@ -740,14 +765,16 @@ namespace VCIGLTF
                     Debug.LogWarning("AddJointComponent connect RigidBody is not found.");
                     return null;
                 }
+
                 result.connectedBody = rigidbody;
             }
 
             // 共通パラメータ
-            result.anchor = (new Vector3(joint.anchor[0], joint.anchor[1], joint.anchor[2])).ReverseZ();
-            result.axis = (new Vector3(joint.axis[0], joint.axis[1], joint.axis[2])).ReverseZ();
+            result.anchor = new Vector3(joint.anchor[0], joint.anchor[1], joint.anchor[2]).ReverseZ();
+            result.axis = new Vector3(joint.axis[0], joint.axis[1], joint.axis[2]).ReverseZ();
             result.autoConfigureConnectedAnchor = joint.autoConfigureConnectedAnchor;
-            result.connectedAnchor = (new Vector3(joint.connectedAnchor[0], joint.connectedAnchor[1], joint.connectedAnchor[2])).ReverseZ();
+            result.connectedAnchor =
+                new Vector3(joint.connectedAnchor[0], joint.connectedAnchor[1], joint.connectedAnchor[2]).ReverseZ();
             result.enableCollision = joint.enableCollision;
             result.enablePreprocessing = joint.enablePreprocessing;
             result.massScale = joint.massScale;
@@ -788,12 +815,13 @@ namespace VCIGLTF
                 spring.maxDistance = joint.spring.maxDistance;
                 spring.tolerance = joint.spring.tolerance;
             }
+
             return result;
         }
 
         public static glTF_VCAST_vci_joint GetglTFJointFromUnityJoint(Joint joint, List<Transform> nodes)
         {
-            glTF_VCAST_vci_joint result = new glTF_VCAST_vci_joint();
+            var result = new glTF_VCAST_vci_joint();
             result.nodeIndex = nodes.FindIndex(x => x == joint.connectedBody.gameObject.transform);
             result.anchor = joint.anchor.ReverseZ().ToArray();
             result.axis = joint.axis.ReverseZ().ToArray();
@@ -807,12 +835,12 @@ namespace VCIGLTF
 
             if (joint.GetType() == typeof(FixedJoint))
             {
-                result.type = glTF_VCAST_vci_joint.JointString.Fixed;
+                result.type = JointString.Fixed;
             }
             else if (joint.GetType() == typeof(HingeJoint))
             {
                 var hinge = joint as HingeJoint;
-                result.type = glTF_VCAST_vci_joint.JointString.Hinge;
+                result.type = JointString.Hinge;
 
                 // spring
                 result.useSpring = hinge.useSpring;
@@ -837,7 +865,7 @@ namespace VCIGLTF
             else if (joint.GetType() == typeof(SpringJoint))
             {
                 var spring = joint as SpringJoint;
-                result.type = glTF_VCAST_vci_joint.JointString.Spring;
+                result.type = JointString.Spring;
                 result.spring = new Spring()
                 {
                     spring = spring.spring,
@@ -854,10 +882,7 @@ namespace VCIGLTF
 
         private static Joint GetJoint(GameObject go, glTF_VCAST_vci_joint joint)
         {
-            if (string.IsNullOrEmpty(joint.type))
-            {
-                return go.AddComponent<HingeJoint>();
-            }
+            if (string.IsNullOrEmpty(joint.type)) return go.AddComponent<HingeJoint>();
 
             switch (joint.type.ToLower())
             {
@@ -872,9 +897,11 @@ namespace VCIGLTF
             }
         }
     }
+
     #endregion
 
     #region item
+
     /// <summary>
     /// node.extension
     /// </summary>
@@ -890,40 +917,17 @@ namespace VCIGLTF
     public class glTF_VCAST_vci_item
     {
         public bool grabbable;
-        public bool IsGrabbable
-        {
-            get
-            {
-                return grabbable;
-            }
-        }
+        public bool IsGrabbable => grabbable;
 
         public bool scalable;
-        public bool IsScalable
-        {
-            get
-            {
-                return scalable;
-            }
-        }
+        public bool IsScalable => scalable;
 
         public bool uniformScaling;
-        public bool IsUniformScaling
-        {
-            get
-            {
-                return uniformScaling;
-            }
-        }
+        public bool IsUniformScaling => uniformScaling;
 
         public int groupId;
-        public int GroupId
-        {
-            get
-            {
-                return groupId;
-            }
-        }
+        public int GroupId => groupId;
     }
+
     #endregion
 }

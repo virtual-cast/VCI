@@ -3,6 +3,7 @@
     public enum MsgPackType : byte
     {
         #region POSITIVE_FIXNUM 0x00-0x7F
+
         POSITIVE_FIXNUM = 0x00,
         POSITIVE_FIXNUM_0x01 = 0x01,
         POSITIVE_FIXNUM_0x02 = 0x02,
@@ -138,9 +139,11 @@
         POSITIVE_FIXNUM_0x7D = 0x7D,
         POSITIVE_FIXNUM_0x7E = 0x7E,
         POSITIVE_FIXNUM_0x7F = 0x7F,
+
         #endregion
 
         #region FIX_MAP 0x80-0x8F
+
         FIX_MAP = 0x80,
         FIX_MAP_0x1 = 0x81,
         FIX_MAP_0x2 = 0x82,
@@ -157,9 +160,11 @@
         FIX_MAP_0xD = 0x8D,
         FIX_MAP_0xE = 0x8E,
         FIX_MAP_0xF = 0x8F,
+
         #endregion
 
         #region FIX_ARRAY 0x90-0x9F
+
         FIX_ARRAY = 0x90,
         FIX_ARRAY_0x1 = 0x91,
         FIX_ARRAY_0x2 = 0x92,
@@ -176,9 +181,11 @@
         FIX_ARRAY_0xD = 0x9D,
         FIX_ARRAY_0xE = 0x9E,
         FIX_ARRAY_0xF = 0x9F,
+
         #endregion
 
         #region FIX_STR 0xA0-0xBF
+
         FIX_STR = 0xA0,
         FIX_STR_0x01 = 0xA1,
         FIX_STR_0x02 = 0xA2,
@@ -211,6 +218,7 @@
         FIX_STR_0x1D = 0xBD,
         FIX_STR_0x1E = 0xBE,
         FIX_STR_0x1F = 0xBF,
+
         #endregion
 
         NIL = 0xC0,
@@ -253,6 +261,7 @@
         MAP32 = 0xDF,
 
         #region NEGATIVE_FIXNUM 0xE0-0xFF
+
         NEGATIVE_FIXNUM = 0xE0, // 1110 0000 = -32
         NEGATIVE_FIXNUM_0x1F = 0xE1, // -31
         NEGATIVE_FIXNUM_0x1E = 0xE2,
@@ -285,6 +294,7 @@
         NEGATIVE_FIXNUM_0x03 = 0xFD,
         NEGATIVE_FIXNUM_0x02 = 0xFE,
         NEGATIVE_FIXNUM_0x01 = 0xFF, // -1
+
         #endregion
     }
 

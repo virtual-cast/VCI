@@ -1,6 +1,5 @@
-﻿using NUnit.Framework;
-using System.Linq;
-
+﻿using System.Linq;
+using NUnit.Framework;
 
 namespace VCIJSON
 {
@@ -21,13 +20,13 @@ namespace VCIJSON
 
             Assert.AreEqual(Utf8String.From("abbc"), ab.Concat(bc));
 
-            Assert.AreEqual(2, abc.IndexOf((byte)'c'));
+            Assert.AreEqual(2, abc.IndexOf((byte) 'c'));
 
             int pos;
-            abc.TrySearchAscii((byte)'c', 0, out pos);
+            abc.TrySearchAscii((byte) 'c', 0, out pos);
             Assert.AreEqual(2, pos);
 
-            abc.TrySearchAscii((byte)'c', 1, out pos);
+            abc.TrySearchAscii((byte) 'c', 1, out pos);
             Assert.AreEqual(2, pos);
         }
 
@@ -36,7 +35,7 @@ namespace VCIJSON
         {
             var a0 = Utf8String4.Create("a");
             Assert.AreEqual("a", a0);
-            var a1 = Utf8String4.Create(new byte[] { (byte)'a', 0x00 });
+            var a1 = Utf8String4.Create(new byte[] {(byte) 'a', 0x00});
             Assert.AreEqual(a0, a1);
             var a2 = Utf8String4.Create("５");
             Assert.AreEqual(3, a2.ByteLength);
@@ -65,7 +64,7 @@ namespace VCIJSON
         {
             {
                 var value = Utf8String.From("a/５/c");
-                var splited = value.Split((byte)'/').ToArray();
+                var splited = value.Split((byte) '/').ToArray();
                 Assert.AreEqual(3, splited.Length);
                 Assert.AreEqual(splited[0], Utf8String.From("a"));
                 Assert.AreEqual(splited[1], Utf8String.From("５"));
@@ -73,7 +72,7 @@ namespace VCIJSON
             }
             {
                 var value = Utf8String.From("/a/５/c/");
-                var splited = value.Split((byte)'/').ToArray();
+                var splited = value.Split((byte) '/').ToArray();
                 Assert.AreEqual(4, splited.Length);
                 Assert.AreEqual(splited[0], Utf8String.From(""));
                 Assert.AreEqual(splited[1], Utf8String.From("a"));

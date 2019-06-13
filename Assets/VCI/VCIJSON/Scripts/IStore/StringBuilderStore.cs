@@ -2,27 +2,21 @@
 using System.Collections.Generic;
 using System.Text;
 
-
 namespace VCIJSON
 {
-    public class StringBuilderStore: IStore
+    public class StringBuilderStore : IStore
     {
-        StringBuilder m_sb;
+        private StringBuilder m_sb;
 
         public StringBuilderStore(StringBuilder sb)
         {
             m_sb = sb;
         }
 
-        public ArraySegment<Byte> Bytes
-        {
-            get
-            {
-                return new ArraySegment<Byte>(
-                    Encoding.UTF8.GetBytes(Buffer())
-                    );
-            }
-        }
+        public ArraySegment<Byte> Bytes =>
+            new ArraySegment<Byte>(
+                Encoding.UTF8.GetBytes(Buffer())
+            );
 
         public string Buffer()
         {
@@ -52,21 +46,21 @@ namespace VCIJSON
 
         public void Write(IEnumerable<char> src)
         {
-            foreach(var c in src)
-            {
-                m_sb.Append(c);
-            }
+            foreach (var c in src) m_sb.Append(c);
         }
+
         public void Write(Char c)
         {
             m_sb.Append(c);
         }
+
         public void Write(string src)
         {
             m_sb.Append(src);
         }
 
         #region BigEndian
+
         public void WriteBigEndian(int value)
         {
             throw new NotImplementedException();
@@ -106,9 +100,11 @@ namespace VCIJSON
         {
             throw new NotImplementedException();
         }
+
         #endregion
 
         #region LittleEndian
+
         public void WriteLittleEndian(double value)
         {
             throw new NotImplementedException();
@@ -148,6 +144,7 @@ namespace VCIJSON
         {
             throw new NotImplementedException();
         }
+
         #endregion
     }
 }

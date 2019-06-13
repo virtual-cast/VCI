@@ -1,11 +1,10 @@
-#pragma warning disable
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using VCIGLTF;
-using System.Collections;
-using System.IO;
 #if UNITY_EDITOR
 using UnityEditor;
+
 #endif
 
 
@@ -13,9 +12,7 @@ namespace VCI
 {
     public class UIManager : MonoBehaviour
     {
-
-        [SerializeField]
-        Button m_open;
+        [SerializeField] private Button m_open;
 
         private void OnEnable()
         {
@@ -27,29 +24,23 @@ namespace VCI
             m_open.onClick.RemoveListener(OnClick);
         }
 
-        void OnClick()
+        private void OnClick()
         {
 #if UNITY_EDITOR
             var path = EditorUtility.OpenFilePanel("open vci", null, "Model;*.vci;*.glb;*.gltf;*.zip;");
-            if (string.IsNullOrEmpty(path))
-            {
-                return;
-            }
+            if (string.IsNullOrEmpty(path)) return;
 
             StartCoroutine(Load(path));
 #endif
         }
 
-        ImporterContext m_loaded;
+        private ImporterContext m_loaded;
 
         private IEnumerator Load(string path)
         {
             Debug.LogFormat("load: {0}", path);
 
-            if (m_loaded != null)
-            {
-                m_loaded.Destroy(true);
-            }
+            if (m_loaded != null) m_loaded.Dispose();
 
             var loader = new VCIImporter();
             loader.Parse(path);

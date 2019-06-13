@@ -1,8 +1,4 @@
-#pragma warning disable
-
-using System;
-
-namespace VCI
+﻿namespace VCI
 {
     public static partial class VCIVersion
     {
