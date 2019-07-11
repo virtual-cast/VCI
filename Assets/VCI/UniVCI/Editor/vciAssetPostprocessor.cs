@@ -30,6 +30,7 @@ namespace VCI
             // save texture assets !
             importer.ExtranctImages(prefabPath);
             importer.ExtractAudio(prefabPath);
+            importer.ExtractEffekseer(prefabPath);
 
             EditorApplication.delayCall += () =>
             {
@@ -40,6 +41,7 @@ namespace VCI
                 importer.SetupCorutine().CoroutinetoEnd();
                 importer.SetupPhysics();
                 importer.SetupAttachable();
+                importer.SetupEffekseer();
                 importer.SaveAsAsset(prefabPath);
                 importer.EditorDestroyRoot();
             };

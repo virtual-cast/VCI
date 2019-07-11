@@ -747,6 +747,10 @@ namespace VCIGLTF
                 }
             }
         }
+        public void AddMeshWitMaterials(MeshWithMaterials meshWithMats)
+        {
+            Meshes.Add(meshWithMats);
+        }
 
         public void EnableUpdateWhenOffscreen()
         {
@@ -891,13 +895,21 @@ namespace VCIGLTF
             if (prefabPath.IsFileExists)
             {
                 Debug.LogFormat("replace prefab: {0}", prefabPath);
+#if UNITY_2018_3_OR_NEWER
+                PrefabUtility.SaveAsPrefabAsset(Root, prefabPath.Value);
+#else
                 var prefab = prefabPath.LoadAsset<GameObject>();
                 PrefabUtility.ReplacePrefab(Root, prefab, ReplacePrefabOptions.ReplaceNameBased);
+#endif
             }
             else
             {
                 Debug.LogFormat("create prefab: {0}", prefabPath);
+#if UNITY_2018_3_OR_NEWER
+                PrefabUtility.SaveAsPrefabAsset(Root, prefabPath.Value);
+#else
                 PrefabUtility.CreatePrefab(prefabPath.Value, Root);
+#endif
             }
             foreach (var x in paths)
             {
@@ -955,13 +967,13 @@ namespace VCIGLTF
 
             CreateTextureItems(prefabParentDir);
         }
-        #endregion
+#endregion
 #endif
 
-        /// <summary>
-        /// This function is used for clean up after create assets.
-        /// </summary>
-        /// <param name="destroySubAssets">Ambiguous arguments</param>
+                /// <summary>
+                /// This function is used for clean up after create assets.
+                /// </summary>
+                /// <param name="destroySubAssets">Ambiguous arguments</param>
         [Obsolete("Use Dispose for runtime loader resource management")]
         public void Destroy(bool destroySubAssets)
         {

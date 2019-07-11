@@ -930,4 +930,106 @@ namespace VCIGLTF
     }
 
     #endregion
+
+    #region Effekseer
+    /// <summary>
+    /// gltf.extension
+    /// </summary>
+    public partial class glTF_extensions : ExtensionsBase<glTF_extensions>
+    {
+        public glTF_Effekseer Effekseer;
+    }
+
+    /// <summary>
+    /// Extension root.
+    /// </summary>
+    [Serializable]
+    public class glTF_Effekseer
+    {
+        public static string ExtensionName => "Effekseer";
+
+        [JsonSchema(Required = true, MinItems = 1, ExplicitIgnorableItemLength = 0)]
+        public List<glTF_Effekseer_effect> effects;
+    }
+
+    /// <summary>
+    /// effect body
+    /// </summary>
+    [Serializable]
+    public class glTF_Effekseer_effect
+    {
+        public int nodeIndex;
+
+        public string nodeName;
+
+        public string effectName;
+
+        public glTF_Effekseer_body body;
+
+        [JsonSchema(Required = true, MinItems = 1, ExplicitIgnorableItemLength = 0)]
+        public List<glTF_Effekseer_image> images;
+
+        [JsonSchema(Required = true, MinItems = 1, ExplicitIgnorableItemLength = 0)]
+        public List<glTF_Effekseer_model> models;
+    }
+
+    [Serializable]
+    public class glTF_Effekseer_body
+    {
+        [JsonSchema(Required = true, Minimum = 0)]
+        public int bufferView = -1;
+    }
+
+    [Serializable]
+    public class glTF_Effekseer_image
+    {
+        public static class MimeTypeString
+        {
+            public const string Png = "image/png";
+            public const string Dds = "image/dds";
+        }
+
+        [JsonSchema(Required = true, Minimum = 0)]
+        public int bufferView = -1;
+
+        [JsonSchema(EnumValues = new object[] { MimeTypeString.Png, MimeTypeString.Dds }, EnumSerializationType = EnumSerializationType.AsString)]
+        public string mimeType;
+    }
+
+    [Serializable]
+    public class glTF_Effekseer_model
+    {
+        [JsonSchema(Required = true, Minimum = 0)]
+        public int bufferView = -1;
+    }
+
+    /// <summary>
+    /// node.extension
+    /// </summary>
+    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
+    {
+        public glTF_Effekseer_emitters Effekseer_emitters;
+    }
+
+    /// <summary>
+    /// Extension root
+    /// </summary>
+    [Serializable]
+    public class glTF_Effekseer_emitters
+    {
+        public static string ExtensionName => "Effekseer_emitters";
+
+        [JsonSchema(MinItems = 1)]
+        public List<glTF_Effekseer_emitter> emitters;
+    }
+
+    [Serializable]
+    public class glTF_Effekseer_emitter
+    {
+        [JsonSchema(Required = true, Minimum = 0)]
+        public int effectIndex = -1;
+        public bool isPlayOnStart;
+        public bool isLoop;
+    }
+    #endregion
 }

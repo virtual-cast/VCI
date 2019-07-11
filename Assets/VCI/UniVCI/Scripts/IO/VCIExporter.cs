@@ -17,6 +17,8 @@ namespace VCI
         public VCIExporter(glTF gltf) : base(gltf)
         {
             gltf.extensionsUsed.Add(glTF_VCAST_vci_meta.ExtensionName);
+            gltf.extensionsUsed.Add(glTF_Effekseer.ExtensionName);
+            gltf.extensionsUsed.Add(glTF_Effekseer_emitters.ExtensionName);
 #if VCI_EXPORTER_USE_SPARSE
             UseSparseAccessorForBlendShape = true
 #endif
@@ -203,6 +205,7 @@ namespace VCI
                 }
             }
 
+            // Audio
             var clips = exporter.Copy.GetComponentsInChildren<AudioSource>()
                 .Select(x => x.clip)
                 .Where(x => x != null)
@@ -214,6 +217,45 @@ namespace VCI
                 {
                     audios = audios
                 };
+            }
+
+            // Effekseer
+            var effekseerEmitters = exporter.Copy.GetComponentsInChildren<Effekseer.EffekseerEmitter>()
+                .Where(x => x.effectAsset != null)
+                .ToArray();
+
+            if(effekseerEmitters.Any())
+            {
+                gltf.extensions.Effekseer = new glTF_Effekseer()
+                {
+                    effects = new List<glTF_Effekseer_effect>()
+                };
+
+                foreach (var emitter in effekseerEmitters)
+                {
+                    var index = exporter.Nodes.FindIndex(x => x == emitter.transform);
+                    if(index < 0)
+                    {
+                        continue;
+                    }
+
+                    var effectIndex = AddEffekseerEffect(gltf, emitter);
+                    var gltfNode = gltf.nodes[index];
+                    if(gltfNode.extensions == null)
+                    {
+                        gltfNode.extensions = new glTFNode_extensions();
+                    }
+                    if(gltfNode.extensions.Effekseer_emitters == null)
+                    {
+                        gltfNode.extensions.Effekseer_emitters = new glTF_Effekseer_emitters() { emitters = new List<glTF_Effekseer_emitter>() };
+                    }
+
+                    gltfNode.extensions.Effekseer_emitters.emitters.Add(new glTF_Effekseer_emitter() {
+                        effectIndex = effectIndex,
+                        isLoop = emitter.isLooping,
+                        isPlayOnStart = emitter.playOnStart
+                    });
+                }
             }
         }
 
@@ -262,6 +304,62 @@ namespace VCI
                 }
             }
 #endif
+        }
+
+        private static int AddEffekseerEffect(glTF gltf, Effekseer.EffekseerEmitter emitter)
+        {
+            if(gltf.extensions.Effekseer.effects.FirstOrDefault(x => x.effectName == emitter.effectAsset.name) == null)
+            {
+                var viewIndex = gltf.ExtendBufferAndGetViewIndex(0, emitter.effectAsset.efkBytes);
+
+                // body
+                var effect = new glTF_Effekseer_effect()
+                {
+                    nodeIndex = 0,
+                    nodeName = "Root",
+                    effectName = emitter.effectAsset.name,
+                    body = new glTF_Effekseer_body() { bufferView = viewIndex },
+                    images = new List<glTF_Effekseer_image>(),
+                    models = new List<glTF_Effekseer_model>()
+                };
+
+                // texture
+                foreach (var texture in emitter.effectAsset.textureResources)
+                {
+#if UNITY_EDITOR
+                    var texturePath = UnityEditor.AssetDatabase.GetAssetPath(texture.texture);
+                    var textureImporter = (UnityEditor.TextureImporter)UnityEditor.TextureImporter.GetAtPath(texturePath);
+                    textureImporter.isReadable = true;
+                    textureImporter.textureCompression = UnityEditor.TextureImporterCompression.Uncompressed;
+                    textureImporter.SaveAndReimport();
+#endif
+
+                    var image = new glTF_Effekseer_image()
+                    {
+                        bufferView = gltf.ExtendBufferAndGetViewIndex(0, texture.texture.EncodeToPNG()),
+                        mimeType = "image/png"
+                    };
+                    effect.images.Add(image);
+                }
+
+                // model
+                foreach (var model in emitter.effectAsset.modelResources)
+                {
+                    var efkModel = new glTF_Effekseer_model()
+                    {
+                        bufferView = gltf.ExtendBufferAndGetViewIndex(0, model.asset.bytes)
+                    };
+                    effect.models.Add(efkModel);
+                }
+
+                gltf.extensions.Effekseer.effects.Add(effect);
+                int index = gltf.extensions.Effekseer.effects.Count - 1;
+                return index;
+            }
+            else
+            {
+                return gltf.extensions.Effekseer.effects.FindIndex(x => x.effectName == emitter.effectAsset.name);
+            }
         }
     }
 }

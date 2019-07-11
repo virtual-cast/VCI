@@ -17,6 +17,9 @@ namespace VCI
     {
         public Dictionary<string, string> AudioAssetPathList = new Dictionary<string, string>();
 
+        public List<Effekseer.EffekseerEmitter> EffekseerEmitterComponents = new List<Effekseer.EffekseerEmitter>();
+        public List<Effekseer.EffekseerEffectAsset> EffekseerEffectAssets = new List<Effekseer.EffekseerEffectAsset>();
+
         public VCIObject VCIObject { get; private set; }
 
         public VCIImporter()
@@ -152,10 +155,9 @@ namespace VCI
                 }
             }
 
-
             // Animation
             var animation = Root.GetComponent<Animation>();
-            if(animation != null)
+            if (animation != null)
             {
                 animation.playAutomatically = false;
             }
@@ -229,14 +231,14 @@ namespace VCI
                 var node = GLTF.nodes[i];
                 var go = Nodes[i].gameObject;
 
-                if(node.extensions != null && node.extensions.VCAST_vci_attachable != null)
+                if (node.extensions != null && node.extensions.VCAST_vci_attachable != null)
                 {
                     var attachable = go.AddComponent<VCIAttachable>();
                     attachable.AttachableHumanBodyBones = node.extensions.VCAST_vci_attachable.attachableHumanBodyBones.Select(x =>
                     {
-                        foreach(HumanBodyBones bone in Enum.GetValues(typeof(HumanBodyBones)))
+                        foreach (HumanBodyBones bone in Enum.GetValues(typeof(HumanBodyBones)))
                         {
-                            if(x == bone.ToString())
+                            if (x == bone.ToString())
                             {
                                 return bone;
                             }
@@ -246,6 +248,110 @@ namespace VCI
                     }).ToArray();
 
                     attachable.AttachableDistance = node.extensions.VCAST_vci_attachable.attachableDistance;
+                }
+            }
+        }
+
+        public void SetupEffekseer()
+        {
+            // Effekseer
+            if (GLTF.extensions != null && GLTF.extensions.Effekseer != null)
+            {
+                for (var i = 0; i < GLTF.nodes.Count; i++)
+                {
+                    var node = GLTF.nodes[i];
+                    var go = Nodes[i].gameObject;
+                    if (node.extensions != null &&
+                        node.extensions.Effekseer_emitters != null &&
+                        node.extensions.Effekseer_emitters.emitters != null)
+                    {
+                        foreach (var emitter in node.extensions.Effekseer_emitters.emitters)
+                        {
+                            var emitterComponent = go.AddComponent<Effekseer.EffekseerEmitter>();
+                            var effectIndex = emitter.effectIndex;
+
+                            if (Application.isPlaying)
+                            {
+                                var effect = GLTF.extensions.Effekseer.effects[effectIndex];
+                                var body = GLTF.GetViewBytes(effect.body.bufferView).ToArray();
+                                var resourcePath = new Effekseer.EffekseerResourcePath();
+                                if (!Effekseer.EffekseerEffectAsset.ReadResourcePath(body, ref resourcePath))
+                                {
+                                    continue;
+                                }
+
+                                // Images
+                                var effekseerTextures = new List<Effekseer.Internal.EffekseerTextureResource>();
+                                if (effect.images != null && effect.images.Any())
+                                {
+                                    for (int t = 0; t < effect.images.Count; t++)
+                                    {
+                                        var image = effect.images[t];
+                                        var path = resourcePath.TexturePathList[t];
+                                        var buffer = GLTF.GetViewBytes(image.bufferView);
+
+                                        if (image.mimeType == glTF_Effekseer_image.MimeTypeString.Png)
+                                        {
+                                            Texture2D texture = new Texture2D(2, 2);
+                                            texture.LoadImage(buffer.ToArray());
+                                            effekseerTextures.Add(new Effekseer.Internal.EffekseerTextureResource()
+                                            {
+                                                path = path,
+                                                texture = texture
+                                            });
+                                        }
+                                        else
+                                        {
+                                            Debug.LogError(string.Format("image format {0} is not suppported.", image.mimeType));
+                                        }
+                                    }
+                                }
+
+
+                                // Models
+                                var effekseerModels = new List<Effekseer.Internal.EffekseerModelResource>();
+                                if (effect.models != null && effect.models.Any())
+                                {
+                                    for (int t = 0; t < effect.models.Count; t++)
+                                    {
+                                        var model = effect.models[t];
+                                        var path = resourcePath.ModelPathList[t];
+                                        path = Path.ChangeExtension(path, "asset");
+                                        var buffer = GLTF.GetViewBytes(model.bufferView);
+
+                                        effekseerModels.Add(new Effekseer.Internal.EffekseerModelResource()
+                                        {
+                                            path = path,
+                                            asset = new Effekseer.EffekseerModelAsset() { bytes = buffer.ToArray() }
+                                        });
+                                    }
+                                }
+
+                                Effekseer.EffekseerEffectAsset effectAsset = ScriptableObject.CreateInstance<Effekseer.EffekseerEffectAsset>();
+                                effectAsset.name = effect.effectName;
+                                effectAsset.efkBytes = body;
+                                effectAsset.textureResources = effekseerTextures.ToArray();
+                                effectAsset.modelResources = effekseerModels.ToArray();
+                                effectAsset.soundResources = new Effekseer.Internal.EffekseerSoundResource[0];
+
+                                emitterComponent.effectAsset = effectAsset;
+                                emitterComponent.playOnStart = emitter.isPlayOnStart;
+                                emitterComponent.isLooping = emitter.isLoop;
+
+                                emitterComponent.effectAsset.LoadEffect();
+                            }
+                            else
+                            {
+#if UNITY_EDITOR
+                                emitterComponent.effectAsset = EffekseerEffectAssets[effectIndex];
+                                emitterComponent.playOnStart = emitter.isPlayOnStart;
+                                emitterComponent.isLooping = emitter.isLoop;
+#endif
+                            }
+
+                            EffekseerEmitterComponents.Add(emitterComponent);
+                        }
+                    }
                 }
             }
         }
@@ -281,6 +387,165 @@ namespace VCI
             }
 
             if (created > 0) AssetDatabase.Refresh();
+#endif
+        }
+
+        public void ExtractEffekseer(UnityPath prefabPath)
+        {
+#if UNITY_EDITOR
+
+            if (GLTF.extensions.Effekseer == null
+                || GLTF.extensions.Effekseer.effects == null
+                || GLTF.extensions.Effekseer.effects.Count == 0)
+                return;
+
+            var prefabParentDir = prefabPath.Parent;
+            var folder = prefabPath.GetAssetFolder(".Effekseers");
+
+            for (var i = 0; i < GLTF.extensions.Effekseer.effects.Count; ++i)
+            {
+                folder.EnsureFolder();
+                var effect = GLTF.extensions.Effekseer.effects[i];
+                var effectDir = string.Format("{0}/{1}", folder.Value, effect.effectName);
+                SafeCreateDirectory(effectDir);
+                var textureDir = string.Format("{0}/{1}", effectDir, "Textures");
+                var modelDir = string.Format("{0}/{1}", effectDir, "Models");
+
+                var body = GLTF.GetViewBytes(effect.body.bufferView).ToArray();
+                var resourcePath = new Effekseer.EffekseerResourcePath();
+                if (!Effekseer.EffekseerEffectAsset.ReadResourcePath(body, ref resourcePath))
+                {
+                    continue;
+                }
+
+                // Texture
+                var writeTexturePathList = new List<string>();
+                if (effect.images != null && effect.images.Any())
+                {
+                    for (int t = 0; t < effect.images.Count; t++)
+                    {
+                        var image = effect.images[t];
+                        var path = resourcePath.TexturePathList[t];
+                        var buffer = GLTF.GetViewBytes(image.bufferView);
+                        var texturePath = string.Format("{0}/{1}", textureDir, Path.GetFileName(path));
+                        SafeCreateDirectory(Path.GetDirectoryName(texturePath));
+
+                        if (image.mimeType == glTF_Effekseer_image.MimeTypeString.Png)
+                        {
+                            File.WriteAllBytes(texturePath, buffer.ToArray());
+                            writeTexturePathList.Add(texturePath);
+                        }
+                        else
+                        {
+                            Debug.LogError(string.Format("image format {0} is not suppported.", image.mimeType));
+                        }
+                    }
+                }
+
+                // Models
+                if (effect.models != null && effect.models.Any())
+                {
+                    for (int t = 0; t < effect.models.Count; t++)
+                    {
+                        var model = effect.models[t];
+                        var path = resourcePath.ModelPathList[t];
+                        var buffer = GLTF.GetViewBytes(model.bufferView);
+
+                        var modelPath = string.Format("{0}/{1}", modelDir, Path.GetFileName(path));
+                        SafeCreateDirectory(Path.GetDirectoryName(modelPath));
+
+                        File.WriteAllBytes(modelPath, buffer.ToArray());
+                        AssetDatabase.ImportAsset(modelPath);
+                    }
+                }
+
+                EditorApplication.delayCall += () =>
+                {
+                    // fix texture setting
+                    foreach (var texturePath in writeTexturePathList)
+                    {
+                        AssetDatabase.ImportAsset(texturePath);
+                        var textureImporter = (TextureImporter)TextureImporter.GetAtPath(texturePath);
+                        if(textureImporter != null)
+                        {
+                            textureImporter.isReadable = true;
+                            textureImporter.textureCompression = TextureImporterCompression.Uncompressed;
+                            textureImporter.SaveAndReimport();
+                        }
+                    }
+
+                    // efk
+                    var assetPath = string.Format("{0}/{1}.efk", effectDir, effect.effectName);
+                    Effekseer.EffekseerEffectAsset.CreateAsset(assetPath, body);
+                    var effectAsset = AssetDatabase.LoadAssetAtPath<Effekseer.EffekseerEffectAsset>(System.IO.Path.ChangeExtension(assetPath, "asset"));
+                    EffekseerEffectAssets.Add(effectAsset);
+
+
+                    // find assets
+                    // textures
+                    for(int t = 0; t < effectAsset.textureResources.Count(); t++)
+                    {
+                        var path = effectAsset.textureResources[t].path;
+                        if (string.IsNullOrEmpty(path))
+                            continue;
+
+                        var fileName = Path.GetFileName(path);
+                        if (string.IsNullOrEmpty(fileName))
+                            continue;
+
+                        Texture2D texture = UnityEditor.AssetDatabase.LoadAssetAtPath(
+                            string.Format("{0}/{1}", textureDir, fileName), typeof(Texture2D)) as Texture2D;
+
+                        if(texture != null)
+                        {
+                            effectAsset.textureResources[t].texture = texture;
+                        }
+                    }
+
+                    // models
+                    for (int t = 0; t < effectAsset.modelResources.Count(); t++)
+                    {
+                        var path = effectAsset.modelResources[t].path;
+                        if (string.IsNullOrEmpty(path))
+                            continue;
+
+                        var fileName = Path.GetFileName(path);
+                        if (string.IsNullOrEmpty(fileName))
+                            continue;
+
+                        Effekseer.EffekseerModelAsset model = UnityEditor.AssetDatabase.LoadAssetAtPath(
+                            string.Format("{0}/{1}", modelDir, fileName), typeof(Effekseer.EffekseerModelAsset)) as Effekseer.EffekseerModelAsset;
+
+                        if (model != null)
+                        {
+                            effectAsset.modelResources[t].asset = model;
+                        }
+                    }
+                };
+            }
+#endif
+        }
+
+        private static DirectoryInfo SafeCreateDirectory(string path)
+        {
+#if UNITY_EDITOR
+            try
+            {
+                if (Directory.Exists(path))
+                {
+                    return null;
+                }
+                var info = Directory.CreateDirectory(path);
+                AssetDatabase.ImportAsset(path);
+                return info;
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+
+#else
+            return null;
 #endif
         }
 

@@ -134,6 +134,12 @@ namespace VCI
             "Assets/VRM/ShaderProperty",
             "Assets/VRM/UniGLTF",
             "Assets/VRM/UniUnlit",
+
+            "Assets/Effekseer/Editor",
+            "Assets/Effekseer/Materials",
+            "Assets/Effekseer/Plugins",
+            "Assets/Effekseer/Resources",
+            "Assets/Effekseer/Scripts",
         };
 
 #if VCI_DEVELOP
@@ -155,7 +161,8 @@ namespace VCI
             {
                 var filesA = EnumerateFiles("Assets/VCI", IsExclude).ToArray();
                 var filesB = EnumerateFiles("Assets/VRM", IsExclude).ToArray();
-                var files = filesA.Concat(filesB).ToArray();
+                var filesC = EnumerateFiles("Assets/Effekseer", IsExclude).ToArray();
+                var files = filesA.Concat(filesB.Concat(filesC)).ToArray();
                 Debug.LogFormat("{0}",
                     string.Join("", files.Select((x, i) => string.Format("[{0:##0}] {1}\n", i, x)).ToArray()));
                 AssetDatabase.ExportPackage(files
