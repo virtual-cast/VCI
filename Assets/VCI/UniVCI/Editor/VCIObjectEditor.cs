@@ -1,5 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
+using System.Linq;
+using System.IO;
 
 namespace VCI
 {
@@ -80,6 +82,38 @@ namespace VCI
             SetMetaPropertyField(_metaProp, "scriptWriteProtected");
             SetMetaPropertyField(_metaProp, "scriptEnableDebugging");
             EditorGUILayout.Space();
+
+            if(_target.Scripts.Any())
+            {
+                if(_target.Scripts[0].name != "main")
+                {
+                    EditorGUILayout.HelpBox("The first script must be named \"main\".", MessageType.Warning);
+                }
+
+                var empties = _target.Scripts.Where(x => string.IsNullOrEmpty(x.name));
+                if(empties.Any())
+                {
+                    EditorGUILayout.HelpBox("Some have no script name.", MessageType.Warning);
+                }
+
+                var duplicates = _target.Scripts.GroupBy(script => script.name)
+                    .Where(name => name.Count() > 1)
+                    .Select(group => group.Key).ToList();
+                if (duplicates.Any())
+                {
+                    EditorGUILayout.HelpBox("Duplicate script name.", MessageType.Warning);
+                }
+
+                var invalidChars = Path.GetInvalidFileNameChars().Concat(new[] { '.' }).ToArray();
+                foreach (var script in _target.Scripts)
+                {
+                    if(script.name.IndexOfAny(invalidChars) >= 0)
+                    {
+                        EditorGUILayout.HelpBox("Contains characters that can not be used as scriptName. " + script.name, MessageType.Warning);
+                    }
+                };
+            }
+            
 
             // vci scripts
             EditorGUILayout.PropertyField(_vciScriptProp, true);

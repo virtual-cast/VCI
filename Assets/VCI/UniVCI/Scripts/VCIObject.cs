@@ -14,7 +14,7 @@ namespace VCI
         [Serializable]
         public class Script
         {
-            public string name = "main.lua";
+            public string name = "main";
 
             public ScriptMimeType mimeType;
 
@@ -46,13 +46,22 @@ namespace VCI
             {
                 var first = Scripts.FirstOrDefault(x => x != null);
                 if (first != null && !string.IsNullOrEmpty(first.name)) return Scripts[0].name;
-                return "main.lua";
+                return "main";
             }
         }
 
         private void Reset()
         {
             Meta.title = name;
+        }
+
+        private void OnValidate()
+        {
+
+            if (Scripts.Any())
+            {
+                Scripts.First().name = "main";
+            }
         }
     }
 }
