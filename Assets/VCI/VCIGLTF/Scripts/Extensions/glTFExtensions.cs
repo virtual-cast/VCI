@@ -103,14 +103,18 @@ namespace VCIGLTF
         }
 
         public static int ExtendBufferAndGetAccessorIndex<T>(this glTF gltf, int bufferIndex, T[] array,
-            glBufferTarget target = glBufferTarget.NONE) where T : struct
+            glBufferTarget target = glBufferTarget.NONE,
+            float[] min = null,
+            float[] max = null) where T : struct
         {
-            return gltf.ExtendBufferAndGetAccessorIndex(bufferIndex, new ArraySegment<T>(array), target);
+            return gltf.ExtendBufferAndGetAccessorIndex(bufferIndex, new ArraySegment<T>(array), target, min, max);
         }
 
         public static int ExtendBufferAndGetAccessorIndex<T>(this glTF gltf, int bufferIndex,
             ArraySegment<T> array,
-            glBufferTarget target = glBufferTarget.NONE) where T : struct
+            glBufferTarget target = glBufferTarget.NONE,
+            float[] min = null,
+            float[] max = null) where T : struct
         {
             if (array.Count == 0)
             {
@@ -122,14 +126,24 @@ namespace VCIGLTF
             gltf.bufferViews[viewIndex].byteStride = 0;
 
             var accessorIndex = gltf.accessors.Count;
-            gltf.accessors.Add(new glTFAccessor
+            var accessor = new glTFAccessor
             {
                 bufferView = viewIndex,
                 byteOffset = 0,
                 componentType = GetComponentType<T>(),
                 type = GetAccessorType<T>(),
                 count = array.Count,
-            });
+            };
+            if(min != null)
+            {
+                accessor.min = min;
+            }
+            if (max != null)
+            {
+                accessor.max = max;
+            }
+
+            gltf.accessors.Add(accessor);
             return accessorIndex;
         }
 

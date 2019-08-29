@@ -18,7 +18,7 @@ namespace VCI
         private
             void OnEnable()
         {
-            _target = (VCIObject) target;
+            _target = (VCIObject)target;
             _scriptProp = serializedObject.FindProperty("m_Script");
             _metaProp = serializedObject.FindProperty("Meta");
             _thumbnailProp = _metaProp.FindPropertyRelative("thumbnail");
@@ -59,7 +59,7 @@ namespace VCI
             SetMetaPropertyField(_metaProp, "thumbnail");
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            _thumbnailProp.objectReferenceValue = (Texture2D) EditorGUILayout.ObjectField(
+            _thumbnailProp.objectReferenceValue = (Texture2D)EditorGUILayout.ObjectField(
                 _thumbnailProp.objectReferenceValue, typeof(Texture2D), false, GUILayout.Width(100),
                 GUILayout.Height(100));
             EditorGUILayout.EndHorizontal();
@@ -83,15 +83,15 @@ namespace VCI
             SetMetaPropertyField(_metaProp, "scriptEnableDebugging");
             EditorGUILayout.Space();
 
-            if(_target.Scripts.Any())
+            if (_target.Scripts.Any())
             {
-                if(_target.Scripts[0].name != "main")
+                if (_target.Scripts[0].name != "main")
                 {
                     EditorGUILayout.HelpBox("The first script must be named \"main\".", MessageType.Warning);
                 }
 
                 var empties = _target.Scripts.Where(x => string.IsNullOrEmpty(x.name));
-                if(empties.Any())
+                if (empties.Any())
                 {
                     EditorGUILayout.HelpBox("Some have no script name.", MessageType.Warning);
                 }
@@ -107,13 +107,14 @@ namespace VCI
                 var invalidChars = Path.GetInvalidFileNameChars().Concat(new[] { '.' }).ToArray();
                 foreach (var script in _target.Scripts)
                 {
-                    if(script.name.IndexOfAny(invalidChars) >= 0)
+                    if (script.name.IndexOfAny(invalidChars) >= 0)
                     {
                         EditorGUILayout.HelpBox("Contains characters that can not be used as scriptName. " + script.name, MessageType.Warning);
                     }
-                };
+                }
+                ;
             }
-            
+
 
             // vci scripts
             EditorGUILayout.PropertyField(_vciScriptProp, true);
@@ -124,7 +125,9 @@ namespace VCI
             // Export Button
             if (GUILayout.Button("Export VCI"))
             {
+#if UNITY_EDITOR_WIN
                 VCIObjectExporterMenu.ExportObject();
+#endif
             }
         }
     }

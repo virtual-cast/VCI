@@ -20,7 +20,7 @@ namespace VCIGLTF
     /// <summary>
     /// GLTF importer
     /// </summary>
-    public class ImporterContext: IDisposable
+    public class ImporterContext : IDisposable
     {
         #region MeasureTime
         bool m_showSpeedLog
@@ -83,6 +83,26 @@ namespace VCIGLTF
 
             return sb.ToString();
         }
+        #endregion
+
+        #region Animation
+        IAnimationImporter m_animationImporter;
+        public void SetAnimationImporter(IAnimationImporter animationImporter)
+        {
+            m_animationImporter = animationImporter;
+        }
+        public IAnimationImporter AnimationImporter
+        {
+            get
+            {
+                if (m_animationImporter == null)
+                {
+                    m_animationImporter = new RootAnimationImporter();
+                }
+                return m_animationImporter;
+            }
+        }
+
         #endregion
 
         IShaderStore m_shaderStore;
@@ -565,7 +585,7 @@ namespace VCIGLTF
                 {
                     using (MeasureTime("AnimationImporter"))
                     {
-                        AnimationImporter.ImportAnimation(this);
+                        AnimationImporter.Import(this);
                     }
                 })
                 .ContinueWith(Scheduler.CurrentThread,

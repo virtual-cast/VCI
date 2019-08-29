@@ -17,6 +17,7 @@ namespace VCI
         public VCIExporter(glTF gltf) : base(gltf)
         {
             gltf.extensionsUsed.Add(glTF_VCAST_vci_meta.ExtensionName);
+            gltf.extensionsUsed.Add(glTF_VCAST_vci_animation.ExtensionName);
             gltf.extensionsUsed.Add(glTF_Effekseer.ExtensionName);
             gltf.extensionsUsed.Add(glTF_Effekseer_emitters.ExtensionName);
 #if VCI_EXPORTER_USE_SPARSE
@@ -219,6 +220,66 @@ namespace VCI
                 };
             }
 
+#if UNITY_EDITOR
+            // Animation
+            // None RootAnimation
+            var animators = exporter.Copy.GetComponentsInChildren<Animator>().Where(x => exporter.Copy != x.gameObject);
+            var animations = exporter.Copy.GetComponentsInChildren<Animation>().Where(x => exporter.Copy != x.gameObject);
+            // NodeIndex to AnimationClips
+            Dictionary<int, AnimationClip[]> animationNodeList = new Dictionary<int, AnimationClip[]>();
+
+            foreach(var animator in animators)
+            {
+                var animationClips = AnimationExporter.GetAnimationClips(animator);
+                var nodeIndex = exporter.Nodes.FindIndex(0, exporter.Nodes.Count, x => x == animator.transform);
+                if(animationClips.Any() && nodeIndex != -1)
+                {
+                    animationNodeList.Add(nodeIndex, animationClips.ToArray());
+                }
+            }
+
+            foreach (var animation in animations)
+            {
+                var animationClips = AnimationExporter.GetAnimationClips(animation);
+                var nodeIndex = exporter.Nodes.FindIndex(0, exporter.Nodes.Count, x => x == animation.transform);
+                if (animationClips.Any() && nodeIndex != -1)
+                {
+                    animationNodeList.Add(nodeIndex, animationClips.ToArray());
+                }
+            }
+
+            int bufferIndex = 0;
+            foreach (var animationNode in animationNodeList)
+            {
+                List<int> clipIndices = new List<int>();
+                // write animationClips
+                foreach (var clip in animationNode.Value)
+                {
+                    var animationWithCurve = AnimationExporter.Export(clip, Nodes[animationNode.Key], Nodes);
+                    AnimationExporter.WriteAnimationWithSampleCurves(gltf, animationWithCurve, clip.name, bufferIndex);
+                    clipIndices.Add(gltf.animations.IndexOf(animationWithCurve.Animation));
+                }
+
+                // write node
+                if(clipIndices.Any())
+                {
+                    var node = gltf.nodes[animationNode.Key];
+                    if (node.extensions == null)
+                        node.extensions = new glTFNode_extensions();
+
+                    node.extensions.VCAST_vci_animation = new glTF_VCAST_vci_animation()
+                    {
+                        animationReferences = new List<glTF_VCAST_vci_animationReference>()
+                    };
+
+                    foreach(var index in clipIndices)
+                    {
+                        node.extensions.VCAST_vci_animation.animationReferences.Add(new glTF_VCAST_vci_animationReference() { animation = index });
+                    }
+                }
+            }
+#endif
+
             // Effekseer
             var effekseerEmitters = exporter.Copy.GetComponentsInChildren<Effekseer.EffekseerEmitter>()
                 .Where(x => x.effectAsset != null)
@@ -318,6 +379,7 @@ namespace VCI
                     nodeIndex = 0,
                     nodeName = "Root",
                     effectName = emitter.effectAsset.name,
+                    scale = emitter.effectAsset.Scale,
                     body = new glTF_Effekseer_body() { bufferView = viewIndex },
                     images = new List<glTF_Effekseer_image>(),
                     models = new List<glTF_Effekseer_model>()

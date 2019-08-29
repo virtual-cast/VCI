@@ -225,49 +225,13 @@ namespace VCIGLTF
                 else if (animation != null) clips = AnimationExporter.GetAnimationClips(animation);
 
                 if (clips.Any())
+                {
                     foreach (var clip in clips)
                     {
                         var animationWithCurve = AnimationExporter.Export(clip, Copy.transform, Nodes);
-
-                        foreach (var kv in animationWithCurve.SamplerMap)
-                        {
-                            var sampler = animationWithCurve.Animation.samplers[kv.Key];
-
-                            var inputAccessorIndex = glTF.ExtendBufferAndGetAccessorIndex(bufferIndex, kv.Value.Input);
-                            sampler.input = inputAccessorIndex;
-
-                            var outputAccessorIndex =
-                                glTF.ExtendBufferAndGetAccessorIndex(bufferIndex, kv.Value.Output);
-                            sampler.output = outputAccessorIndex;
-
-                            // modify accessors
-                            var outputAccessor = glTF.accessors[outputAccessorIndex];
-                            var channel = animationWithCurve.Animation.channels.First(x => x.sampler == kv.Key);
-                            switch (glTFAnimationTarget.GetElementCount(channel.target.path))
-                            {
-                                case 1:
-                                    outputAccessor.type = "SCALAR";
-                                    //outputAccessor.count = ;
-                                    break;
-                                case 3:
-                                    outputAccessor.type = "VEC3";
-                                    outputAccessor.count /= 3;
-                                    break;
-
-                                case 4:
-                                    outputAccessor.type = "VEC4";
-                                    outputAccessor.count /= 4;
-                                    break;
-
-                                default:
-                                    throw new NotImplementedException();
-                            }
-                        }
-
-                        animationWithCurve.Animation.name = clip.name;
-                        glTF.animations.Add(animationWithCurve.Animation);
+                        AnimationExporter.WriteAnimationWithSampleCurves(glTF, animationWithCurve, clip.name, bufferIndex);
                     }
-
+                }
                 #endregion
 
 #endif

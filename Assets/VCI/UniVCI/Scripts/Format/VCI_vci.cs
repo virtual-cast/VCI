@@ -966,6 +966,8 @@ namespace VCIGLTF
 
         public glTF_Effekseer_body body;
 
+        public float scale = 1.0f;
+
         [JsonSchema(Required = true, MinItems = 1, ExplicitIgnorableItemLength = 0)]
         public List<glTF_Effekseer_image> images;
 
@@ -1030,6 +1032,36 @@ namespace VCIGLTF
         public int effectIndex = -1;
         public bool isPlayOnStart;
         public bool isLoop;
+    }
+    #endregion
+
+    #region Animation
+
+    /// <summary>
+    /// node.extension
+    /// </summary>
+    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
+    {
+        public glTF_VCAST_vci_animation VCAST_vci_animation;
+    }
+
+    /// <summary>
+    /// Extension root
+    /// </summary>
+    [Serializable]
+    public class glTF_VCAST_vci_animation
+    {
+        public static string ExtensionName => "VCAST_vci_animation";
+
+        [JsonSchema(MinItems = 1)]
+        public List<glTF_VCAST_vci_animationReference> animationReferences;
+    }
+    
+    [Serializable]
+    public class glTF_VCAST_vci_animationReference
+    {
+        [JsonSchema(Required = true, Minimum = 0)]
+        public int animation = -1;
     }
     #endregion
 }

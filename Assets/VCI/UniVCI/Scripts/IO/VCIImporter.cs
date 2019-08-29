@@ -57,6 +57,7 @@ namespace VCI
             {
                 var nodes = parsed["extensions"][MATERIAL_EXTENSION_NAME]["materials"];
                 SetMaterialImporter(new VCIMaterialImporter(this, glTF_VCI_Material.Parse(nodes)));
+                SetAnimationImporter(new EachAnimationImporter());
             }
         }
 
@@ -156,12 +157,13 @@ namespace VCI
             }
 
             // Animation
-            var animation = Root.GetComponent<Animation>();
-            if (animation != null)
+            var rootAnimation = Root.GetComponent<Animation>();
+            if (rootAnimation != null)
             {
-                animation.playAutomatically = false;
+                rootAnimation.playAutomatically = false;
             }
 
+            // SubItem
             for (var i = 0; i < GLTF.nodes.Count; i++)
             {
                 var node = GLTF.nodes[i];
@@ -330,6 +332,7 @@ namespace VCI
                                 Effekseer.EffekseerEffectAsset effectAsset = ScriptableObject.CreateInstance<Effekseer.EffekseerEffectAsset>();
                                 effectAsset.name = effect.effectName;
                                 effectAsset.efkBytes = body;
+                                effectAsset.Scale = effect.scale;
                                 effectAsset.textureResources = effekseerTextures.ToArray();
                                 effectAsset.modelResources = effekseerModels.ToArray();
                                 effectAsset.soundResources = new Effekseer.Internal.EffekseerSoundResource[0];
