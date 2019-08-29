@@ -3,7 +3,7 @@
 これはVCI作成用のプロジェクトです。
 UnityのEditorから `VCI` をエクスポートすることができます。
 
-* Unity-2018.2
+* Unity-2018.4
 * .Net-4.5
 
 をサポートしています。
@@ -21,5 +21,6 @@ UnityのEditorから `VCI` をエクスポートすることができます。
 
 ## 依存ライブラリ
 
-UniVRM開発版の一部(UniGLTF, MToon)を含んでいます。
+* UniVRM開発版の一部(UniGLTF, MToon)を含んでいます。
+* Effekseerライブラリ https://github.com/effekseer/Effekseer
 
