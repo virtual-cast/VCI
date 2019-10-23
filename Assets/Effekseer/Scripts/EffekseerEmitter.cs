@@ -67,6 +67,7 @@ namespace Effekseer
 			var h = EffekseerSystem.PlayEffect(effectAsset, transform.position);
 			h.SetRotation(transform.rotation);
 			h.SetScale(transform.localScale);
+			h.layer = gameObject.layer;
 			if (speed != 1.0f) h.speed = speed;
 			if (paused) h.paused = paused;
 			if (shown) h.shown = shown;
@@ -302,7 +303,13 @@ namespace Effekseer
 				} else if(isLooping && handles.Count == 1)
 				{
 					handles.RemoveAt(i);
-					Play();
+					var newHandle = Play();
+
+					// avoid infinite loop
+					if (!newHandle.exists)
+					{
+						break;
+					}
 				}
 				else {
 					handles.RemoveAt(i);

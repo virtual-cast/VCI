@@ -1,5 +1,4 @@
-﻿#pragma warning disable
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,8 +10,6 @@ namespace Effekseer.Editor
 	[CustomEditor(typeof(Effekseer.EffekseerEmitter))]
 	public class EffekseerEmitterEditor : UnityEditor.Editor
 	{
-        public static bool EnableUpdate = true;
-
 		private EffekseerEmitter emitter;
 		private double lastTime;
 		private bool systemInitialized;
@@ -51,9 +48,6 @@ namespace Effekseer.Editor
 
 		void Update()
 		{
-            if (!EnableUpdate)
-                return;
-
 			double currentTime = EditorApplication.timeSinceStartup;
 			float deltaTime = (float)(currentTime - lastTime);
 			float deltaFrames = Utility.TimeToFrames(deltaTime);
@@ -76,8 +70,11 @@ namespace Effekseer.Editor
 			SceneView.RepaintAll();
 			var assembly = typeof(EditorWindow).Assembly;
 			var type = assembly.GetType("UnityEditor.GameView");
-			var gameview = EditorWindow.GetWindow(type);
-			gameview.Repaint();
+			var gameview = EditorWindow.GetWindow(type, false, null, false);
+			if (gameview != null)
+			{
+				gameview.Repaint();
+			}
 		}
 		
 		void OnSceneGUI()
@@ -108,10 +105,17 @@ namespace Effekseer.Editor
 				if (systemInitialized == false) {
 					InitSystem();
 				}
+
+				// avoid a bug playing effect sometimes causes craches after window size is changed.
+				// Unity, Effekseer, or driver bug
+				Effekseer.EffekseerSystem.Instance.renderer.CleanUp();
 				emitter.Play();
 			}
 			if (GUILayout.Button("Stop")) {
 				emitter.StopImmediate();
+
+				// just in case
+				Effekseer.EffekseerSystem.Instance.renderer.CleanUp();
 				RepaintEffect();
 			}
 			GUILayout.EndHorizontal();
