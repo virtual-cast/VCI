@@ -16,7 +16,6 @@ namespace VCI
         public static void ExportObject()
         {
             EditorApplication.isPlaying = false;
-            Effekseer.Editor.EffekseerEmitterEditor.EnableUpdate = false;
             try
             {
                 var errorMessage = "";
@@ -61,13 +60,9 @@ namespace VCI
                     System.Diagnostics.Process.Start("explorer.exe", " /e,/select," + path.Replace("/", "\\"));
                 }
             }
-            catch (System.Exception ex)
+            catch
             {
-                throw ex;
-            }
-            finally
-            {
-                Effekseer.Editor.EffekseerEmitterEditor.EnableUpdate = true;
+                throw;
             }
         }
 
