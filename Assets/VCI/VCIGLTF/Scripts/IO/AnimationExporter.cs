@@ -59,6 +59,7 @@ namespace VCIGLTF
 
         static int GetNodeIndex(Transform root, List<Transform> nodes, string path)
         {
+            if(string.IsNullOrEmpty(path)) return 0;
             var descendant = root.GetFromPath(path);
             return nodes.IndexOf(descendant);
         }
