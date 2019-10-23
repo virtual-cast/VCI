@@ -8,8 +8,6 @@ namespace Effekseer.Internal
 {
 	public interface IEffekseerRenderer
 	{
-		int layer { get; set; }
-
 		void SetVisible(bool visible);
 
 		void CleanUp();
@@ -248,6 +246,8 @@ namespace Effekseer.Internal
 
 	internal class EffekseerRendererUtils
 	{
+		public const int RenderIDCount = 128;
+
 	    internal static int ScaledClamp(int value, float scale)
 		{
 			var v = (int)(value * scale);
@@ -277,6 +277,58 @@ namespace Effekseer.Internal
 		}
 	}
 	
+	internal class BackgroundRenderTexture
+	{
+		public RenderTexture renderTexture = null;
+		public IntPtr ptr = IntPtr.Zero;
+
+		public BackgroundRenderTexture(int width, int height, int depth, RenderTextureFormat format)
+		{
+			renderTexture = new RenderTexture(width, height, 0, format);
+		}
+
+		public bool Create()
+		{
+			// HACK for ZenPhone (cannot understand)
+			if (this.renderTexture == null || !this.renderTexture.Create())
+			{
+				this.renderTexture = null;
+				return false;
+			}
+
+			this.ptr = this.renderTexture.GetNativeTexturePtr();
+			return true;			
+		}
+
+		public int width
+		{
+			get
+			{
+				if (renderTexture != null) return renderTexture.width;
+				return 0;
+			}
+		}
+
+		public int height
+		{
+			get
+			{
+				if (renderTexture != null) return renderTexture.height;
+				return 0;
+			}
+		}
+
+		public void Release()
+		{
+			if(renderTexture != null)
+			{
+				renderTexture.Release();
+				renderTexture = null;
+				ptr = IntPtr.Zero;
+			}
+		}
+	}
+
 	internal class EffekseerRendererUnity : IEffekseerRenderer
 	{
 		const CameraEvent cameraEvent = CameraEvent.AfterForwardAlpha;
@@ -385,6 +437,66 @@ namespace Effekseer.Internal
 			}
 		}
 
+		class ModelBufferCollection
+		{
+			const int elementCount = 40;
+
+			List<ComputeBuffer> computeBuffers = new List<ComputeBuffer>();
+			List<Plugin.UnityRenderModelParameter[]> cpuBuffers = new List<Plugin.UnityRenderModelParameter[]>();
+			int bufferOffset = 0;
+
+			public ModelBufferCollection()
+			{
+				for(int i = 0; i < 10; i++)
+				{
+					computeBuffers.Add(new ComputeBuffer(elementCount, sizeof(int) * 25));
+					cpuBuffers.Add(new Plugin.UnityRenderModelParameter[elementCount]);
+				}
+			}
+
+			public void Reset()
+			{
+				bufferOffset = 0;
+			}
+
+			public unsafe int Allocate(Plugin.UnityRenderModelParameter* param, int offset, int count, ref ComputeBuffer computeBuffer)
+			{
+				if (bufferOffset >= computeBuffers.Count)
+				{
+					computeBuffers.Add(new ComputeBuffer(elementCount, sizeof(int) * 25));
+					cpuBuffers.Add(new Plugin.UnityRenderModelParameter[elementCount]);
+				}
+
+				computeBuffer = computeBuffers[bufferOffset];
+				var cpuBuffer = cpuBuffers[bufferOffset];
+				bufferOffset++;
+
+				if(count >= elementCount)
+				{
+					count = elementCount;
+				}
+
+				for(int i = 0; i < count; i++)
+				{
+					cpuBuffer[i] =  param[offset + i];
+				}
+
+				computeBuffer.SetData(cpuBuffer, 0, 0, count);
+
+				return count;
+			}
+
+			public void Release()
+			{
+				for(int i = 0; i < computeBuffers.Count; i++)
+				{
+					computeBuffers[i].Release();
+				}
+				computeBuffers.Clear();
+				cpuBuffers.Clear();
+			}
+		}
+
 		class DelayEvent
 		{
 			public int RestTime = 0;
@@ -398,7 +510,7 @@ namespace Effekseer.Internal
 			public CommandBuffer commandBuffer;
 			public CameraEvent cameraEvent;
 			public int renderId;
-			public RenderTexture renderTexture;
+			public BackgroundRenderTexture renderTexture;
 			public ComputeBuffer computeBufferFront;
 			public ComputeBuffer computeBufferBack;
 			public byte[] computeBufferTemp;
@@ -407,6 +519,7 @@ namespace Effekseer.Internal
 			bool isDistortionEnabled = false;
 
 			public MaterialPropCollection materiaProps = new MaterialPropCollection();
+			public ModelBufferCollection modelBuffers = new ModelBufferCollection();
 
 			List<DelayEvent> delayEvents = new List<DelayEvent>();
 			
@@ -415,6 +528,10 @@ namespace Effekseer.Internal
 				this.camera = camera;
 				this.renderId = renderId;
 				this.cameraEvent = cameraEvent;
+
+#if DEBUG_RENDERPATH
+				Debug.Log(string.Format("Create RenderPath {0}", renderId));
+#endif
 			}
 
 			public void Init(bool enableDistortion)
@@ -438,7 +555,7 @@ namespace Effekseer.Internal
 #else
 					RenderTextureFormat format = (this.camera.allowHDR) ? RenderTextureFormat.ARGBHalf : RenderTextureFormat.ARGB32;
 #endif
-					this.renderTexture = new RenderTexture(width, height, 0, format);
+					this.renderTexture = new BackgroundRenderTexture(width, height, 0, format);
 	
 					// HACK for ZenPhone (cannot understand)
 					if(this.renderTexture == null || !this.renderTexture.Create())
@@ -503,11 +620,20 @@ namespace Effekseer.Internal
 					this.renderTexture = null;
 				}
 
+				if(this.modelBuffers != null)
+				{
+					this.modelBuffers.Release();
+				}
+
 				foreach (var e in delayEvents)
 				{
 					e.Event();
 				}
 				delayEvents.Clear();
+
+#if DEBUG_RENDERPATH
+				Debug.Log(string.Format("Dispose RenderPath {0}", renderId));
+#endif
 			}
 
 			public bool IsValid()
@@ -544,6 +670,7 @@ namespace Effekseer.Internal
 		MaterialCollection materialsDistortion = new MaterialCollection();
 		MaterialCollection materialsModel = new MaterialCollection();
 		MaterialCollection materialsModelDistortion = new MaterialCollection();
+		int nextRenderID = 0;
 
 		public EffekseerRendererUnity()
 		{
@@ -556,8 +683,6 @@ namespace Effekseer.Internal
 
 		// RenderPath per Camera
 		private Dictionary<Camera, RenderPath> renderPaths = new Dictionary<Camera, RenderPath>();
-
-		public int layer { get; set; }
 
 		public void SetVisible(bool visible)
 		{
@@ -614,14 +739,11 @@ namespace Effekseer.Internal
 			RenderPath path;
 
 			// check a culling mask
-			if ((camera.cullingMask & (1 << layer)) == 0)
+			var mask = Effekseer.Plugin.EffekseerGetCameraCullingMaskToShowAllEffects();
+
+			// don't need to update because doesn't exists and need not to render
+			if ((camera.cullingMask & mask) == 0 && !renderPaths.ContainsKey(camera))
 			{
-				if (renderPaths.ContainsKey(camera))
-				{
-					path = renderPaths[camera];
-					path.Dispose();
-					renderPaths.Remove(camera);
-				}
 				return;
 			}
 
@@ -660,9 +782,32 @@ namespace Effekseer.Internal
 			else
 			{
 				// render path doesn't exists, create a render path
-				path = new RenderPath(camera, cameraEvent, renderPaths.Count);
+				while (true)
+				{
+					bool found = false;
+					foreach (var kv in renderPaths)
+					{
+						if (kv.Value.renderId == nextRenderID)
+						{
+							found = true;
+							break;
+						}
+					}
+
+					if (found)
+					{
+						nextRenderID++;
+					}
+					else
+					{
+						break;
+					}
+				}
+
+				path = new RenderPath(camera, cameraEvent, nextRenderID);
 				path.Init(EffekseerRendererUtils.IsDistortionEnabled);
 				renderPaths.Add(camera, path);
+				nextRenderID = (nextRenderID + 1) % EffekseerRendererUtils.RenderIDCount;
 			}
 
 			if (!path.IsValid())
@@ -673,11 +818,17 @@ namespace Effekseer.Internal
 
 			path.Update();
 			path.LifeTime = 60;
+			Plugin.EffekseerSetRenderingCameraCullingMask(path.renderId, camera.cullingMask);
+
+			if ((camera.cullingMask & mask) == 0)
+			{
+				return;
+			}
 
 			// assign a dinsotrion texture
-			if (path.renderTexture)
+			if (path.renderTexture != null)
 			{
-				Plugin.EffekseerSetBackGroundTexture(path.renderId, path.renderTexture.GetNativeTexturePtr());
+				Plugin.EffekseerSetBackGroundTexture(path.renderId, path.renderTexture.ptr);
 			}
 			else
 			{
@@ -705,6 +856,7 @@ namespace Effekseer.Internal
 			// Reset command buffer
 			path.commandBuffer.Clear();
 			path.materiaProps.Reset();
+			path.modelBuffers.Reset();
 
 			// generate render events on this thread
 			Plugin.EffekseerRenderBack(path.renderId);
@@ -715,7 +867,7 @@ namespace Effekseer.Internal
 				path.ReallocateComputeBuffer();
 			}
 
-			RenderInternal(path.commandBuffer, path.computeBufferTemp, path.computeBufferBack, path.materiaProps, path.renderTexture);
+			RenderInternal(path.commandBuffer, path.computeBufferTemp, path.computeBufferBack, path.materiaProps, path.modelBuffers, path.renderTexture);
 
 			// Distortion
 			if (EffekseerRendererUtils.IsDistortionEnabled && 
@@ -724,17 +876,17 @@ namespace Effekseer.Internal
 				// Add a blit command that copy to the distortion texture
 				if(dstID.HasValue)
 				{
-					path.commandBuffer.Blit(dstID.Value, path.renderTexture);
+					path.commandBuffer.Blit(dstID.Value, path.renderTexture.renderTexture);
 					path.commandBuffer.SetRenderTarget(dstID.Value);
 				}
                 else if (dstIdentifier.HasValue)
                 {
-                    path.commandBuffer.Blit(dstIdentifier.Value, path.renderTexture);
+                    path.commandBuffer.Blit(dstIdentifier.Value, path.renderTexture.renderTexture);
                     path.commandBuffer.SetRenderTarget(dstIdentifier.Value);
                 }
 				else
 				{
-					path.commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, path.renderTexture);
+					path.commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, path.renderTexture.renderTexture);
 					path.commandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
 				}
 			}
@@ -747,17 +899,17 @@ namespace Effekseer.Internal
 				path.ReallocateComputeBuffer();
 			}
 
-			RenderInternal(path.commandBuffer, path.computeBufferTemp, path.computeBufferFront, path.materiaProps, path.renderTexture);
+			RenderInternal(path.commandBuffer, path.computeBufferTemp, path.computeBufferFront, path.materiaProps, path.modelBuffers, path.renderTexture);
 		}
 
-		Texture GetCachedTexture(IntPtr key, RenderTexture background)
+		Texture GetCachedTexture(IntPtr key, BackgroundRenderTexture background)
 		{
-			if (background != null && background.GetNativeTexturePtr() == key) return background;
+			if (background != null && background.ptr == key) return background.renderTexture;
 
 			return EffekseerSystem.GetCachedTexture(key);
 		}
 
-		unsafe void RenderInternal(CommandBuffer commandBuffer, byte[] computeBufferTemp, ComputeBuffer computeBuffer, MaterialPropCollection matPropCol, RenderTexture background)
+		unsafe void RenderInternal(CommandBuffer commandBuffer, byte[] computeBufferTemp, ComputeBuffer computeBuffer, MaterialPropCollection matPropCol, ModelBufferCollection modelBufferCol, BackgroundRenderTexture background)
 		{
 			var renderParameterCount = Plugin.GetUnityRenderParameterCount();
 			var vertexBufferSize = Plugin.GetUnityRenderVertexBufferCount();
@@ -804,27 +956,32 @@ namespace Effekseer.Internal
 							key.Cull = (int)UnityEngine.Rendering.CullMode.Off;
 						}
 
-						
-						for(int mi = 0; mi < parameter.ElementCount; mi++)
-						{
-							var model = EffekseerSystem.GetCachedModel(parameter.ModelPtr);
-							if (model == null)
-								continue;
+						var model = EffekseerSystem.GetCachedModel(parameter.ModelPtr);
+						if (model == null)
+							continue;
 
+						var count = parameter.ElementCount;
+						var offset = 0;
+
+						while(count > 0)
+						{
 							var prop = matPropCol.GetNext();
+							ComputeBuffer computeBuf = null;
+							var allocated = modelBufferCol.Allocate(modelParameters, offset, count, ref computeBuf);
 
 							if (parameter.IsDistortingMode > 0)
 							{
 								var material = materialsModelDistortion.GetMaterial(ref key);
 
+
 								prop.SetBuffer("buf_vertex", model.VertexBuffer);
 								prop.SetBuffer("buf_index", model.IndexBuffer);
-								prop.SetMatrix("buf_matrix", modelParameters[mi].Matrix);
-								prop.SetVector("buf_uv", modelParameters[mi].UV);
-								prop.SetVector("buf_color", modelParameters[mi].VColor);
-								prop.SetFloat("buf_vertex_offset", model.vertexOffsets[modelParameters[mi].Time]);
-								prop.SetFloat("buf_index_offset", model.indexOffsets[modelParameters[mi].Time]);
-								
+								prop.SetBuffer("buf_vertex_offsets", model.VertexOffsets);
+								prop.SetBuffer("buf_index_offsets", model.IndexOffsets);
+								prop.SetBuffer("buf_model_parameter", computeBuf);
+
+								prop.SetFloat("distortionIntensity", parameter.DistortionIntensity);
+
 								var colorTexture = GetCachedTexture(parameter.TexturePtrs0, background);
 								if (parameter.TextureWrapTypes[0] == 0)
 								{
@@ -850,9 +1007,9 @@ namespace Effekseer.Internal
 
 								if (background != null)
 								{
-									prop.SetTexture("_BackTex", background);
+									prop.SetTexture("_BackTex", background.renderTexture);
 
-									commandBuffer.DrawProcedural(new Matrix4x4(), material, 0, MeshTopology.Triangles, model.IndexCounts[0], 1, prop);
+									commandBuffer.DrawProcedural(new Matrix4x4(), material, 0, MeshTopology.Triangles, model.IndexCounts[0], allocated, prop);
 								}
 							}
 							else
@@ -861,16 +1018,13 @@ namespace Effekseer.Internal
 
 								prop.SetBuffer("buf_vertex", model.VertexBuffer);
 								prop.SetBuffer("buf_index", model.IndexBuffer);
-								prop.SetMatrix("buf_matrix", modelParameters[mi].Matrix);
-								prop.SetVector("buf_uv", modelParameters[mi].UV);
-								prop.SetVector("buf_color", modelParameters[mi].VColor);
+								prop.SetBuffer("buf_vertex_offsets", model.VertexOffsets);
+								prop.SetBuffer("buf_index_offsets", model.IndexOffsets);
+								prop.SetBuffer("buf_model_parameter", computeBuf);
 
-								int modelTime = modelParameters[mi].Time;
-								prop.SetFloat("buf_vertex_offset", model.vertexOffsets[modelTime]);
-								prop.SetFloat("buf_index_offset", model.indexOffsets[modelTime]);
 
 								var colorTexture = GetCachedTexture(parameter.TexturePtrs0, background);
-								if(parameter.TextureWrapTypes[0] == 0)
+								if (parameter.TextureWrapTypes[0] == 0)
 								{
 									colorTexture.wrapMode = TextureWrapMode.Repeat;
 								}
@@ -890,8 +1044,11 @@ namespace Effekseer.Internal
 
 								prop.SetTexture("_ColorTex", GetCachedTexture(parameter.TexturePtrs0, background));
 
-								commandBuffer.DrawProcedural(new Matrix4x4(), material, 0, MeshTopology.Triangles, model.IndexCounts[0], 1, prop);
+								commandBuffer.DrawProcedural(new Matrix4x4(), material, 0, MeshTopology.Triangles, model.IndexCounts[0], allocated, prop);
 							}
+
+							offset += allocated;
+							count -= allocated;
 						}
 					}
 					else
@@ -911,6 +1068,7 @@ namespace Effekseer.Internal
 
 							prop.SetFloat("buf_offset", parameter.VertexBufferOffset / VertexDistortionSize);
 							prop.SetBuffer("buf_vertex", computeBuffer);
+							prop.SetFloat("distortionIntensity", parameter.DistortionIntensity);
 
 							var colorTexture = GetCachedTexture(parameter.TexturePtrs0, background);
 							if (parameter.TextureWrapTypes[0] == 0)
@@ -937,7 +1095,7 @@ namespace Effekseer.Internal
 
 							if(background != null)
 							{
-								prop.SetTexture("_BackTex", background);
+								prop.SetTexture("_BackTex", background.renderTexture);
 
 								commandBuffer.DrawProcedural(new Matrix4x4(), material, 0, MeshTopology.Triangles, parameter.ElementCount * 2 * 3, 1, prop);
 							}
@@ -999,7 +1157,7 @@ namespace Effekseer.Internal
 			public CommandBuffer commandBuffer;
 			public CameraEvent cameraEvent;
 			public int renderId;
-			public RenderTexture renderTexture;
+			public BackgroundRenderTexture renderTexture;
 			public int LifeTime = 5;
 
 			bool isDistortionEnabled = false;
@@ -1009,6 +1167,10 @@ namespace Effekseer.Internal
 				this.camera = camera;
 				this.renderId = renderId;
 				this.cameraEvent = cameraEvent;
+
+#if DEBUG_RENDERPATH
+				Debug.Log(string.Format("Create RenderPath {0}", renderId));
+#endif
 			}
 
 			public void Init(bool enableDistortion, int? dstID, RenderTargetIdentifier? dstIdentifier)
@@ -1032,7 +1194,7 @@ namespace Effekseer.Internal
 #else
 					RenderTextureFormat format = (this.camera.allowHDR) ? RenderTextureFormat.ARGBHalf : RenderTextureFormat.ARGB32;
 #endif
-					this.renderTexture = new RenderTexture(width, height, 0, format);
+					this.renderTexture = new BackgroundRenderTexture(width, height, 0, format);
 
 					// HACK for ZenPhone (cannot understand)
 					if (this.renderTexture == null || !this.renderTexture.Create())
@@ -1044,22 +1206,22 @@ namespace Effekseer.Internal
 					}
 
 					// Add a blit command that copy to the distortion texture
-					this.commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, this.renderTexture);
+					this.commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, this.renderTexture.renderTexture);
 					this.commandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
 
                     if (dstID.HasValue)
                     {
-                        this.commandBuffer.Blit(dstID.Value, this.renderTexture);
+                        this.commandBuffer.Blit(dstID.Value, this.renderTexture.renderTexture);
                         this.commandBuffer.SetRenderTarget(dstID.Value);
                     }
                     else if (dstIdentifier.HasValue)
                     {
-                        this.commandBuffer.Blit(dstIdentifier.Value, this.renderTexture);
+                        this.commandBuffer.Blit(dstIdentifier.Value, this.renderTexture.renderTexture);
                         this.commandBuffer.SetRenderTarget(dstIdentifier.Value);
                     }
                     else
                     {
-                        this.commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, this.renderTexture);
+                        this.commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, this.renderTexture.renderTexture);
                         this.commandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
                     }
                 }
@@ -1087,6 +1249,10 @@ namespace Effekseer.Internal
 					this.renderTexture.Release();
 					this.renderTexture = null;
 				}
+
+#if DEBUG_RENDERPATH
+				Debug.Log(string.Format("Dispose RenderPath {0}", renderId));
+#endif
 			}
 
 			public bool IsValid()
@@ -1107,8 +1273,7 @@ namespace Effekseer.Internal
 
 		// RenderPath per Camera
 		private Dictionary<Camera, RenderPath> renderPaths = new Dictionary<Camera, RenderPath>();
-
-		public int layer { get; set; }
+		int nextRenderID = 0;
 
 		public void SetVisible(bool visible)
 		{
@@ -1165,14 +1330,10 @@ namespace Effekseer.Internal
 			RenderPath path;
 
 			// check a culling mask
-			if ((camera.cullingMask & (1 << layer)) == 0)
+			var mask = Effekseer.Plugin.EffekseerGetCameraCullingMaskToShowAllEffects();
+
+			if ((camera.cullingMask & mask) == 0 && !renderPaths.ContainsKey(camera))
 			{
-				if (renderPaths.ContainsKey(camera))
-				{
-					path = renderPaths[camera];
-					path.Dispose();
-					renderPaths.Remove(camera);
-				}
 				return;
 			}
 
@@ -1211,9 +1372,32 @@ namespace Effekseer.Internal
 			else
 			{
 				// render path doesn't exists, create a render path
-				path = new RenderPath(camera, cameraEvent, renderPaths.Count);
+				while(true)
+				{
+					bool found = false;
+					foreach(var kv in renderPaths)
+					{
+						if(kv.Value.renderId == nextRenderID)
+						{
+							found = true;
+							break;
+						}
+					}
+
+					if(found)
+					{
+						nextRenderID++;
+					}
+					else
+					{
+						break;
+					}
+				}
+
+				path = new RenderPath(camera, cameraEvent, nextRenderID);
 				path.Init(EffekseerRendererUtils.IsDistortionEnabled, dstID, dstIdentifier);
 				renderPaths.Add(camera, path);
+				nextRenderID = (nextRenderID + 1) % EffekseerRendererUtils.RenderIDCount;
 			}
 
 			if (!path.IsValid())
@@ -1223,6 +1407,12 @@ namespace Effekseer.Internal
 			}
 
 			path.LifeTime = 60;
+			Plugin.EffekseerSetRenderingCameraCullingMask(path.renderId, camera.cullingMask);
+
+			if ((camera.cullingMask & mask) == 0)
+			{
+				return;
+			}
 
             // if LWRP
             if(dstID.HasValue || dstIdentifier.HasValue)
@@ -1239,9 +1429,9 @@ namespace Effekseer.Internal
 			}
 
 			// assign a dinsotrion texture
-			if (path.renderTexture)
+			if (path.renderTexture != null)
 			{
-				Plugin.EffekseerSetBackGroundTexture(path.renderId, path.renderTexture.GetNativeTexturePtr());
+				Plugin.EffekseerSetBackGroundTexture(path.renderId, path.renderTexture.ptr);
 			}
 
 			// specify matrixes for stereo rendering

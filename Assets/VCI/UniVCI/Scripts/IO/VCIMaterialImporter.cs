@@ -27,9 +27,9 @@ namespace VCI
             "VRM/UnlitTransparentZWrite",
         };
 
-        public override Material CreateMaterial(int i, glTFMaterial src)
+        public override Material CreateMaterial(glTF gltf, int i, glTFMaterial src)
         {
-            if (i == 0 && m_materials.Count == 0) return base.CreateMaterial(i, src);
+            if (i == 0 && m_materials.Count == 0) return base.CreateMaterial(gltf, i, src);
 
             var item = m_materials[i];
             var shaderName = item.shader;
@@ -45,7 +45,7 @@ namespace VCI
                         shaderName);
                 else
                     Debug.LogFormat("unknown shader {0}.", shaderName);
-                return base.CreateMaterial(i, src);
+                return base.CreateMaterial(gltf, i, src);
             }
 
             //

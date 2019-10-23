@@ -11,7 +11,7 @@ namespace VCIGLTF
 {
     public interface IMaterialImporter
     {
-        Material CreateMaterial(int i, glTFMaterial src);
+        Material CreateMaterial(glTF gltf, int i, glTFMaterial src);
     }
 
     public class MaterialImporter : IMaterialImporter
@@ -65,7 +65,7 @@ namespace VCIGLTF
         /// _SrcBlend
         /// _DstBlend
         /// _ZWrite
-        public virtual Material CreateMaterial(int i, glTFMaterial x)
+        public virtual Material CreateMaterial(glTF gltf, int i, glTFMaterial x)
         {
             var shader = m_shaderStore.GetShader(x);
             //Debug.LogFormat("[{0}]{1}", i, shader.name);
@@ -134,6 +134,13 @@ namespace VCIGLTF
                 {
                     Utils.SetCullMode(material, UniUnlitCullMode.Back);
                 }
+
+                // VColor
+                if(gltf != null && gltf.MaterialHasVertexColor(x))
+                {
+                    Utils.SetVColBlendMode(material, UniUnlitVertexColorBlendOp.Multiply);
+                }
+
 
                 Utils.ValidateProperties(material, true);
 
