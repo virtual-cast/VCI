@@ -634,13 +634,13 @@ namespace VCIGLTF
             {
                 if (GLTF.materials == null || !GLTF.materials.Any())
                 {
-                    AddMaterial(MaterialImporter.CreateMaterial(0, null));
+                    AddMaterial(MaterialImporter.CreateMaterial(GLTF, 0, null));
                 }
                 else
                 {
                     for (int i = 0; i < GLTF.materials.Count; ++i)
                     {
-                        AddMaterial(MaterialImporter.CreateMaterial(i, GLTF.materials[i]));
+                        AddMaterial(MaterialImporter.CreateMaterial(GLTF, i, GLTF.materials[i]));
                     }
                 }
             }

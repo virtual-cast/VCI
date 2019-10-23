@@ -280,6 +280,7 @@ namespace VCI
             }
 #endif
 
+
             // Effekseer
             var effekseerEmitters = exporter.Copy.GetComponentsInChildren<Effekseer.EffekseerEmitter>()
                 .Where(x => x.effectAsset != null)

@@ -170,7 +170,7 @@ namespace VCIGLTF
             var materialImporter = new MaterialImporter(shaderStore, null);
 
             {
-                var material = materialImporter.CreateMaterial(0, new glTFMaterial
+                var material = materialImporter.CreateMaterial(null, 0, new glTFMaterial
                 {
 
                 });
