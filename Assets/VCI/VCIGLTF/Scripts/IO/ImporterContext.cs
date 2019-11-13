@@ -5,6 +5,7 @@ using UnityEngine;
 using System.IO;
 using System.Text;
 using System.Collections;
+using TMPro;
 using VCIDepthFirstScheduler;
 using VCIJSON;
 #if UNITY_EDITOR
@@ -717,6 +718,7 @@ namespace VCIGLTF
         public List<Transform> Nodes = new List<Transform>();
 
         List<TextureItem> m_textures = new List<TextureItem>();
+
         public IList<TextureItem> GetTextures()
         {
             return m_textures;
@@ -804,6 +806,18 @@ namespace VCIGLTF
             foreach (var x in m_materials) { yield return x; }
             foreach (var x in Meshes) { yield return x.Mesh; }
             foreach (var x in AnimationClips) { yield return x; }
+        }
+
+        List<TextMeshPro> m_texts = new List<TextMeshPro>();
+
+        public void AddText(TextMeshPro text)
+        {
+            m_texts.Add(text);
+        }
+
+        public IEnumerable<TextMeshPro> GetTexts(string id)
+        {
+            return m_texts.Where(t => t.name.ToLower() == id.ToLower());
         }
 
 #if UNITY_EDITOR

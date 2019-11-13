@@ -42,6 +42,7 @@ namespace VCI
                 importer.SetupPhysics();
                 importer.SetupAttachable();
                 importer.SetupEffekseer();
+                importer.SetupText();
                 importer.SaveAsAsset(prefabPath);
                 importer.EditorDestroyRoot();
             };

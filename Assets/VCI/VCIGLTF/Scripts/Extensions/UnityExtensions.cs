@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -241,6 +242,11 @@ namespace VCIGLTF
             return new float[] { q.x, q.y, q.z, q.w };
         }
 
+        public static float[] ToArray(this Vector2 v)
+        {
+            return new float[] {v.x, v.y};
+        }
+
         public static float[] ToArray(this Vector3 v)
         {
             return new float[] { v.x, v.y, v.z };
@@ -269,6 +275,10 @@ namespace VCIGLTF
 
         public static Mesh GetSharedMesh(this Transform t)
         {
+            // Ignore TMP Mesh
+            var tmp = t.GetComponent<TextMeshPro>();
+            if (tmp != null) return null;
+
             var meshFilter = t.GetComponent<MeshFilter>();
             if (meshFilter != null)
             {

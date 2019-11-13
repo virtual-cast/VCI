@@ -142,6 +142,14 @@ namespace VCI
             "Assets/Effekseer/Scripts",
         };
 
+
+        private static string[] adfFiles = new string[]
+        {
+            "Assets/VCI/VCI.asmdef",
+            "Assets/VRM/VRM.asmdef",
+            "Assets/Effekseer/EffekseerAssemblyDefinition.asmdef",
+        };
+
 #if VCI_DEVELOP
         [MenuItem(VCIVersion.MENU + "/Export unitypackage")]
 #endif
@@ -162,7 +170,8 @@ namespace VCI
                 var filesA = EnumerateFiles("Assets/VCI", IsExclude).ToArray();
                 var filesB = EnumerateFiles("Assets/VRM", IsExclude).ToArray();
                 var filesC = EnumerateFiles("Assets/Effekseer", IsExclude).ToArray();
-                var files = filesA.Concat(filesB.Concat(filesC)).ToArray();
+                var files = adfFiles.Concat(filesA.Concat(filesB.Concat(filesC))).ToArray();
+
                 Debug.LogFormat("{0}",
                     string.Join("", files.Select((x, i) => string.Format("[{0:##0}] {1}\n", i, x)).ToArray()));
                 AssetDatabase.ExportPackage(files
