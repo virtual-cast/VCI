@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 
@@ -23,6 +24,19 @@ namespace VCI
             vciSubItem.transform.SetParent(vciObjectComponent.transform);
             var vciSubItemObjectComponent = vciSubItem.AddComponent<VCISubItem>();
             vciSubItemObjectComponent.Grabbable = true;
+        }
+
+        [MenuItem("GameObject/VCI/Text", false, 0)]
+        public static void CreateVCIText()
+        {
+            var go = new GameObject("Text");
+            var rt = go.AddComponent<RectTransform>();
+            var tmp = go.AddComponent<TextMeshPro>();
+            tmp.text = "VCI";
+            tmp.fontSize = 5;
+            tmp.enableWordWrapping = false;
+            tmp.alignment = TextAlignmentOptions.Center;
+            rt.sizeDelta = Vector2.one;
         }
 
         private static VCIObject CreateVCIObject()

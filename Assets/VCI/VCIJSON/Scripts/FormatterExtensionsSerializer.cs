@@ -64,7 +64,7 @@ namespace VCIJSON
         }
     }
 
-    internal static class GenericSerializer<T>
+    public static class GenericSerializer<T>
     {
         private delegate void Serializer(IFormatter f, T t);
 

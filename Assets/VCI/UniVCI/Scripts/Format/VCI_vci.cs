@@ -126,6 +126,46 @@ namespace VCIGLTF
 
     #endregion
 
+    #region RectTransform
+
+    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
+    {
+        public glTF_VCAST_vci_rectTransform VCAST_vci_rectTransform;
+    }
+
+    /// <summary>
+    /// Extension root
+    /// </summary>
+    [Serializable]
+    public class glTF_VCAST_vci_rectTransform
+    {
+        public static string ExtensionName => "VCAST_vci_rectTransform";
+
+        public VCI.glTF_VCAST_vci_RectTransform rectTransform;
+    }
+
+    #endregion
+
+    #region Text
+
+    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
+    {
+        public glTF_VCAST_vci_text VCAST_vci_text;
+    }
+
+    /// <summary>
+    /// Extension root
+    /// </summary>
+    [Serializable]
+    public class glTF_VCAST_vci_text
+    {
+        public static string ExtensionName => "VCAST_vci_text";
+
+        public VCI.glTF_VCAST_vci_Text text;
+    }
+
+    #endregion
+
     #region audio
 
     /// <summary>
@@ -137,7 +177,7 @@ namespace VCIGLTF
     }
 
     /// <summary>
-    /// Extension root.
+    /// Extension root
     /// </summary>
     [Serializable]
     public class glTF_VCAST_vci_audios

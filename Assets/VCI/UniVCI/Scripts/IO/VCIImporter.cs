@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using VCIGLTF;
 using VCIJSON;
@@ -21,6 +22,8 @@ namespace VCI
         public List<Effekseer.EffekseerEffectAsset> EffekseerEffectAssets = new List<Effekseer.EffekseerEffectAsset>();
 
         public VCIObject VCIObject { get; private set; }
+
+        public IFontProvider FontProvider { get; set; }
 
         public VCIImporter()
         {
@@ -359,6 +362,67 @@ namespace VCI
             }
         }
 
+        public void SetupText()
+        {
+            for (var i = 0; i < GLTF.nodes.Count; i++)
+            {
+                var node = GLTF.nodes[i];
+                var go = Nodes[i].gameObject;
+
+                if(node.extensions != null && node.extensions.VCAST_vci_text != null)
+                {
+                    var rt = go.AddComponent<RectTransform>();
+                    // RectTransformのAddComponentで元のtransformが置き換わるのでNodesも更新する。
+                    Nodes[i] = rt.transform;
+
+                    var tmp = go.AddComponent<TextMeshPro>();
+                    var vci_text = node.extensions.VCAST_vci_text.text;
+
+                    // Get font
+                    if (FontProvider != null)
+                    {
+                        var font = FontProvider.GetDefaultFont();
+                        if (font != null) tmp.font = font;
+                    }
+
+                    // Set TMPText
+                    tmp.text = vci_text.text;
+                    tmp.richText = vci_text.richText;
+                    tmp.fontSize = vci_text.fontSize;
+                    tmp.autoSizeTextContainer = vci_text.autoSize;
+                    tmp.fontStyle = (FontStyles)vci_text.fontStyle;
+                    tmp.color = new Color(vci_text.color[0], vci_text.color[1], vci_text.color[2], vci_text.color[3]);
+                    tmp.enableVertexGradient = vci_text.enableVertexGradient;
+                    tmp.colorGradient = new VertexGradient(
+                            new Color(vci_text.topLeftColor[0], vci_text.topLeftColor[1], vci_text.topLeftColor[2], vci_text.topLeftColor[3]),
+                            new Color(vci_text.topRightColor[0], vci_text.topRightColor[1], vci_text.topRightColor[2], vci_text.topRightColor[3]),
+                            new Color(vci_text.bottomLeftColor[0], vci_text.bottomLeftColor[1], vci_text.bottomLeftColor[2], vci_text.bottomLeftColor[3]),
+                            new Color(vci_text.bottomRightColor[0], vci_text.bottomRightColor[1], vci_text.bottomRightColor[2], vci_text.bottomRightColor[3])
+                        );
+                    tmp.characterSpacing = vci_text.characterSpacing;
+                    tmp.wordSpacing = vci_text.wordSpacing;
+                    tmp.lineSpacing = vci_text.lineSpacing;
+                    tmp.paragraphSpacing = vci_text.paragraphSpacing;
+                    tmp.alignment = (TextAlignmentOptions)vci_text.alignment;
+                    tmp.enableWordWrapping = vci_text.enableWordWrapping;
+                    tmp.overflowMode = (TextOverflowModes) vci_text.overflowMode;
+                    tmp.enableKerning = vci_text.enableKerning;
+                    tmp.extraPadding = vci_text.extraPadding;
+                    tmp.margin = new Vector4(vci_text.margin[0], vci_text.margin[1], vci_text.margin[2], vci_text.margin[3]);
+
+                    // Set RectTransform
+                    var vci_rt = node.extensions.VCAST_vci_rectTransform.rectTransform;
+                    rt.anchorMin = new Vector2(vci_rt.anchorMin[0], vci_rt.anchorMin[1]);
+                    rt.anchorMax = new Vector2(vci_rt.anchorMax[0], vci_rt.anchorMax[1]);
+                    rt.anchoredPosition = new Vector2(vci_rt.anchoredPosition[0], vci_rt.anchoredPosition[1]);
+                    rt.sizeDelta = new Vector2(vci_rt.sizeDelta[0], vci_rt.sizeDelta[1]);
+                    rt.pivot = new Vector2(vci_rt.pivot[0], vci_rt.pivot[1]);
+
+                    AddText(tmp);
+                }
+            }
+        }
+
         public void ExtractAudio(UnityPath prefabPath)
         {
 #if UNITY_EDITOR
@@ -666,6 +730,11 @@ namespace VCI
             };
 
             return importer;
+        }
+
+        public interface IFontProvider
+        {
+            TMP_FontAsset GetDefaultFont();
         }
     }
 }

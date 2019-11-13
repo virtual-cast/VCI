@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using VCIGLTF;
 using VCIJSON;
@@ -20,6 +21,8 @@ namespace VCI
             gltf.extensionsUsed.Add(glTF_VCAST_vci_animation.ExtensionName);
             gltf.extensionsUsed.Add(glTF_Effekseer.ExtensionName);
             gltf.extensionsUsed.Add(glTF_Effekseer_emitters.ExtensionName);
+            gltf.extensionsUsed.Add(glTF_VCAST_vci_text.ExtensionName);
+            gltf.extensionsUsed.Add(glTF_VCAST_vci_rectTransform.ExtensionName);
 #if VCI_EXPORTER_USE_SPARSE
             UseSparseAccessorForBlendShape = true
 #endif
@@ -204,6 +207,24 @@ namespace VCI
                         attachableDistance = vciAttachable.AttachableDistance,
                     };
                 }
+
+                // Text
+                var tmp = node.GetComponent<TextMeshPro>();
+                var rt = node.GetComponent<RectTransform>();
+                if (tmp != null && rt != null)
+                {
+                    if (gltfNode.extensions == null) gltfNode.extensions = new glTFNode_extensions();
+
+                    gltfNode.extensions.VCAST_vci_rectTransform = new glTF_VCAST_vci_rectTransform()
+                    {
+                        rectTransform = glTF_VCAST_vci_RectTransform.CreateFromRectTransform(rt)
+                    };
+
+                    gltfNode.extensions.VCAST_vci_text = new glTF_VCAST_vci_text
+                    {
+                        text = glTF_VCAST_vci_Text.Create(tmp)
+                    };
+                }
             }
 
             // Audio
@@ -279,7 +300,6 @@ namespace VCI
                 }
             }
 #endif
-
 
             // Effekseer
             var effekseerEmitters = exporter.Copy.GetComponentsInChildren<Effekseer.EffekseerEmitter>()
