@@ -362,9 +362,9 @@ namespace VCI
             {
                 var path = UnityPath.FromAsset(clip);
                 if (!path.IsUnderAssetsFolder) return null;
-                if (path.Extension.ToLower() != ".wav")
+                if (path.Extension.ToLower() == ".wav")
                 {
-                    var bytes = WaveUtil.GetWaveBinary(clip);
+                    var bytes = File.ReadAllBytes(path.FullPath);
                     var viewIndex = gltf.ExtendBufferAndGetViewIndex(0, bytes);
                     return new glTF_VCAST_vci_audio
                     {
@@ -373,9 +373,21 @@ namespace VCI
                         bufferView = viewIndex,
                     };
                 }
-                else
+                else if (path.Extension.ToLower() == ".mp3")
                 {
                     var bytes = File.ReadAllBytes(path.FullPath);
+                    var viewIndex = gltf.ExtendBufferAndGetViewIndex(0, bytes);
+                    return new glTF_VCAST_vci_audio
+                    {
+                        name = clip.name,
+                        mimeType = "audio/mp3",
+                        bufferView = viewIndex,
+                    };
+                }
+                else
+                {
+                    // Convert to wav
+                    var bytes = WaveUtil.GetWaveBinary(clip);
                     var viewIndex = gltf.ExtendBufferAndGetViewIndex(0, bytes);
                     return new glTF_VCAST_vci_audio
                     {

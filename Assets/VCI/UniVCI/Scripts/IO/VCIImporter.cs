@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using VCIGLTF;
@@ -116,13 +117,25 @@ namespace VCI
                         WaveUtil.WaveHeaderData waveHeader;
                         var audioBuffer = new byte[bytes.Count];
                         Buffer.BlockCopy(bytes.Array, bytes.Offset, audioBuffer, 0, audioBuffer.Length);
+
+                        if (audio.mimeType == "audio/mp3")
+                        {
+                            var task = Task.Run(() => audioBuffer = MP3Util.ToWavData(audioBuffer));
+
+                            while (true)
+                                if (task.IsCompleted || task.IsFaulted || task.IsCanceled)
+                                    break;
+                                else
+                                    yield return null;
+                        }
+
                         if (WaveUtil.TryReadHeader(audioBuffer, out waveHeader))
                         {
                             AudioClip audioClip = null;
                             yield return AudioClipMaker.Create(
                                 audio.name,
                                 audioBuffer,
-                                44,
+                                waveHeader.FormatChunkSize + 28,
                                 waveHeader.BitPerSample,
                                 waveHeader.DataChunkSize / waveHeader.BlockSize,
                                 waveHeader.Channel,
@@ -405,7 +418,8 @@ namespace VCI
                     tmp.paragraphSpacing = vci_text.paragraphSpacing;
                     tmp.alignment = (TextAlignmentOptions)vci_text.alignment;
                     tmp.enableWordWrapping = vci_text.enableWordWrapping;
-                    tmp.overflowMode = (TextOverflowModes) vci_text.overflowMode;
+                    // overflowModeのインポート時にエラーになる可能性があるので無効にする。
+                    //tmp.overflowMode = (TextOverflowModes) vci_text.overflowMode;
                     tmp.enableKerning = vci_text.enableKerning;
                     tmp.extraPadding = vci_text.extraPadding;
                     tmp.margin = new Vector4(vci_text.margin[0], vci_text.margin[1], vci_text.margin[2], vci_text.margin[3]);

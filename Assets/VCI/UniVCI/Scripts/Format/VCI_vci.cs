@@ -197,7 +197,7 @@ namespace VCIGLTF
         [JsonSchema(Required = true, Minimum = 0)]
         public int bufferView = -1;
 
-        [JsonSchema(EnumValues = new object[] {"audio/wav"}, EnumSerializationType = EnumSerializationType.AsString)]
+        [JsonSchema(EnumValues = new object[] {"audio/wav", "audio/mp3"}, EnumSerializationType = EnumSerializationType.AsString)]
         public string mimeType;
     }
 

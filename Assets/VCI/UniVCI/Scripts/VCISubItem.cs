@@ -24,6 +24,7 @@ namespace VCI
         public bool Scalable;
         public bool UniformScaling;
         public int GroupId;
+        public int NodeIndex;
 
         public VCISubItem CopyTo(GameObject go)
         {
@@ -32,6 +33,7 @@ namespace VCI
             subItem.Scalable = Scalable;
             subItem.UniformScaling = UniformScaling;
             subItem.GroupId = GroupId;
+            subItem.NodeIndex = NodeIndex;
             return subItem;
         }
 

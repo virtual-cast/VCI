@@ -140,6 +140,8 @@ namespace VCI
             "Assets/Effekseer/Plugins",
             "Assets/Effekseer/Resources",
             "Assets/Effekseer/Scripts",
+
+            "Assets/NAudio"
         };
 
 
@@ -170,7 +172,8 @@ namespace VCI
                 var filesA = EnumerateFiles("Assets/VCI", IsExclude).ToArray();
                 var filesB = EnumerateFiles("Assets/VRM", IsExclude).ToArray();
                 var filesC = EnumerateFiles("Assets/Effekseer", IsExclude).ToArray();
-                var files = adfFiles.Concat(filesA.Concat(filesB.Concat(filesC))).ToArray();
+                var filesD = EnumerateFiles("Assets/NAudio", IsExclude).ToArray();
+                var files = adfFiles.Concat(filesA.Concat(filesB.Concat(filesC.Concat(filesD)))).ToArray();
 
                 Debug.LogFormat("{0}",
                     string.Join("", files.Select((x, i) => string.Format("[{0:##0}] {1}\n", i, x)).ToArray()));
