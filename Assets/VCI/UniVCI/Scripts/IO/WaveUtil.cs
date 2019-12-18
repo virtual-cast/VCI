@@ -59,6 +59,7 @@ namespace VCI
                             waveHeader.BlockSize = BitConverter.ToInt16(br.ReadBytes(2), 0);
                             waveHeader.BitPerSample = BitConverter.ToInt16(br.ReadBytes(2), 0);
                             bytesPerSec = waveHeader.SampleRate * waveHeader.BlockSize;
+                            if (waveHeader.FormatChunkSize > 16) br.ReadBytes(waveHeader.FormatChunkSize - 16);
                             readFmtChunk = true;
                         }
                         else if (chunk.ToLower().CompareTo("data") == 0)
