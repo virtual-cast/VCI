@@ -43,6 +43,7 @@ namespace VCI
                 importer.SetupAttachable();
                 importer.SetupEffekseer();
                 importer.SetupText();
+                importer.SetupSpringBone();
                 importer.SaveAsAsset(prefabPath);
                 importer.EditorDestroyRoot();
             };

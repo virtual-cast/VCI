@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using VCI;
 using VCIJSON;
 
 
@@ -386,6 +387,7 @@ namespace VCIGLTF
         {
             var type = unityCollider.GetType();
             var collider = new glTF_VCAST_vci_Collider();
+
             if (type == typeof(BoxCollider))
             {
                 var box = unityCollider as BoxCollider;
@@ -1096,12 +1098,33 @@ namespace VCIGLTF
         [JsonSchema(MinItems = 1)]
         public List<glTF_VCAST_vci_animationReference> animationReferences;
     }
-    
+
     [Serializable]
     public class glTF_VCAST_vci_animationReference
     {
         [JsonSchema(Required = true, Minimum = 0)]
         public int animation = -1;
     }
+    #endregion
+
+    #region SpringBone
+
+    public partial class glTF_extensions
+    {
+        public glTF_VCAST_vci_spring_bone VCAST_vci_spring_bone;
+    }
+
+    /// <summary>
+    /// Extension root
+    /// </summary>
+    [Serializable]
+    public class glTF_VCAST_vci_spring_bone
+    {
+        public static string ExtensionName => "VCAST_vci_spring_bone";
+
+        [JsonSchema(Required = true, MinItems = 1, ExplicitIgnorableItemLength = 0)]
+        public List<glTF_VCAST_vci_SpringBone> springBones;
+    }
+
     #endregion
 }

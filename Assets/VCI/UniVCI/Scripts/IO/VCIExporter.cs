@@ -23,6 +23,8 @@ namespace VCI
             gltf.extensionsUsed.Add(glTF_Effekseer_emitters.ExtensionName);
             gltf.extensionsUsed.Add(glTF_VCAST_vci_text.ExtensionName);
             gltf.extensionsUsed.Add(glTF_VCAST_vci_rectTransform.ExtensionName);
+            gltf.extensionsUsed.Add(glTF_VCAST_vci_spring_bone.ExtensionName);
+
 #if VCI_EXPORTER_USE_SPARSE
             UseSparseAccessorForBlendShape = true
 #endif
@@ -92,6 +94,31 @@ namespace VCI
                         })
                         .ToList()
                     };
+
+                var springBones = Copy.GetComponents<VCISpringBone>();
+                if (springBones.Length > 0)
+                {
+                    var sbg = new glTF_VCAST_vci_spring_bone();
+                    sbg.springBones = new List<glTF_VCAST_vci_SpringBone>();
+                    gltf.extensions.VCAST_vci_spring_bone = sbg;
+                    foreach (var sb in springBones)
+                    {
+                        sbg.springBones.Add( new glTF_VCAST_vci_SpringBone()
+                        {
+                            center = Nodes.IndexOf(sb.m_center),
+                            dragForce = sb.m_dragForce,
+                            gravityDir = sb.m_gravityDir,
+                            gravityPower = sb.m_gravityPower,
+                            stiffiness = sb.m_stiffnessForce,
+                            hitRadius = sb.m_hitRadius,
+                            colliderIds = sb.m_colliderObjects
+                                .Where(x => x != null)
+                                .Select(x => Nodes.IndexOf(x))
+                                .ToArray(),
+                            bones = sb.RootBones.Where(x => x != null).Select(x => Nodes.IndexOf(x.transform)).ToArray()
+                        });
+                    }
+                }
 
                 // meta
                 var meta = vciObject.Meta;

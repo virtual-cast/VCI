@@ -765,7 +765,10 @@ namespace VCIGLTF
             {
                 foreach(var y in x.Renderers)
                 {
-                    y.enabled = true;
+                    if(y != null)
+                    {
+                        y.enabled = true;
+                    }                    
                 }
             }
         }

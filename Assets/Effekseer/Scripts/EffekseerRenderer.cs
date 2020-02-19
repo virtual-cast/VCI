@@ -664,7 +664,14 @@ namespace Effekseer.Internal
 
 				delayEvents.RemoveAll(_ => _.RestTime <= 0);
 			}
-		};
+
+            public void ResetBuffers()
+            {
+                commandBuffer.Clear();
+                materiaProps.Reset();
+                modelBuffers.Reset();
+            }
+        };
 
 		MaterialCollection materials = new MaterialCollection();
 		MaterialCollection materialsDistortion = new MaterialCollection();
@@ -744,7 +751,11 @@ namespace Effekseer.Internal
 			// don't need to update because doesn't exists and need not to render
 			if ((camera.cullingMask & mask) == 0 && !renderPaths.ContainsKey(camera))
 			{
-				return;
+                if (renderPaths.ContainsKey(camera))
+                {
+                    renderPaths[camera].ResetBuffers();
+                }
+                return;
 			}
 
 			// GC renderpaths
@@ -822,7 +833,8 @@ namespace Effekseer.Internal
 
 			if ((camera.cullingMask & mask) == 0)
 			{
-				return;
+                path.ResetBuffers();
+                return;
 			}
 
 			// assign a dinsotrion texture
@@ -853,13 +865,11 @@ namespace Effekseer.Internal
 					camera.worldToCameraMatrix));
 			}
 
-			// Reset command buffer
-			path.commandBuffer.Clear();
-			path.materiaProps.Reset();
-			path.modelBuffers.Reset();
+            // Reset command buffer
+            path.ResetBuffers();
 
-			// generate render events on this thread
-			Plugin.EffekseerRenderBack(path.renderId);
+            // generate render events on this thread
+            Plugin.EffekseerRenderBack(path.renderId);
 
 			// if memory is lacked, reallocate memory
 			while(Plugin.GetUnityRenderParameterCount() > 0 && Plugin.GetUnityRenderVertexBufferCount() > path.computeBufferTemp.Length)

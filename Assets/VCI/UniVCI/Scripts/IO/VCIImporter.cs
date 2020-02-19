@@ -214,13 +214,11 @@ namespace VCI
 
                 if (node.extensions != null)
                 {
-                    if (node.extensions.VCAST_vci_collider != null
-                        && node.extensions.VCAST_vci_collider.colliders != null)
+                    if (node.extensions.VCAST_vci_collider?.colliders != null)
                         foreach (var vciCollider in node.extensions.VCAST_vci_collider.colliders)
                             glTF_VCAST_vci_Collider.AddColliderComponent(go, vciCollider);
 
-                    if (node.extensions.VCAST_vci_rigidbody != null
-                        && node.extensions.VCAST_vci_rigidbody.rigidbodies != null)
+                    if (node.extensions.VCAST_vci_rigidbody?.rigidbodies != null)
                         foreach (var rigidbody in node.extensions.VCAST_vci_rigidbody.rigidbodies)
                             glTF_VCAST_vci_Rigidbody.AddRigidbodyComponent(go, rigidbody);
                 }
@@ -434,6 +432,25 @@ namespace VCI
 
                     AddText(tmp);
                 }
+            }
+        }
+
+        public void SetupSpringBone()
+        {
+            if (GLTF.extensions.VCAST_vci_spring_bone == null) return;
+
+            foreach (var bone in GLTF.extensions.VCAST_vci_spring_bone.springBones)
+            {
+                var sb = Root.AddComponent<VCISpringBone>();
+                if(bone.center >= 0) sb.m_center = Nodes[bone.center];
+                sb.m_dragForce = bone.dragForce;
+                sb.m_gravityDir = bone.gravityDir;
+                sb.m_gravityPower = bone.gravityPower;
+                sb.m_hitRadius = bone.hitRadius;
+                sb.m_stiffnessForce = bone.stiffiness;
+                if (bone.colliderIds != null && bone.colliderIds.Any())
+                    sb.m_colliderObjects = bone.colliderIds.Select(id => Nodes[id]).ToList();
+                sb.RootBones = bone.bones.Select(x => Nodes[x]).ToList();
             }
         }
 

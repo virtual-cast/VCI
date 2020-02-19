@@ -278,6 +278,8 @@ namespace VCIGLTF
             // Ignore TMP Mesh
             var tmp = t.GetComponent<TextMeshPro>();
             if (tmp != null) return null;
+            var subMesh = t.GetComponent<TMP_SubMesh>();
+            if (subMesh != null) return null;
 
             var meshFilter = t.GetComponent<MeshFilter>();
             if (meshFilter != null)

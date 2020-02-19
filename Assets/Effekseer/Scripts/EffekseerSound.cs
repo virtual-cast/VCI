@@ -194,17 +194,17 @@ namespace Effekseer.Internal
 
 	public class EffekseerSoundInstance : MonoBehaviour
 	{
-		new private AudioSource audio;
+		private AudioSource _audio;
 		public string audioTag;
 		public float lastPlayTime;
 
 		void Awake() {
-			audio = gameObject.AddComponent<AudioSource>();
-			audio.playOnAwake = false;
+			_audio = gameObject.AddComponent<AudioSource>();
+			_audio.playOnAwake = false;
 		}
 		void Update() {
-			if (audio.clip && !audio.isPlaying) {
-				audio.clip = null;
+			if (_audio.clip && !_audio.isPlaying) {
+				_audio.clip = null;
 			}
 		}
 		public void Play(string tag, EffekseerSoundResource resource, 
@@ -214,24 +214,24 @@ namespace Effekseer.Internal
 			this.audioTag = tag;
 			this.lastPlayTime = Time.time;
 			transform.position = new Vector3(x, y, z);
-			audio.spatialBlend = (mode3D) ? 1.0f : 0.0f;
-			audio.volume = volume;
-			audio.pitch = Mathf.Pow(2.0f, pitch);
-			audio.panStereo = pan;
-			audio.minDistance = distance;
-			audio.maxDistance = distance * 2;
-			audio.clip = resource.clip;
-			audio.Play();
+			_audio.spatialBlend = (mode3D) ? 1.0f : 0.0f;
+			_audio.volume = volume;
+			_audio.pitch = Mathf.Pow(2.0f, pitch);
+			_audio.panStereo = pan;
+			_audio.minDistance = distance;
+			_audio.maxDistance = distance * 2;
+			_audio.clip = resource.clip;
+			_audio.Play();
 		}
 		public void Stop() {
-			audio.Stop();
+			_audio.Stop();
 		}
 		public void Pause(bool paused) {
-			if (paused) audio.Pause();
-			else audio.UnPause();
+			if (paused) _audio.Pause();
+			else _audio.UnPause();
 		}
 		public bool CheckPlaying() {
-			return audio.isPlaying;
+			return _audio.isPlaying;
 		}
 	}
 }
