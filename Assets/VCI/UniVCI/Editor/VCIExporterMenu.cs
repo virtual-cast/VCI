@@ -1,5 +1,5 @@
-﻿using System.IO;
-using System.Linq;
+﻿using System;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 using VCIGLTF;
@@ -8,24 +8,17 @@ namespace VCI
 {
     public static class VCIObjectExporterMenu
     {
-        #region Export NonHumanoid
-
         private const string CONVERT_OBJECT_KEY = VCIVersion.MENU + "/Export VCI";
 
         [MenuItem(CONVERT_OBJECT_KEY)]
         public static void ExportObject()
         {
             EditorApplication.isPlaying = false;
+
+            if (!Validate()) return;
+
             try
             {
-                var errorMessage = "";
-                if (!Validate(out errorMessage))
-                {
-                    Debug.LogAssertion(errorMessage);
-                    EditorUtility.DisplayDialog("Error", errorMessage, "OK");
-                    return;
-                }
-
                 // save dialog
                 var root = Selection.activeObject as GameObject;
 
@@ -55,7 +48,7 @@ namespace VCI
                 }
 
                 // Show the file in the explorer.
-                if (Application.platform == RuntimePlatform.WindowsEditor)
+                if (VCIConfig.IsOpenDirectoryAfterExport && Application.platform == RuntimePlatform.WindowsEditor)
                 {
                     System.Diagnostics.Process.Start("explorer.exe", " /e,/select," + path.Replace("/", "\\"));
                 }
@@ -66,68 +59,48 @@ namespace VCI
             }
         }
 
-        private static bool Validate(out string errorMessage)
+        public static bool Validate()
         {
-            var selectedGameObjects = Selection.gameObjects;
-            if (selectedGameObjects.Length == 0)
+            // Validation
+            try
             {
-                errorMessage = "VCIObjectがアタッチされたGameObjectを選択して下さい。";
-                return false;
-            }
+                var selectedGameObjects = Selection.gameObjects;
+                if (selectedGameObjects.Length == 0)
+                    throw new VCIValidatorException(ValidationErrorType.GameObjectNotSelected);
 
-            if (2 <= selectedGameObjects.Length)
-            {
-                errorMessage = "VCIObjectがアタッチされたGameObjectを1つ選択して下さい。";
-                return false;
-            }
+                if (2 <= selectedGameObjects.Length)
+                    throw new VCIValidatorException(ValidationErrorType.MultipleSelection);
 
-            var vciObject = selectedGameObjects[0].GetComponent<VCIObject>();
-            if (vciObject == null)
-            {
-                errorMessage = "VCIObjectがアタッチされたGameObjectを選択して下さい。";
-                return false;
-            }
+                var vciObject = selectedGameObjects[0].GetComponent<VCIObject>();
+                if (vciObject == null)
+                    throw new VCIValidatorException(ValidationErrorType.VCIObjectNotAttached);
 
-            // Script
-            if(vciObject.Scripts.Any())
+                VCIValidator.ValidateVCIObject(vciObject);
+            }
+            catch (VCIValidatorException e)
             {
-                if (vciObject.Scripts[0].name != "main")
+                var title =  $"Error{(int)e.ErrorType}";
+
+                var text = "";
+
+                if (string.IsNullOrEmpty(e.Message))
                 {
-                    errorMessage = "The first script must be named \"main\".";
-                    return false;
+                    text = VCIConfig.GetText($"Error{(int)e.ErrorType}");
+                }
+                else
+                {
+                    text = e.Message;
                 }
 
-                var empties = vciObject.Scripts.Where(x => string.IsNullOrEmpty(x.name));
-                if (empties.Any())
-                {
-                    errorMessage = "Some have no script name.";
-                    return false;
-                }
+                text = text.Replace("\\n", Environment.NewLine);
 
-                var duplicates = vciObject.Scripts.GroupBy(script => script.name)
-                    .Where(name => name.Count() > 1)
-                    .Select(group => group.Key).ToList();
-                if (duplicates.Any())
-                {
-                    errorMessage = "Duplicate script name.";
-                    return false;
-                }
+                if(e.ErrorType == ValidationErrorType.InvalidCharacter)
+                    EditorGUILayout.HelpBox(e.Message, MessageType.Warning);
 
-                var invalidChars = Path.GetInvalidFileNameChars().Concat(new []{ '.' }).ToArray();
-                foreach (var script in vciObject.Scripts)
-                {
-                    if (script.name.IndexOfAny(invalidChars) >= 0)
-                    {
-                        EditorGUILayout.HelpBox("Contains characters that can not be used as scriptName. " + script.name, MessageType.Warning);
-                    }
-                };
+                EditorUtility.DisplayDialog(title, text, "OK");
+                return false;
             }
-
-
-            var isValid = VCIMetaValidator.Validate(vciObject, out errorMessage);
-            return isValid;
+            return true;
         }
-
-        #endregion
     }
 }

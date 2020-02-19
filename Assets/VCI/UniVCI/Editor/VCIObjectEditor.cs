@@ -14,9 +14,7 @@ namespace VCI
         private SerializedProperty _thumbnailProp;
         private SerializedProperty _vciScriptProp;
 
-
-        private
-            void OnEnable()
+        private void OnEnable()
         {
             _target = (VCIObject)target;
             _scriptProp = serializedObject.FindProperty("m_Script");
@@ -25,9 +23,9 @@ namespace VCI
             _vciScriptProp = serializedObject.FindProperty("Scripts");
         }
 
-        private void SetMetaPropertyField(SerializedProperty meta, string name)
+        private void SetMetaPropertyField(SerializedProperty meta, string metaName)
         {
-            var prop = meta.FindPropertyRelative(name);
+            var prop = meta.FindPropertyRelative(metaName);
             if (prop != null)
                 EditorGUILayout.PropertyField(prop);
             else
@@ -81,6 +79,7 @@ namespace VCI
             // script settings
             SetMetaPropertyField(_metaProp, "scriptWriteProtected");
             SetMetaPropertyField(_metaProp, "scriptEnableDebugging");
+
             EditorGUILayout.Space();
 
             if (_target.Scripts.Any())
@@ -115,7 +114,6 @@ namespace VCI
                 ;
             }
 
-
             // vci scripts
             EditorGUILayout.PropertyField(_vciScriptProp, true);
             serializedObject.ApplyModifiedProperties();
@@ -123,7 +121,16 @@ namespace VCI
             EditorGUILayout.Space();
 
             // Export Button
-            if (GUILayout.Button("Export VCI"))
+            if (GUILayout.Button(VCIConfig.GetText("validate_button"), GUILayout.MinHeight(32)))
+            {
+                if (VCIObjectExporterMenu.Validate())
+                    EditorUtility.DisplayDialog("Result", VCIConfig.GetText("no_error"), "OK");
+            }
+
+            EditorGUILayout.Space();
+
+            // Export Button
+            if (GUILayout.Button(VCIConfig.GetText("export_button"), GUILayout.MinHeight(32)))
             {
 #if UNITY_EDITOR_WIN
                 VCIObjectExporterMenu.ExportObject();
