@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fd3035e83df43329d4487c6f930c1a1, type: 3}
+  m_Name: VCIConfig
+  m_EditorClassIdentifier: 
+  _openDirectoryAfterExport: 1
+  _primaryLanguageIndex: 0
+  _terms:
+  - {fileID: 11400000, guid: f4933817be4413d4f935c87adb8ee0a1, type: 2}
+  - {fileID: 11400000, guid: 88dd6fcb76556e94aa4317a4d8135cc8, type: 2}

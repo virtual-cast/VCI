@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b4a1f20a2e3458c9cd02a8f96a29cc0, type: 3}
+  m_Name: EnglishTermData
+  m_EditorClassIdentifier: UniVCI.Editor:VCI:VCILanguageResource
+  _texts:
+  - key: export_button
+    value: Export VCI
+  - key: validate_button
+    value: Validate
+  - key: error400
+    value: Too many SpringBones.
+  - key: error401
+    value: RootBone not defined.
+  - key: error402
+    value: Too many RootBones.
+  - key: error403
+    value: Too many children for a RootBone.
+  - key: error404
+    value: SubItem found under a RootBone.
+  - key: error410
+    value: Too many SpringBoneColliders.
+  - key: error401
+    value: Too may SphereColliders.
+  - key: error100
+    value: Select a GameObject with VCIObject attached.
+  - key: error101
+    value: Select one GameObject with VCIObject attached.
+  - key: error102
+    value: Select a GameObject with VCIObject attached.
+  - key: error200
+    value: The first script must be named \"main\".
+  - key: error201
+    value: Some have no script name.
+  - key: error202
+    value: Duplicate script name.
+  - key: error203
+    value: Contains characters that can not be used as scriptName.\n{0}
+  - key: error204
+    value: The meta data is invalid.
+  - key: input
+    value: Enter {0}.
+  - key: input_less_than
+    value: '{0} must be less than or equal to {1} letters.'
+  - key: no_error
+    value: No error found.
+  - key: error205
+    value: Contains multiple VCIObjects.
+  - key: error405
+    value: Nested RootBones found.
+  - key: error206
+    value: Contains invalid component.\n{0}
