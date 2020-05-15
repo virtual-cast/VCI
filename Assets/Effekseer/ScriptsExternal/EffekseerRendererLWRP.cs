@@ -1,5 +1,4 @@
-﻿// After 5.7
-/*
+﻿/*
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,102 +9,55 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.LWRP;
 
-namespace Effekseer
-{
-    public class EffekseerRendererLWRP : ScriptableRendererFeature
-    {
-        static RenderTargetHandle afterTransparent;
-
-        public EffekseerRendererLWRP()
-        {
-            afterTransparent.Init("_AfterTransparent");
-        }
-
-        public override void Create()
-        {
-        }
-
-        public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
-        {
-            var pass = new EffekseerRenderPassLWRP(renderer.cameraColorTarget);
-            renderer.EnqueuePass(pass);
-        }
-    }
-
-    class EffekseerRenderPassLWRP : ScriptableRenderPass
-    {
-        RenderTargetIdentifier cameraColorTarget;
-
-        public EffekseerRenderPassLWRP(RenderTargetIdentifier cameraColorTarget)
-        {
-            this.cameraColorTarget = cameraColorTarget;
-            this.renderPassEvent = RenderPassEvent.AfterRenderingTransparents;
-        }
-
-        public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
-        {
-            if (EffekseerSystem.Instance == null) return;
-
-            EffekseerSystem.Instance.renderer.Render(renderingData.cameraData.camera, null, this.cameraColorTarget);
-            var commandBuffer = EffekseerSystem.Instance.renderer.GetCameraCommandBuffer(renderingData.cameraData.camera);
-
-            if (commandBuffer != null)
-            {
-                context.ExecuteCommandBuffer(commandBuffer);
-                context.Submit();
-            }
-        }
-    }
-}
-*/
-
-// Before 5.7
-/*
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections;
-using UnityEngine;
-using UnityEngine.Experimental.Rendering;
-using UnityEngine.Experimental.Rendering.LightweightPipeline;
 
 namespace Effekseer
 {
-	[AddComponentMenu("Effekseer/Effekseer RendererLWRP")]
-	public class EffekseerRendererLWRP : MonoBehaviour, IAfterTransparentPass
+	public class EffekseerRendererLWRP : ScriptableRendererFeature
 	{
-		public ScriptableRenderPass GetPassToEnqueue(
-			 RenderTextureDescriptor baseDescriptor,
-			RenderTargetHandle colorHandle,
-			RenderTargetHandle depthHandle)
-		{
-			var cameraComponent = gameObject.GetComponent<Camera>();
+		static RenderTargetHandle afterTransparent;
 
-			return new EffekseerRenderPassLWRP(cameraComponent, colorHandle.id);
+		public EffekseerRendererLWRP()
+		{
+			afterTransparent.Init("_AfterTransparent");
+		}
+
+		public override void Create()
+		{
+		}
+
+		public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
+		{
+			var pass = new EffekseerRenderPassLWRP(renderer.cameraColorTarget, renderer.cameraDepth);
+			renderer.EnqueuePass(pass);
 		}
 	}
 
 	class EffekseerRenderPassLWRP : ScriptableRenderPass
 	{
-		Camera cameraComponent = null;
-		int dstID = 0;
+		RenderTargetIdentifier cameraColorTarget;
+		RenderTargetIdentifier cameraDepthTarget;
 
-		public EffekseerRenderPassLWRP(Camera cameraComponent, int dstID)
+		Effekseer.Internal.RenderTargetProperty prop = new Internal.RenderTargetProperty();
+
+		public EffekseerRenderPassLWRP(RenderTargetIdentifier cameraColorTarget, RenderTargetIdentifier cameraDepthTarget)
 		{
-			this.cameraComponent = cameraComponent;
-			this.dstID = dstID;
+			this.cameraColorTarget = cameraColorTarget;
+			this.cameraDepthTarget = cameraDepthTarget;
+			this.renderPassEvent = RenderPassEvent.AfterRenderingTransparents;
 
-			RegisterShaderPassName("Effekseer");
+			prop.colorTargetIdentifier = cameraColorTarget;
+			prop.depthTargetIdentifier = cameraDepthTarget;
 		}
 
-		public override void Execute(ScriptableRenderer renderer, ScriptableRenderContext context, ref RenderingData renderingData)
+		public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
 		{
 			if (EffekseerSystem.Instance == null) return;
+			prop.colorTargetDescriptor = renderingData.cameraData.cameraTargetDescriptor;
+			prop.isRequiredToCopyBackground = true;
 
-			EffekseerSystem.Instance.renderer.Render(cameraComponent, dstID, null);
-			var commandBuffer = EffekseerSystem.Instance.renderer.GetCameraCommandBuffer(cameraComponent);
+			EffekseerSystem.Instance.renderer.Render(renderingData.cameraData.camera, prop, null);
+			var commandBuffer = EffekseerSystem.Instance.renderer.GetCameraCommandBuffer(renderingData.cameraData.camera);
+
 
 			if (commandBuffer != null)
 			{

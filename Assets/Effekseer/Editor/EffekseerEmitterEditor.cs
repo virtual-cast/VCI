@@ -62,6 +62,8 @@ namespace Effekseer.Editor
 			foreach (var handle in emitter.handles) {
 				handle.UpdateHandle(deltaFrames);
 			}
+			EffekseerSystem.Instance.UpdateTime(deltaFrames);
+			EffekseerSystem.Instance.ApplyLightingToNative();
 			emitter.Update();
 		}
 

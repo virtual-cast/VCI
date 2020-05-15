@@ -118,6 +118,15 @@ namespace Effekseer
 		[SerializeField]
 		public Shader standardModelDistortionShader = null;
 
+		[SerializeField]
+		public Shader standardLightingShader = null;
+
+		[SerializeField]
+		public Shader texture2DArrayBlitMaterial = null;
+
+		[SerializeField]
+		public Shader texture2DBlitMaterial = null;
+
 		#region Network
 		/// <summary xml:lang="en">
 		/// A network port to edit effects from remote
@@ -153,8 +162,11 @@ namespace Effekseer
 		}
 
 #if UNITY_EDITOR
+#if UNITY_2018_3_OR_NEWER
+#else
 		[MenuItem("Edit/Project Settings/Effekseer")]
-		public static void EditOrCreateAsset()
+#endif 
+	public static void EditOrCreateAsset()
 		{
 			const string assetDir = "Assets/Effekseer";
 			const string materialDir = assetDir + "/Materials";
@@ -172,6 +184,9 @@ namespace Effekseer
 				asset.standardDistortionShader = AssetDatabase.LoadAssetAtPath<Shader>(materialDir + "/StandardDistortionShader.shader");
 				asset.standardModelShader = AssetDatabase.LoadAssetAtPath<Shader>(materialDir + "/StandardModelShader.shader");
 				asset.standardModelDistortionShader = AssetDatabase.LoadAssetAtPath<Shader>(materialDir + "/StandardModelDistortionShader.shader");
+				asset.standardLightingShader = AssetDatabase.LoadAssetAtPath<Shader>(materialDir + "/StandardLightingShader.shader");
+				asset.texture2DArrayBlitMaterial = AssetDatabase.LoadAssetAtPath<Shader>(materialDir + "/Texture2DArrayBlitShader.shader");
+				asset.texture2DBlitMaterial = AssetDatabase.LoadAssetAtPath<Shader>(materialDir + "/Texture2DBlitShader.shader");
 
 				AssetDatabase.CreateAsset(asset, assetPath);
 				AssetDatabase.Refresh();

@@ -39,7 +39,7 @@ namespace VCI
                 var text = res.GetText(key);
                 if (!string.IsNullOrEmpty(text)) return text;
             }
-            return null;
+            return "";
         }
     }
 }

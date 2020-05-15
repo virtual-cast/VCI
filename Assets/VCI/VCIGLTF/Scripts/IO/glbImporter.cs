@@ -23,7 +23,7 @@ namespace VCIGLTF
                     return GlbChunkType.JSON;
 
                 default:
-                    throw new FormatException("unknown chunk type: " + src);
+                    return GlbChunkType.UNKNOWN;
             }
         }
 

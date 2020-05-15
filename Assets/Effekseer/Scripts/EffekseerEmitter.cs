@@ -4,6 +4,19 @@ using System.Collections.Generic;
 namespace Effekseer
 {
 	/// <summary xml:lang="en">
+	/// Which scale is A scale of effect based on. 
+	/// </summary>
+	/// <summary xml:lang="ja">
+	/// どのスケールをエフェクトのスケールの元にするか
+	/// </summary>
+	public enum EffekseerEmitterScale
+	{
+		Local,
+		Global,
+	}
+
+
+	/// <summary xml:lang="en">
 	/// A emitter of the Effekseer effect
 	/// </summary>
 	/// <summary xml:lang="ja">
@@ -12,6 +25,16 @@ namespace Effekseer
 	[AddComponentMenu("Effekseer/Effekseer Emitter")]
 	public class EffekseerEmitter : MonoBehaviour
 	{
+		float cachedMagnification = 0.0f;
+
+		/// <summary xml:lang="en">
+		/// Which scale is A scale of effect based on. 
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// どのスケールをエフェクトのスケールの元にするか
+		/// </summary>
+		public EffekseerEmitterScale EmitterScale = EffekseerEmitterScale.Local;
+
 		/// <summary xml:lang="en">
 		/// Effect name
 		/// </summary>
@@ -19,7 +42,7 @@ namespace Effekseer
 		/// エフェクト名
 		/// </summary>
 		//public string effectName;
-		
+
 		/// <summary xml:lang="en">
 		/// Effect name
 		/// </summary>
@@ -65,6 +88,10 @@ namespace Effekseer
 		public EffekseerHandle Play(EffekseerEffectAsset effectAsset)
 		{
 			var h = EffekseerSystem.PlayEffect(effectAsset, transform.position);
+
+			// must run after loading
+			cachedMagnification = effectAsset.Magnification;
+
 			h.SetRotation(transform.rotation);
 			h.SetScale(transform.localScale);
 			h.layer = gameObject.layer;
@@ -112,6 +139,7 @@ namespace Effekseer
 				handle.UpdateHandle(1);
 			}
 			handles.Clear();
+			Plugin.EffekseerResetTime();
 		}
 	
 		/// <summary xml:lang="en">
@@ -158,7 +186,101 @@ namespace Effekseer
 				handle.SetTargetLocation(targetLocation);
 			}
 		}
-	
+
+		/// <summary xml:lang="en">
+		/// get first effect's dynamic parameter, which changes effect parameters dynamically while playing
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// 再生中にエフェクトのパラメーターを変更する最初のエフェクトの動的パラメーターを取得する。
+		/// </summary>
+		/// <param name="index"></param>
+		/// <returns></returns>
+		public float GetDynamicInput(int index)
+		{
+			foreach (var handle in handles)
+			{
+				return handle.GetDynamicInput(index);
+			}
+
+			return 0.0f;
+		}
+
+		/// <summary xml:lang="en">
+		/// specfiy a dynamic parameter, which changes effect parameters dynamically while playing
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// 再生中にエフェクトのパラメーターを変更する動的パラメーターを設定する。
+		/// </summary>
+		/// <param name="index"></param>
+		/// <param name="value"></param>
+		public void SetDynamicInput(int index, float value)
+		{
+			foreach (var handle in handles)
+			{
+				handle.SetDynamicInput(index, value);
+			}
+		}
+
+		/// <summary xml:lang="en">
+		/// specify a dynamic parameters x,y,z with a world position converting into local position considering effect magnification.
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// エフェクトの拡大率を考慮しつつ、ローカル座標に変換しつつ、ワールド座標で動的パラメーターx,y,zを設定する。
+		/// </summary>
+		/// <param name="worldPos"></param>
+		public void SetDynamicInputWithWorldPosition(ref Vector3 worldPos)
+		{
+			var localPos = transform.InverseTransformPoint(worldPos);
+			SetDynamicInputWithLocalPosition(ref localPos);
+		}
+
+		/// <summary xml:lang="en">
+		/// specify a dynamic parameters x,y,z with a local position considering effect magnification.
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// エフェクトの拡大率を考慮しつつ、ローカル座標座標で動的パラメーターx,y,zを設定する。
+		/// </summary>
+		/// <param name="worldPos"></param>
+		public void SetDynamicInputWithLocalPosition(ref Vector3 localPos)
+		{
+			SetDynamicInput(0, localPos.x / cachedMagnification);
+			SetDynamicInput(1, localPos.y / cachedMagnification);
+
+			if (EffekseerSettings.Instance.isRightEffekseerHandledCoordinateSystem)
+			{
+				SetDynamicInput(2, localPos.z / cachedMagnification);
+			}
+			else
+			{
+				SetDynamicInput(2, -localPos.z / cachedMagnification);
+			}
+		}
+
+		/// <summary xml:lang="en">
+		/// specify a dynamic parameters x with distance to a world position converting into local position considering effect magnification.
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// エフェクトの拡大率を考慮しつつ、ローカル座標に変換しつつ、ワールド座標への距離で動的パラメーターxを設定する。
+		/// </summary>
+		/// <param name="worldPos"></param>
+		public void SetDynamicInputWithWorldDistance(ref Vector3 worldPos)
+		{
+			var localPos = transform.InverseTransformPoint(worldPos);
+			SetDynamicInputWithLocalDistance(ref localPos);
+		}
+
+		/// <summary xml:lang="en">
+		/// specify a dynamic parameters x with distance to a world position converting into local position considering effect magnification.
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// エフェクトの拡大率を考慮しつつ、ローカル座標への距離で動的パラメーターxを設定する。
+		/// </summary>
+		/// <param name="localPos"></param>
+		public void SetDynamicInputWithLocalDistance(ref Vector3 localPos)
+		{
+			SetDynamicInput(0, localPos.magnitude / cachedMagnification);
+		}
+
 		/// <summary xml:lang="en">
 		/// Pausing the effect
 		/// <para>true:  It will update on Update()</para>
@@ -298,7 +420,16 @@ namespace Effekseer
 				if (handle.exists) {
 					handle.SetLocation(transform.position);
 					handle.SetRotation(transform.rotation);
-					handle.SetScale(transform.localScale);
+
+					if(EmitterScale == EffekseerEmitterScale.Local)
+					{
+						handle.SetScale(transform.localScale);
+					}
+					else if(EmitterScale == EffekseerEmitterScale.Global)
+					{
+						handle.SetScale(transform.lossyScale);
+					}
+
 					i++;
 				} else if(isLooping && handles.Count == 1)
 				{

@@ -1,11 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace VCI
 {
     [DisallowMultipleComponent]
-    public class VCIAttachable : MonoBehaviour
+    public sealed class VCIAttachable : MonoBehaviour
     {
         // アタッチ対象となるHumanBodyBones
         [SerializeField]
@@ -15,28 +16,20 @@ namespace VCI
         [SerializeField]
         private float _attachableDistance;
 
+        public Func<bool, bool> AttachFunc { get; set; }
+
+        public bool IsAttached { get; set; }
+
         public HumanBodyBones[] AttachableHumanBodyBones
         {
-            get
-            {
-                return _attachableHumanBodyBones;
-            }
-            set
-            {
-                _attachableHumanBodyBones = value;
-            }
+            get => _attachableHumanBodyBones;
+            set => _attachableHumanBodyBones = value;
         }
 
         public float AttachableDistance
         {
-            get
-            {
-                return _attachableDistance;
-            }
-            set
-            {
-                _attachableDistance = value;
-            }
+            get => _attachableDistance;
+            set => _attachableDistance = value;
         }
 
 # if UNITY_EDITOR

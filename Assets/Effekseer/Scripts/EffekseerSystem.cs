@@ -13,6 +13,12 @@ namespace Effekseer
 {
 	using Internal;
 
+	enum DummyTextureType
+	{
+		White,
+		Normal,
+	}
+
 	[Serializable]
 	public class EffekseerSystem
 	{
@@ -130,6 +136,46 @@ namespace Effekseer
 
 		private static Dictionary<IntPtr, UnityRendererModel> cachedModels = new Dictionary<IntPtr, UnityRendererModel>();
 
+		private static int materialIDCounter = 0;
+
+		private static Dictionary<IntPtr, UnityRendererMaterial> cachedMaterials = new Dictionary<IntPtr, UnityRendererMaterial>();
+
+		private static Dictionary<EffekseerMaterialAsset, IntPtr> cachedMaterialIDs = new Dictionary<EffekseerMaterialAsset, IntPtr>();
+
+		static Vector3 lightDirection = new Vector3(1, 1, -1);
+
+		static Color lightColor = new Color(255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f);
+
+		static Color lightAmbientColor = new Color(40.0f / 255.0f, 40.0f / 255.0f, 40.0f / 255.0f);
+
+		static Texture2D normalTexture = null;
+
+		public static Vector3 LightDirection
+		{
+			get { return lightDirection; }
+			set
+			{
+				lightDirection = value;
+			}
+		}
+
+		public static Color LightColor
+		{
+			get { return lightColor; }
+			set
+			{
+				lightColor = value;
+			}
+		}
+
+		public static Color LightAmbientColor
+		{
+			get { return lightAmbientColor; }
+			set
+			{
+				lightAmbientColor = value;
+			}
+		}
 		private void ReloadEffects()
 		{
 			foreach (var weakEffectAsset in EffekseerEffectAsset.enabledAssets)
@@ -197,6 +243,17 @@ namespace Effekseer
 			}
 		}
 
+		internal float GetEffectMagnification(EffekseerEffectAsset effectAsset)
+		{
+			int id = effectAsset.GetInstanceID();
+			IntPtr nativeEffect;
+			if (nativeEffects.TryGetValue(id, out nativeEffect))
+			{
+				return Plugin.EffekseerGetEffectMagnification(nativeEffect);
+			}
+			return 0.0f;
+		}
+
 		/// <summary>
 		/// Don't touch it!!
 		/// </summary>
@@ -208,6 +265,10 @@ namespace Effekseer
 
 #if (UNITY_WEBGL || UNITY_IOS || UNITY_SWITCH) && !UNITY_EDITOR
 			Plugin.RegisterPlugin();
+#endif
+
+#if UNITY_SWITCH && UNITY_2017 && NET_4_6
+#error cannot compile with ilcpp
 #endif
 
 			Instance = this;
@@ -225,8 +286,7 @@ namespace Effekseer
 
 				if (SystemInfo.supportsComputeShaders)
 				{
-					if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLCore ||
-						SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES3)
+					if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLCore)
 					{
 						Debug.LogWarning("[Effekseer] Graphics API \"" + SystemInfo.graphicsDeviceType + "\" has many limitations with ComputeShader. Renderer is changed into Native.");
 						RendererType = EffekseerRendererType.Native;
@@ -256,8 +316,7 @@ namespace Effekseer
 					case GraphicsDeviceType.Direct3D12:
 					case GraphicsDeviceType.Vulkan:
 					case GraphicsDeviceType.XboxOne:
-					case GraphicsDeviceType.Switch:
-					case GraphicsDeviceType.PlayStation4:
+					case GraphicsDeviceType.XboxOneD3D12:
 						if (RendererType == EffekseerRendererType.Native)
 						{
 							RendererType = EffekseerRendererType.Unity;
@@ -267,7 +326,7 @@ namespace Effekseer
 				}
 			}
 
-			// Zのnearとfarの反転対応
+			// reverse Znear and Zfar
 			bool reversedDepth = false;
 			switch (SystemInfo.graphicsDeviceType) {
 			case GraphicsDeviceType.Direct3D11:
@@ -300,6 +359,15 @@ namespace Effekseer
 			{
 				StartNetwork();
 			}
+
+			// Create dummy texture
+			normalTexture = new Texture2D(16, 16);
+			Color[] normalColor = new Color[16 * 16];
+			for(int i = 0; i < normalColor.Length; i++)
+			{
+				normalColor[i] = new Color(0.5f, 0.5f, 1.0f);
+			}
+			normalTexture.SetPixels(0, 0, 16, 16, normalColor);
 		}
 
 		/// <summary>
@@ -362,7 +430,10 @@ namespace Effekseer
 			Plugin.EffekseerSetSoundLoaderEvent(
 				SoundLoaderLoad, 
 				SoundLoaderUnload);
-			
+			Plugin.EffekseerSetMaterialLoaderEvent(
+				MaterialLoaderLoad,
+				MaterialLoaderUnload);
+
 #if UNITY_EDITOR
 			for (int i = 0; i < nativeEffectsKeys.Count; i++) {
 				IntPtr nativeEffect = new IntPtr((long)ulong.Parse(nativeEffectsValues[i]));
@@ -399,7 +470,15 @@ namespace Effekseer
 			Plugin.EffekseerSetTextureLoaderEvent(null, null);
 			Plugin.EffekseerSetModelLoaderEvent(null, null);
 			Plugin.EffekseerSetSoundLoaderEvent(null, null);
+			Plugin.EffekseerSetMaterialLoaderEvent(null, null);
 		}
+
+#if UNITY_EDITOR
+		public void UpdateTime(float deltaTime)
+		{
+			Plugin.EffekseerUpdateTime(deltaTime);
+		}
+#endif
 
 		float restFrames = 0;
 
@@ -408,18 +487,47 @@ namespace Effekseer
 			restFrames += deltaFrames;
 			int updateCount = Mathf.RoundToInt(restFrames);
 			for (int i = 0; i < updateCount; i++) {
+				Plugin.EffekseerUpdateTime(1);
 				Plugin.EffekseerUpdate(1);
 			}
 			restFrames -= updateCount;
+
+			ApplyLightingToNative();
 		}
 
-		internal static Texture GetCachedTexture(IntPtr key)
+		/// <summary>
+		/// Don't touch it!!
+		/// </summary>
+		public void ApplyLightingToNative()
+		{
+			var lr = (int)Math.Max(Math.Min(255, lightColor.r * 255), 0);
+			var lg = (int)Math.Max(Math.Min(255, lightColor.g * 255), 0);
+			var lb = (int)Math.Max(Math.Min(255, lightColor.b * 255), 0);
+			var lar = (int)Math.Max(Math.Min(255, lightAmbientColor.r * 255), 0);
+			var lag = (int)Math.Max(Math.Min(255, lightAmbientColor.g * 255), 0);
+			var lab = (int)Math.Max(Math.Min(255, lightAmbientColor.b * 255), 0);
+			var direction = LightDirection.normalized;
+
+			Plugin.EffekseerSetLightDirection(direction.x, direction.y, direction.z);
+			Plugin.EffekseerSetLightColor(lr, lg, lb);
+			Plugin.EffekseerSetLightAmbientColor(lar, lab, lag);
+		}
+
+		internal static Texture GetCachedTexture(IntPtr key, DummyTextureType type)
 		{
 			if(cachedTextures.ContainsKey(key))
 			{
 				return cachedTextures[key];
 			}
-			return Texture2D.whiteTexture;
+
+			if(type == DummyTextureType.White)
+			{
+				return Texture2D.whiteTexture;
+			}
+			else
+			{
+				return normalTexture;
+			}
 		}
 
 		internal static UnityRendererModel GetCachedModel(IntPtr key)
@@ -427,6 +535,15 @@ namespace Effekseer
 			if (cachedModels.ContainsKey(key))
 			{
 				return cachedModels[key];
+			}
+			return null;
+		}
+
+		internal static UnityRendererMaterial GetCachedMaterial(IntPtr key)
+		{
+			if (cachedMaterials.ContainsKey(key))
+			{
+				return cachedMaterials[key];
 			}
 			return null;
 		}
@@ -494,7 +611,7 @@ namespace Effekseer
 		[AOT.MonoPInvokeCallback(typeof(Plugin.EffekseerTextureLoaderUnload))]
 		private static void TextureLoaderUnload(IntPtr path, IntPtr nativePtr)
 		{
-			var pathstr = Marshal.PtrToStringUni(path);
+			// var pathstr = Marshal.PtrToStringUni(path);
 
 			if (Instance.RendererType == EffekseerRendererType.Unity)
 			{
@@ -547,6 +664,110 @@ namespace Effekseer
 					var model = cachedModels[modelPtr];
 					model.Dispose();
 					cachedModels.Remove(modelPtr);
+				}
+			}
+		}
+
+		[AOT.MonoPInvokeCallback(typeof(Plugin.EffekseerMaterialLoaderLoad))]
+		private static IntPtr MaterialLoaderLoad(IntPtr path, 
+			IntPtr materialBuffer, int materialBufferSize, ref int requiredMaterialBufferSize,
+			IntPtr cachedMaterialBuffer, int cachedMaterialBufferSize, ref int requiredCachedMaterialBufferSize)
+		{
+			var pathstr = Marshal.PtrToStringUni(path);
+			pathstr = Path.ChangeExtension(pathstr, ".asset");
+			var asset = Instance.effectAssetInLoading;
+			var res = asset.FindMaterial(pathstr);
+			var material = (res != null) ? res.asset : null;
+
+			if (material != null)
+			{
+				if (Instance.RendererType == EffekseerRendererType.Unity)
+				{
+					if (cachedMaterialIDs.ContainsKey(material))
+					{
+						return cachedMaterialIDs[material];
+					}
+					else
+					{
+						int status = 0;
+
+						if (requiredMaterialBufferSize == 0 && material.materialBuffers != null)
+						{
+							requiredMaterialBufferSize = material.materialBuffers.Length;
+
+							status += 1;
+							return new IntPtr(status);
+						}
+
+						if (material.materialBuffers.Length <= materialBufferSize)
+						{
+							Marshal.Copy(material.materialBuffers, 0, materialBuffer, material.materialBuffers.Length);
+						}
+
+						var ptr = new IntPtr();
+						do
+						{
+							materialIDCounter++;
+							if (materialIDCounter > int.MaxValue / 2)
+							{
+								materialIDCounter = 0;
+							}
+							ptr = new IntPtr(materialIDCounter);
+						}
+						while (cachedMaterials.ContainsKey(ptr));
+
+						var unityRendererMaterial = new UnityRendererMaterial(material);
+
+						cachedMaterials.Add(ptr, unityRendererMaterial);
+						cachedMaterialIDs.Add(material, ptr);
+						return ptr;
+					}
+				}
+				else
+				{
+					int status = 0;
+
+					if(material.cachedMaterialBuffers != null)
+					{
+						requiredCachedMaterialBufferSize = material.cachedMaterialBuffers.Length;
+
+						if (material.cachedMaterialBuffers.Length <= cachedMaterialBufferSize)
+						{
+							Marshal.Copy(material.cachedMaterialBuffers, 0, cachedMaterialBuffer, material.cachedMaterialBuffers.Length);
+						}
+
+						status += 2;
+					}
+
+					if(material.materialBuffers != null)
+					{
+						requiredMaterialBufferSize = material.materialBuffers.Length;
+
+						if (material.materialBuffers.Length <= materialBufferSize)
+						{
+							Marshal.Copy(material.materialBuffers, 0, materialBuffer, material.materialBuffers.Length);
+						}
+
+						status += 1;
+					}
+
+					return new IntPtr(status);
+				}
+			}
+
+			return IntPtr.Zero;
+		}
+
+		[AOT.MonoPInvokeCallback(typeof(Plugin.EffekseerMaterialLoaderUnload))]
+		private static void MaterialLoaderUnload(IntPtr path, IntPtr materialPtr)
+		{
+			if (Instance.RendererType == EffekseerRendererType.Unity)
+			{
+				if (cachedMaterials.ContainsKey(materialPtr))
+				{
+					var material = cachedMaterials[materialPtr];
+					cachedMaterials.Remove(materialPtr);
+					cachedMaterialIDs.Remove(material.asset);
 				}
 			}
 		}
