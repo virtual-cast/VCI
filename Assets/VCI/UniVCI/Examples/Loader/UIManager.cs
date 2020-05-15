@@ -45,7 +45,7 @@ namespace VCI
             var loader = new VCIImporter();
             loader.Parse(path);
             yield return loader.LoadCoroutine();
-            yield return loader.SetupCorutine();
+            yield return loader.SetupCoroutine();
 
             loader.ShowMeshes();
 

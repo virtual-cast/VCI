@@ -38,7 +38,7 @@ namespace VCI
                 // after textures imported
                 //
                 importer.Load();
-                importer.SetupCorutine().CoroutinetoEnd();
+                importer.SetupCoroutine().CoroutinetoEnd();
                 importer.SetupPhysics();
                 importer.SetupAttachable();
                 importer.SetupEffekseer();

@@ -85,7 +85,7 @@ namespace VCI
 
                 if (string.IsNullOrEmpty(e.Message))
                 {
-                    text = VCIConfig.GetText($"Error{(int)e.ErrorType}");
+                    text = VCIConfig.GetText($"error{(int)e.ErrorType}");
                 }
                 else
                 {

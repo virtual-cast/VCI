@@ -74,7 +74,7 @@ namespace VCI
             }
         }
 
-        public IEnumerator SetupCorutine()
+        public IEnumerator SetupCoroutine()
         {
             VCIObject = Root.AddComponent<VCIObject>();
             yield return ToUnity(meta => VCIObject.Meta = meta);
@@ -240,8 +240,9 @@ namespace VCI
         }
 
         // Attachable
-        public void SetupAttachable()
+        public int SetupAttachable()
         {
+            var attachableCount = 0;
             for (var i = 0; i < GLTF.nodes.Count; i++)
             {
                 var node = GLTF.nodes[i];
@@ -264,8 +265,10 @@ namespace VCI
                     }).ToArray();
 
                     attachable.AttachableDistance = node.extensions.VCAST_vci_attachable.attachableDistance;
+                    attachableCount++;
                 }
             }
+            return attachableCount;
         }
 
         public void SetupEffekseer()
@@ -478,9 +481,20 @@ namespace VCI
                 var audioBuffer = new byte[bytes.Count];
                 Buffer.BlockCopy(bytes.Array, bytes.Offset, audioBuffer, 0, audioBuffer.Length);
 
-                var path = string.Format("{0}/{1}.wav", folder.Value, audio.name);
-                File.WriteAllBytes(path, audioBuffer);
-                AudioAssetPathList.Add(audio.name, path);
+                System.Text.RegularExpressions.Regex r =
+                    new System.Text.RegularExpressions.Regex(
+                        @"(?<type>.*)/(?<ext>.*)",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase
+                        | System.Text.RegularExpressions.RegexOptions.Singleline);
+                var match = r.Match(audio.mimeType);
+                var ext = match.Groups["ext"].Value;
+                if(!string.IsNullOrEmpty(ext))
+                {
+                    var path = string.Format("{0}/{1}.{2}", folder.Value, audio.name, ext);
+                    File.WriteAllBytes(path, audioBuffer);
+                    AudioAssetPathList.Add(audio.name, path);
+                }
+
                 created++;
             }
 

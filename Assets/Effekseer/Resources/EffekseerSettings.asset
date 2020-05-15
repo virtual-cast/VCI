@@ -13,18 +13,24 @@ MonoBehaviour:
   m_Name: EffekseerSettings
   m_EditorClassIdentifier: 
   drawInSceneView: 1
-  RendererType: 1
+  RendererType: 0
   effectInstances: 8192
   maxSquares: 8192
   isRightEffekseerHandledCoordinateSystem: 0
-  soundInstances: 0
-  enableDistortion: 0
+  soundInstances: 16
+  enableDistortion: 1
   enableDistortionMobile: 0
   standardShader: {fileID: 4800000, guid: 398157573952b9e4682f1d3a7e97652e, type: 3}
   standardDistortionShader: {fileID: 4800000, guid: e3ddd9d8606475e448c31613e1f3e1fa,
     type: 3}
   standardModelShader: {fileID: 4800000, guid: e14e7277212921543aea7560f1d8a6b4, type: 3}
   standardModelDistortionShader: {fileID: 4800000, guid: 23bcea1519109ce4980c415796e630d0,
+    type: 3}
+  standardLightingShader: {fileID: 4800000, guid: c4fd16b02c45808499e11cfde93609b0,
+    type: 3}
+  texture2DArrayBlitMaterial: {fileID: 4800000, guid: 67d08a86aa6a44b41bf877601419e9d7,
+    type: 3}
+  texture2DBlitMaterial: {fileID: 4800000, guid: 481306851e1e5834bb2c03a0fb529629,
     type: 3}
   NetworkPort: 60000
   DoStartNetworkAutomatically: 0

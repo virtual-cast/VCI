@@ -24,10 +24,10 @@ namespace Effekseer
 	
 	internal static class Plugin
 	{
-		#if !UNITY_EDITOR && (UNITY_IPHONE || UNITY_WEBGL)
+#if !UNITY_EDITOR && (UNITY_IPHONE || UNITY_WEBGL || UNITY_SWITCH)
 			public const string pluginName = "__Internal";
-		#else
-			public const string pluginName = "EffekseerUnity";
+#else
+		public const string pluginName = "EffekseerUnity";
 #endif
 
 #if (UNITY_WEBGL || UNITY_IOS || UNITY_SWITCH) && !UNITY_EDITOR
@@ -40,6 +40,12 @@ namespace Effekseer
 
 		[DllImport(pluginName)]
 		public static extern void EffekseerTerm();
+
+		[DllImport(pluginName)]
+		public static extern void EffekseerResetTime();
+
+		[DllImport(pluginName)]
+		public static extern void EffekseerUpdateTime(float deltaTime);
 
 		[DllImport(pluginName)]
 		public static extern void EffekseerUpdate(float deltaTime);
@@ -69,7 +75,7 @@ namespace Effekseer
 		public static extern void EffekseerSetCameraMatrix(int renderId, float[] matrix);
 
 		[DllImport(pluginName)]
-		public static extern void EffekseerSetStereoRenderingMatrix(int renderId, float[] projMatL, float[] projMatR, float[] camMatL, float[] camMatR);
+		public static extern void EffekseerSetStereoRenderingMatrix(int renderId, int renderType, float[] camCenterMat, float[] projMatL, float[] projMatR, float[] camMatL, float[] camMatR);
 
 		[DllImport(pluginName)]
 		public static extern void EffekseerSetBackGroundTexture(int renderId, IntPtr background);
@@ -86,7 +92,10 @@ namespace Effekseer
         [DllImport(pluginName)]
         public static extern void EffekseerSetIsBackgroundTextureFlipped(int isFlipped);
 
-        [DllImport(pluginName)]
+		[DllImport(pluginName)]
+		public static extern void EffekseerAddRemovingRenderPath(int renderID);
+
+		[DllImport(pluginName)]
 		public static extern IntPtr EffekseerLoadEffect(IntPtr path, float magnification);
 
 		[DllImport(pluginName)]
@@ -100,6 +109,9 @@ namespace Effekseer
 
 		[DllImport(pluginName)]
 		public static extern void EffekseerUnloadResources(IntPtr effect);
+
+		[DllImport(pluginName)]
+		public static extern float EffekseerGetEffectMagnification(IntPtr effect);
 
 		[DllImport(pluginName)]
 		public static extern int EffekseerPlayEffect(IntPtr effect, float x, float y, float z);
@@ -159,7 +171,22 @@ namespace Effekseer
 		public static extern void EffekseerSetTargetLocation(int handle, float x, float y, float z);
 
 		[DllImport(pluginName)]
+		public static extern void EffekseerSetLightDirection(float x, float y, float z);
+
+		[DllImport(pluginName)]
+		public static extern void EffekseerSetLightColor(int r, int g, int b);
+
+		[DllImport(pluginName)]
+		public static extern void EffekseerSetLightAmbientColor(int r, int g, int b);
+
+		[DllImport(pluginName)]
 		public static extern void EffekseerSetLayer(int handle, int layer);
+
+		[DllImport(pluginName)]
+		public static extern float EffekseerGetDynamicInput(int handle, int index);
+
+		[DllImport(pluginName)]
+		public static extern void EffekseerSetDynamicInput(int handle, int index, float value);
 
 		[DllImport(pluginName)]
 		public static extern void EffekseerSetTextureLoaderEvent(
@@ -174,6 +201,15 @@ namespace Effekseer
 			EffekseerModelLoaderUnload unload);
 		public delegate IntPtr EffekseerModelLoaderLoad(IntPtr path, IntPtr buffer, int bufferSize, ref int requiredBufferSize);
 		public delegate void EffekseerModelLoaderUnload(IntPtr path, IntPtr modelPtr);
+
+		[DllImport(pluginName)]
+		public static extern void EffekseerSetMaterialLoaderEvent(
+	EffekseerMaterialLoaderLoad load,
+	EffekseerMaterialLoaderUnload unload);
+		public delegate IntPtr EffekseerMaterialLoaderLoad(IntPtr path,
+			IntPtr materialBuffer, int materialBufferSize, ref int requiredMaterialBufferSize,
+			IntPtr cachedMaterialBuffer, int cachedMaterialBufferSize, ref int requiredCachedMaterialBufferSize);
+		public delegate void EffekseerMaterialLoaderUnload(IntPtr path, IntPtr modelPtr);
 
 		[DllImport(pluginName)]
 		public static extern void EffekseerSetSoundLoaderEvent(
@@ -199,18 +235,35 @@ namespace Effekseer
 
 		#region UnityRenderer
 
-		
+		public enum RendererMaterialType : int
+		{
+			Default = 0,
+			BackDistortion = 6,
+			Lighting = 7,
+			File = 128,
+		}
+
 		[StructLayout(LayoutKind.Sequential)]
 		public unsafe struct UnityRenderParameter
 		{
 			//! 0 - procedual, 1 - model
 			public int RenderMode;
 
-			//! 0 - False, 1 - True 
-			public int IsDistortingMode;
+			public RendererMaterialType MaterialType;
 
 			//! VertexBuffer 
 			public int VertexBufferOffset;
+
+			//! VertexBuffer 
+			public int VertexBufferStride;
+
+			//! For model
+			public int CustomData1BufferOffset;
+
+			//! For model
+			public int CustomData2BufferOffset;
+
+			public int UniformBufferOffset;
 
 			//! Element count (Triangle) or instance
 			public int ElementCount;
@@ -225,15 +278,37 @@ namespace Effekseer
 
 			public float DistortionIntensity;
 
+			//! for material
+			public int IsRefraction;
+
 			//! Texture ptr
 			public IntPtr TexturePtrs0;
 			public IntPtr TexturePtrs1;
 			public IntPtr TexturePtrs2;
 			public IntPtr TexturePtrs3;
+			public IntPtr TexturePtrs4;
+			public IntPtr TexturePtrs5;
+			public IntPtr TexturePtrs6;
+			public IntPtr TexturePtrs7;
 
-			public fixed int TextureFilterTypes[4];
+			public IntPtr GetTexturePtr(int i)
+			{
+				if (i == 0) return TexturePtrs0;
+				if (i == 1) return TexturePtrs1;
+				if (i == 2) return TexturePtrs2;
+				if (i == 3) return TexturePtrs3;
+				if (i == 4) return TexturePtrs4;
+				if (i == 5) return TexturePtrs5;
+				if (i == 6) return TexturePtrs6;
+				if (i == 7) return TexturePtrs7;
+				return IntPtr.Zero;
+			}
 
-			public fixed int TextureWrapTypes[4];
+			public fixed int TextureFilterTypes[8];
+
+			public fixed int TextureWrapTypes[8];
+
+			public int TextureCount;
 
 			//! Material ptr
 			public IntPtr MaterialPtr;
@@ -266,8 +341,6 @@ namespace Effekseer
 		[DllImport(pluginName)]
 		public static extern IntPtr GetUnityRenderInfoBuffer();
 
-		[DllImport(pluginName)]
-		public static extern void SetMaterial(IntPtr material);
 		#endregion
 
 		#region Network
