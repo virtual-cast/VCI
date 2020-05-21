@@ -50,10 +50,54 @@ namespace VCI
 
         private const string MATERIAL_PATH = "/extensions/" + MATERIAL_EXTENSION_NAME + "/materials";
 
+        private bool ImportableVersionCheck(string exportedVciVersion)
+        {
+            if(string.IsNullOrEmpty(exportedVciVersion))
+            {
+                return false;
+            }
+
+            System.Text.RegularExpressions.Regex r =
+                new System.Text.RegularExpressions.Regex(
+                    @"UniVCI-(?<version>[+-]?[0-9]+[.]?[0-9]([eE][+-])?[0-9])",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase
+                    | System.Text.RegularExpressions.RegexOptions.Singleline);
+            var match = r.Match(exportedVciVersion);
+            var version = match.Groups["version"].Value;
+
+            if(string.IsNullOrEmpty(version))
+            {
+                return false;
+            }
+
+            int itemExportedVersion = (int)(float.Parse(version) * 100);
+            int uniVciVersion = (int)(float.Parse(VCIVersion.VERSION) * 100);
+            if( itemExportedVersion > uniVciVersion)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         public override void ParseJson(string json, IStorage storage)
         {
             base.ParseJson(json, storage);
             var parsed = JsonParser.Parse(Json);
+
+            if(parsed.ContainsKey("extensions") 
+                && parsed["extensions"].ContainsKey("VCAST_vci_meta")
+            )
+            {
+                var meta = parsed["extensions"]["VCAST_vci_meta"];
+                var version = meta["exporterVCIVersion"];
+
+                if(!ImportableVersionCheck(version.Value.ToString()))
+                {
+                    throw new Exception("The current UniVCI cannot read this VCI version. " + version.Value);
+                }
+            }
+
             if (parsed.ContainsKey("extensions")
                 && parsed["extensions"].ContainsKey(MATERIAL_EXTENSION_NAME)
                 && parsed["extensions"][MATERIAL_EXTENSION_NAME].ContainsKey("materials")
@@ -660,6 +704,22 @@ namespace VCI
             return null;
 #endif
         }
+
+#if UNITY_EDITOR
+        protected override UnityPath GetAssetPath(UnityPath prefabPath, UnityEngine.Object o)
+        {
+            if (o is AnimationClip)
+            {
+                var dir = prefabPath.GetAssetFolder(".Animation");
+                var assetPath = dir.Child(o.name.EscapeFilePath() + ".asset");
+                return assetPath;
+            }
+            else
+            {
+                return base.GetAssetPath(prefabPath, o);
+            }
+        }
+#endif
 
         #region Meta
 

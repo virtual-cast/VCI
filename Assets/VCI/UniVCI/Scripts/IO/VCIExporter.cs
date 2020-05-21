@@ -448,12 +448,21 @@ namespace VCI
                 // texture
                 foreach (var texture in emitter.effectAsset.textureResources)
                 {
+                    if(texture == null || texture.texture == null)
+                    {
+                        Debug.LogWarning("Effekseer Texture Asset is null. " + texture?.path);
+                        continue;
+                    }
 #if UNITY_EDITOR
                     var texturePath = UnityEditor.AssetDatabase.GetAssetPath(texture.texture);
                     var textureImporter = (UnityEditor.TextureImporter)UnityEditor.TextureImporter.GetAtPath(texturePath);
-                    textureImporter.isReadable = true;
-                    textureImporter.textureCompression = UnityEditor.TextureImporterCompression.Uncompressed;
-                    textureImporter.SaveAndReimport();
+                    if(textureImporter != null)
+                    {
+                        textureImporter.isReadable = true;
+                        textureImporter.textureCompression = UnityEditor.TextureImporterCompression.Uncompressed;
+                        textureImporter.SaveAndReimport();
+                    }
+
 #endif
 
                     var image = new glTF_Effekseer_image()
@@ -467,6 +476,12 @@ namespace VCI
                 // model
                 foreach (var model in emitter.effectAsset.modelResources)
                 {
+                    if(model == null || model.asset == null)
+                    {
+                        Debug.LogWarning("Effekseer Model Asset is null. " + model?.path);
+                        continue;
+                    }
+
                     var efkModel = new glTF_Effekseer_model()
                     {
                         bufferView = gltf.ExtendBufferAndGetViewIndex(0, model.asset.bytes)
