@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: EffekseerSettings
   m_EditorClassIdentifier: 
   drawInSceneView: 1
-  RendererType: 0
+  RendererType: 1
   effectInstances: 8192
   maxSquares: 8192
   isRightEffekseerHandledCoordinateSystem: 0
-  soundInstances: 16
-  enableDistortion: 1
+  soundInstances: 0
+  enableDistortion: 0
   enableDistortionMobile: 0
   standardShader: {fileID: 4800000, guid: 398157573952b9e4682f1d3a7e97652e, type: 3}
   standardDistortionShader: {fileID: 4800000, guid: e3ddd9d8606475e448c31613e1f3e1fa,
