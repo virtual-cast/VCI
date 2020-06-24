@@ -5,7 +5,6 @@ using UnityEngine;
 using System.IO;
 using System.Text;
 using System.Collections;
-using TMPro;
 using VCIDepthFirstScheduler;
 using VCIJSON;
 #if UNITY_EDITOR
@@ -21,7 +20,7 @@ namespace VCIGLTF
     /// <summary>
     /// GLTF importer
     /// </summary>
-    public class ImporterContext : IDisposable
+    public class ImporterContext: IDisposable
     {
         #region MeasureTime
         bool m_showSpeedLog
@@ -130,7 +129,7 @@ namespace VCIGLTF
             {
                 if (m_materialImporter == null)
                 {
-                    m_materialImporter = new MaterialImporter(ShaderStore, this);
+                    m_materialImporter = new MaterialImporter(ShaderStore, (int index) => this.GetTexture(index));
                 }
                 return m_materialImporter;
             }
@@ -259,7 +258,7 @@ namespace VCIGLTF
         /// <param name="bytes"></param>
         public void ParseGlb(Byte[] bytes)
         {
-            var chunks = glbImporter.ParseGlbChanks(bytes);
+            var chunks = glbImporter.ParseGlbChunks(bytes);
 
             if (chunks.Count != 2)
             {
@@ -276,23 +275,43 @@ namespace VCIGLTF
                 throw new Exception("chunk 1 is not BIN");
             }
 
-            var jsonBytes = chunks[0].Bytes;
-            ParseJson(Encoding.UTF8.GetString(jsonBytes.Array, jsonBytes.Offset, jsonBytes.Count),
-                new SimpleStorage(chunks[1].Bytes));
+            try
+            {
+                var jsonBytes = chunks[0].Bytes;
+                ParseJson(Encoding.UTF8.GetString(jsonBytes.Array, jsonBytes.Offset, jsonBytes.Count),
+                    new SimpleStorage(chunks[1].Bytes));
+            }
+            catch(StackOverflowException ex)
+            {
+                throw new Exception("[UniVRM Import Error] json parsing failed, nesting is too deep.\n" + ex);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
-        public bool UseUniJSONParser;
+        private SerializerTypes _serializerType = SerializerTypes.UniJSON;
+        public SerializerTypes SerializerType { get { return _serializerType; } set { _serializerType = value; } }
+
         public virtual void ParseJson(string json, IStorage storage)
         {
             Json = json;
             Storage = storage;
 
-            if (UseUniJSONParser)
+            if (_serializerType == SerializerTypes.UniJSON)
             {
                 Json.ParseAsJson().Deserialize(ref GLTF);
             }
-            else
+            else if (_serializerType == SerializerTypes.Generated)
             {
+                // ToDo: Generate VCI Serializer
+                //GLTF = GltfDeserializer.Deserialize(json.ParseAsJson());
+                throw new NotImplementedException("SerializerTypes.Generated is not Implemented.");
+            }
+            else if (_serializerType == SerializerTypes.JsonSerializable)
+            {
+                // Obsolete
                 GLTF = JsonUtility.FromJson<glTF>(Json);
             }
 
@@ -314,7 +333,7 @@ namespace VCIGLTF
 
         void RestoreOlderVersionValues()
         {
-            var parsed = VCIJSON.JsonParser.Parse(Json);
+            var parsed = JsonParser.Parse(Json);
             for (int i = 0; i < GLTF.images.Count; ++i)
             {
                 if (string.IsNullOrEmpty(GLTF.images[i].name))
@@ -397,6 +416,15 @@ namespace VCIGLTF
             Root.name = Path.GetFileNameWithoutExtension(path);
         }
 
+        public virtual ITextureLoader CreateTextureLoader(int index)
+        {
+#if UNIGLTF_USE_WEBREQUEST_TEXTURELOADER
+            return new UnityWebRequestTextureLoader(index);
+#else
+            return new TextureLoader(index);
+#endif
+        }
+
         public void CreateTextureItems(UnityPath imageBaseDir = default(UnityPath))
         {
             if (m_textures.Any())
@@ -425,7 +453,7 @@ namespace VCIGLTF
                 else
 #endif
                 {
-                    item = new TextureItem(i);
+                    item = new TextureItem(i, CreateTextureLoader(i));
                 }
 
                 AddTexture(item);
@@ -589,10 +617,10 @@ namespace VCIGLTF
                         AnimationImporter.Import(this);
                     }
                 })
+                .ContinueWithCoroutine(Scheduler.MainThread, OnLoadModel)
                 .ContinueWith(Scheduler.CurrentThread,
                     _ =>
                     {
-                        OnLoadModel();
                         if (m_showSpeedLog)
                         {
                             Debug.Log(GetSpeedLog());
@@ -601,9 +629,10 @@ namespace VCIGLTF
                     });
         }
 
-        protected virtual void OnLoadModel()
+        protected virtual IEnumerator OnLoadModel()
         {
             Root.name = "GLTF";
+            yield break;
         }
 
         IEnumerator TexturesProcessOnAnyThread()
@@ -635,13 +664,13 @@ namespace VCIGLTF
             {
                 if (GLTF.materials == null || !GLTF.materials.Any())
                 {
-                    AddMaterial(MaterialImporter.CreateMaterial(GLTF, 0, null));
+                    AddMaterial(MaterialImporter.CreateMaterial(0, null, false));
                 }
                 else
                 {
                     for (int i = 0; i < GLTF.materials.Count; ++i)
                     {
-                        AddMaterial(MaterialImporter.CreateMaterial(GLTF, i, GLTF.materials[i]));
+                        AddMaterial(MaterialImporter.CreateMaterial(i, GLTF.materials[i], GLTF.MaterialHasVertexColor(i)));
                     }
                 }
             }
@@ -670,9 +699,9 @@ namespace VCIGLTF
         {
             using (MeasureTime("LoadNodes"))
             {
-                foreach (var x in GLTF.nodes)
+                for (int i = 0; i < GLTF.nodes.Count; i++)
                 {
-                    Nodes.Add(NodeImporter.ImportNode(x).transform);
+                    Nodes.Add(NodeImporter.ImportNode(GLTF.nodes[i], i).transform);
                 }
             }
 
@@ -718,7 +747,6 @@ namespace VCIGLTF
         public List<Transform> Nodes = new List<Transform>();
 
         List<TextureItem> m_textures = new List<TextureItem>();
-
         public IList<TextureItem> GetTextures()
         {
             return m_textures;
@@ -772,10 +800,6 @@ namespace VCIGLTF
                 }
             }
         }
-        public void AddMeshWitMaterials(MeshWithMaterials meshWithMats)
-        {
-            Meshes.Add(meshWithMats);
-        }
 
         public void EnableUpdateWhenOffscreen()
         {
@@ -808,19 +832,6 @@ namespace VCIGLTF
             foreach (var x in textures) { yield return x; }
             foreach (var x in m_materials) { yield return x; }
             foreach (var x in Meshes) { yield return x.Mesh; }
-            foreach (var x in AnimationClips) { yield return x; }
-        }
-
-        List<TextMeshPro> m_texts = new List<TextMeshPro>();
-
-        public void AddText(TextMeshPro text)
-        {
-            m_texts.Add(text);
-        }
-
-        public IEnumerable<TextMeshPro> GetTexts(string id)
-        {
-            return m_texts.Where(t => t.name.ToLower() == id.ToLower());
         }
 
 #if UNITY_EDITOR
@@ -928,22 +939,23 @@ namespace VCIGLTF
                 }
             }
 
-            // Create or upate Main Asset
+            // Create or update Main Asset
             if (prefabPath.IsFileExists)
             {
                 Debug.LogFormat("replace prefab: {0}", prefabPath);
-#if UNITY_2018_3_OR_NEWER
-                PrefabUtility.SaveAsPrefabAsset(Root, prefabPath.Value);
-#else
                 var prefab = prefabPath.LoadAsset<GameObject>();
+#if UNITY_2018_3_OR_NEWER
+                PrefabUtility.SaveAsPrefabAssetAndConnect(Root, prefabPath.Value, InteractionMode.AutomatedAction);
+#else
                 PrefabUtility.ReplacePrefab(Root, prefab, ReplacePrefabOptions.ReplaceNameBased);
 #endif
+
             }
             else
             {
                 Debug.LogFormat("create prefab: {0}", prefabPath);
 #if UNITY_2018_3_OR_NEWER
-                PrefabUtility.SaveAsPrefabAsset(Root, prefabPath.Value);
+                PrefabUtility.SaveAsPrefabAssetAndConnect(Root, prefabPath.Value, InteractionMode.AutomatedAction);
 #else
                 PrefabUtility.CreatePrefab(prefabPath.Value, Root);
 #endif
@@ -954,11 +966,17 @@ namespace VCIGLTF
             }
         }
 
+        [Obsolete("Use ExtractImages(prefabPath)")]
+        public void ExtranctImages(UnityPath prefabPath)
+        {
+            ExtractImages(prefabPath);
+        }
+
         /// <summary>
         /// Extract images from glb or gltf out of Assets folder.
         /// </summary>
         /// <param name="prefabPath"></param>
-        public void ExtranctImages(UnityPath prefabPath)
+        public void ExtractImages(UnityPath prefabPath)
         {
             var prefabParentDir = prefabPath.Parent;
 
@@ -1004,13 +1022,13 @@ namespace VCIGLTF
 
             CreateTextureItems(prefabParentDir);
         }
-#endregion
+        #endregion
 #endif
 
-                /// <summary>
-                /// This function is used for clean up after create assets.
-                /// </summary>
-                /// <param name="destroySubAssets">Ambiguous arguments</param>
+        /// <summary>
+        /// This function is used for clean up after create assets.
+        /// </summary>
+        /// <param name="destroySubAssets">Ambiguous arguments</param>
         [Obsolete("Use Dispose for runtime loader resource management")]
         public void Destroy(bool destroySubAssets)
         {
@@ -1061,7 +1079,7 @@ namespace VCIGLTF
         }
 
         /// <summary>
-        /// Destroy assets that created ImporterContext. This function is clean up for imoprter error.
+        /// Destroy assets that created ImporterContext. This function is clean up for importer error.
         /// </summary>
         public void EditorDestroyRootAndAssets()
         {

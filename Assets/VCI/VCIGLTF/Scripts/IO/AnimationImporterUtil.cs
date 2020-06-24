@@ -155,7 +155,44 @@ namespace VCIGLTF
             }
         }
 
-        public static AnimationClip ImportAnimationClip(ImporterContext ctx, glTFAnimation animation, Transform root)
+        public static string RelativePathFrom(List<glTFNode> nodes, glTFNode root, glTFNode target, List<String> path)
+        {
+            if(path.Count() == 0)
+            {
+                path.Add(target.name);
+            }
+
+            var rootIndex = nodes.IndexOf(root);
+            var targetIndex = nodes.IndexOf(target);
+            for(var i = 0;i< nodes.Count;i++)
+            {
+                var node = nodes[i];
+
+                if(node.children == null || !node.children.Any())
+                    continue;
+
+                foreach(var child in node.children)
+                {
+                    if(child == targetIndex)
+                    {
+                        var parent = node;
+                        if(parent == root)
+                        {
+                            return String.Join("/", path.ToArray()); 
+                        }
+                        else
+                        {
+                            path.Insert(0, parent.name);
+                            return RelativePathFrom(nodes, root, parent, path);
+                        }
+                    }
+                }
+            }
+
+            throw new Exception("no RelativePath"); 
+        }
+
+        public static AnimationClip ImportAnimationClip(ImporterContext ctx, glTFAnimation animation, glTFNode root)
         {
             var clip = new AnimationClip();
             clip.ClearCurves();
@@ -165,8 +202,8 @@ namespace VCIGLTF
 
             foreach (var channel in animation.channels)
             {
-                var targetTransform = ctx.Nodes[channel.target.node];
-                var relativePath = targetTransform.RelativePathFrom(root);
+                List<string> pathList = new List<string>();
+                var relativePath = RelativePathFrom(ctx.GLTF.nodes, root, ctx.GLTF.nodes[channel.target.node], pathList);
                 switch (channel.target.path)
                 {
                     case glTFAnimationTarget.PATH_TRANSLATION:
@@ -313,7 +350,7 @@ namespace VCIGLTF
                     animation.name = string.Format("animation:{0}", i);
                 }
 
-                animasionClips.Add(ImportAnimationClip(ctx, animation, ctx.Root.transform));
+                animasionClips.Add(ImportAnimationClip(ctx, animation, ctx.GLTF.nodes[0]));
             }
 
             return animasionClips;

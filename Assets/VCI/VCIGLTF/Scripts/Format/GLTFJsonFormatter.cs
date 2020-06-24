@@ -4,7 +4,7 @@ using VCIJSON;
 
 namespace VCIGLTF
 {
-    public class GLTFJsonFormatter: VCIJSON.JsonFormatter
+    public class GLTFJsonFormatter: JsonFormatter
     {
         public void GLTFValue(JsonSerializableBase s)
         {

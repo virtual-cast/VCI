@@ -8,18 +8,17 @@ namespace VCI
 {
     public static class AudioClipMaker
     {
-        public static readonly float RANGE_VALUE_BIT_8 = 1.0f / Mathf.Pow(2, 7); // 1 / 128
-        public static readonly float RANGE_VALUE_BIT_16 = 1.0f / Mathf.Pow(2, 15); // 1 / 32768
-        public static readonly int BASE_CONVERT_SAMPLES = 1024 * 20;
-        public static int BIT_8 = 8;
-        public static int BIT_16 = 16;
-        public static int BIT_24 = 24;
+        private static readonly float RANGE_VALUE_BIT_8 = 1.0f / Mathf.Pow(2, 7); // 1 / 128
+        private static readonly float RANGE_VALUE_BIT_16 = 1.0f / Mathf.Pow(2, 15); // 1 / 32768
+        private static readonly int BIT_8 = 8;
+        private static readonly int BIT_16 = 16;
+        private static readonly int BIT_24 = 24;
 
         public static IEnumerator Create(
             string name,
-            byte[] raw_data,
-            int wav_buf_idx,
-            int bit_per_sample,
+            byte[] rawData,
+            int wavBufIdx,
+            int bitPerSample,
             int samples,
             int channels,
             int frequency,
@@ -27,10 +26,7 @@ namespace VCI
             Action<AudioClip> callback
         )
         {
-            var task = Task.Run<float[]>(() =>
-            {
-                return CreateRangedRawData(raw_data, wav_buf_idx, samples, channels, bit_per_sample);
-            });
+            var task = Task.Run(() => CreateRangedRawData(rawData, wavBufIdx, samples, channels, bitPerSample));
 
             while (true)
                 if (task.IsCompleted || task.IsFaulted || task.IsCanceled)
@@ -41,9 +37,9 @@ namespace VCI
             callback(Create(name, task.Result, samples, channels, frequency, isStream));
         }
 
-        public static AudioClip Create(
+        private static AudioClip Create(
             string name,
-            float[] ranged_data,
+            float[] rangedData,
             int samples,
             int channels,
             int frequency,
@@ -51,57 +47,52 @@ namespace VCI
         )
         {
             var clip = AudioClip.Create(name, samples, channels, frequency, isStream);
-            clip.SetData(ranged_data, 0);
-
+            clip.SetData(rangedData, 0);
             return clip;
         }
 
-        public static float[] CreateRangedRawData(byte[] byte_data, int wav_buf_idx, int samples, int channels,
-            int bit_per_sample)
+        private static float[] CreateRangedRawData(byte[] rawData, int wavBufIdx, int samples, int channels,
+            int bitPerSample)
         {
-            var ranged_rawdata = new float[samples * channels];
+            var rangedRawData = new float[samples * channels];
 
-            var step_byte = bit_per_sample / BIT_8;
-            var now_idx = wav_buf_idx;
+            var stepByte = bitPerSample / BIT_8;
+            var nowIdx = wavBufIdx;
 
             for (var i = 0; i < samples * channels; ++i)
             {
-                ranged_rawdata[i] = convertByteToFloatData(byte_data, now_idx, bit_per_sample);
-
-                now_idx += step_byte;
+                rangedRawData[i] = ConvertByteToFloatData(rawData, nowIdx, bitPerSample);
+                nowIdx += stepByte;
             }
 
-            return ranged_rawdata;
+            return rangedRawData;
         }
 
-        private static float convertByteToFloatData(byte[] byte_data, int idx, int bit_per_sample)
+        private static float ConvertByteToFloatData(byte[] rawData, int idx, int bitPerSample)
         {
-            var float_data = 0.0f;
-
+            var floatData = 0.0f;
             try
             {
-                if (bit_per_sample == BIT_8)
+                if (bitPerSample == BIT_8)
                 {
-                    float_data = ((int) byte_data[idx] - 0x80) * RANGE_VALUE_BIT_8;
+                    floatData = ((int) rawData[idx] - 0x80) * RANGE_VALUE_BIT_8;
                 }
-                else if (bit_per_sample == BIT_16)
+                else if (bitPerSample == BIT_16)
                 {
-                    var sample_data = BitConverter.ToInt16(byte_data, idx);
-                    float_data = sample_data * RANGE_VALUE_BIT_16;
+                    floatData = BitConverter.ToInt16(rawData, idx) * RANGE_VALUE_BIT_16;
                 }
-                else if (bit_per_sample == BIT_24)
+                else if (bitPerSample == BIT_24)
                 {
-                    var sample_data = BitConverter.ToInt16(byte_data, idx + 1); // skip low bit
-                    float_data = sample_data * RANGE_VALUE_BIT_16;
+                    // skip low bit
+                    floatData = BitConverter.ToInt16(rawData, idx + 1) * RANGE_VALUE_BIT_16;
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError(ex);
-                throw ex;
+                Debug.LogWarning(ex);
+                throw;
             }
-
-            return float_data;
+            return floatData;
         }
     }
 }

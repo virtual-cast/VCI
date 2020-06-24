@@ -24,6 +24,8 @@ namespace VCI
             gltf.extensionsUsed.Add(glTF_VCAST_vci_text.ExtensionName);
             gltf.extensionsUsed.Add(glTF_VCAST_vci_rectTransform.ExtensionName);
             gltf.extensionsUsed.Add(glTF_VCAST_vci_spring_bone.ExtensionName);
+            gltf.extensionsUsed.Add(glTF_VCAST_vci_player_spawn_point.ExtensionName);
+            gltf.extensionsUsed.Add(glTF_VCAST_vci_player_spawn_point_restriction.ExtensionName);
 
 #if VCI_EXPORTER_USE_SPARSE
             UseSparseAccessorForBlendShape = true
@@ -36,7 +38,7 @@ namespace VCI
 
             var gltf = GLTF;
             var exporter = this;
-            var go = Copy;
+            // var go = Copy;
 
             //exporter.Prepare(go);
             //exporter.Export();
@@ -145,11 +147,11 @@ namespace VCI
                     scriptFormat = meta.scriptFormat
                 };
                 if (meta.thumbnail != null)
-                    gltf.extensions.VCAST_vci_meta.thumbnail = TextureIO.ExportTexture(
+                    gltf.extensions.VCAST_vci_meta.thumbnail = TextureExporter.ExportTexture(
                         gltf, gltf.buffers.Count - 1, meta.thumbnail, glTFTextureTypes.Unknown);
             }
 
-            // collider & rigidbody & joint & item
+            // collider & rigidbody & joint & item & playerSpawnPoint
             for (var i = 0; i < exporter.Nodes.Count; i++)
             {
                 var node = exporter.Nodes[i];
@@ -251,6 +253,27 @@ namespace VCI
                     {
                         text = glTF_VCAST_vci_Text.Create(tmp)
                     };
+                }
+
+                // PlayerSpawnPoint
+                var psp = node.GetComponent<VCIPlayerSpawnPoint>();
+                if (psp != null)
+                {
+                    if (gltfNode.extensions == null) gltfNode.extensions = new glTFNode_extensions();
+
+                    gltfNode.extensions.VCAST_vci_player_spawn_point = new glTF_VCAST_vci_player_spawn_point
+                    {
+                        playerSpawnPoint = glTF_VCAST_vci_PlayerSpawnPoint.Create(psp)
+                    };
+
+                    var pspR = node.GetComponent<VCIPlayerSpawnPointRestriction>();
+                    if (pspR != null)
+                    {
+                        gltfNode.extensions.VCAST_vci_player_spawn_point_restriction = new glTF_VCAST_vci_player_spawn_point_restriction
+                        {
+                            playerSpawnPointRestriction = glTF_VCAST_vci_PlayerSpawnPointRestriction.Create(pspR)
+                        };
+                    }
                 }
             }
 
@@ -427,7 +450,7 @@ namespace VCI
 #endif
         }
 
-        private static int AddEffekseerEffect(glTF gltf, Effekseer.EffekseerEmitter emitter)
+        private int AddEffekseerEffect(glTF gltf, Effekseer.EffekseerEmitter emitter)
         {
             if(gltf.extensions.Effekseer.effects.FirstOrDefault(x => x.effectName == emitter.effectAsset.name) == null)
             {
@@ -464,11 +487,12 @@ namespace VCI
                     }
 
 #endif
-
+                    var textureBytes = TextureExporter.GetBytesWithMime(texture.texture, glTFTextureTypes.Unknown);
                     var image = new glTF_Effekseer_image()
                     {
-                        bufferView = gltf.ExtendBufferAndGetViewIndex(0, texture.texture.EncodeToPNG()),
-                        mimeType = "image/png"
+
+                        bufferView = gltf.ExtendBufferAndGetViewIndex(0, textureBytes.bytes),
+                        mimeType = textureBytes.mine
                     };
                     effect.images.Add(image);
                 }

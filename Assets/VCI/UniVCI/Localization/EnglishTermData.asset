@@ -59,3 +59,11 @@ MonoBehaviour:
     value: Nested RootBones found.
   - key: error206
     value: Contains invalid component.\n{0}
+  - key: error501
+    value: PositionY of the VCIPlayerSpawnPoint is beyond the valid range.
+  - key: error502
+    value: RotationX and Z of the VCIPlayerSpawnPoint must be 0.
+  - key: error503
+    value: For VCIPlayerSpawnPointRestriction, LimitRectLeft and LimitRectBackward
+      must be less than or equal to 0, LimitRectRight and LimitRectForward must be
+      more than or equal to 0.

@@ -9,10 +9,13 @@ namespace VCI
     {
         private List<glTF_VCI_Material> m_materials;
 
-        public VCIMaterialImporter(ImporterContext context, List<glTF_VCI_Material> materials) : base(
-            new ShaderStore(context), context)
+        private bool m_srgbToLinearColor = false;
+
+        public VCIMaterialImporter(ImporterContext context, List<glTF_VCI_Material> materials, bool srgbToLinearColor) : base(
+            new ShaderStore(context), (int index) => context.GetTexture(index))
         {
             m_materials = materials;
+            m_srgbToLinearColor = srgbToLinearColor;
         }
 
         private static string[] VRM_SHADER_NAMES =
@@ -27,9 +30,25 @@ namespace VCI
             "VRM/UnlitTransparentZWrite",
         };
 
-        public override Material CreateMaterial(glTF gltf, int i, glTFMaterial src)
+        public override Material CreateMaterial(int i, glTFMaterial src,  bool hasVertexColor)
         {
-            if (i == 0 && m_materials.Count == 0) return base.CreateMaterial(gltf, i, src);
+
+            // UniVCI v0.27以下のバージョンでExportしたVCIは、baseColorFactorがSrgbで値が入っているためLinearに変換する必要がある
+            if(m_srgbToLinearColor 
+                && src != null
+                && src.pbrMetallicRoughness != null 
+                && src.pbrMetallicRoughness.baseColorFactor != null
+                && src.pbrMetallicRoughness.baseColorFactor.Length == 4)
+            {
+                var color = src.pbrMetallicRoughness.baseColorFactor;
+                Color linearColor = (new Color(color[0], color[1], color[2], color[3])).linear;
+                src.pbrMetallicRoughness.baseColorFactor[0] = linearColor[0];
+                src.pbrMetallicRoughness.baseColorFactor[1] = linearColor[1];
+                src.pbrMetallicRoughness.baseColorFactor[2] = linearColor[2];
+                src.pbrMetallicRoughness.baseColorFactor[3] = linearColor[3];
+            }
+
+            if (i == 0 && m_materials.Count == 0) return base.CreateMaterial(i, src, hasVertexColor);
 
             var item = m_materials[i];
             var shaderName = item.shader;
@@ -45,7 +64,7 @@ namespace VCI
                         shaderName);
                 else
                     Debug.LogFormat("unknown shader {0}.", shaderName);
-                return base.CreateMaterial(gltf, i, src);
+                return base.CreateMaterial(i, src, hasVertexColor);
             }
 
             //
@@ -72,7 +91,7 @@ namespace VCI
 
             foreach (var kv in item.textureProperties)
             {
-                var texture = Context.GetTexture(kv.Value);
+                var texture = GetTextureFunc(kv.Value);
                 if (texture != null)
                 {
                     var converted = texture.ConvertTexture(kv.Key);

@@ -20,7 +20,7 @@ namespace VCIGLTF
 
         public static Texture2D Convert(Texture2D texture, glTFTextureTypes textureType, ColorConversion colorConversion, Material convertMaterial)
         {
-            var copyTexture = TextureItem.CopyTexture(texture, TextureIO.GetColorSpace(textureType), convertMaterial);
+            var copyTexture = TextureItem.CopyTexture(texture, TextureExporter.GetColorSpace(textureType), convertMaterial);
             if (colorConversion != null)
             {
                 copyTexture.SetPixels32(copyTexture.GetPixels32().Select(x => colorConversion(x)).ToArray());

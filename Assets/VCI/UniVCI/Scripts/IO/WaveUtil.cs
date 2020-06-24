@@ -25,65 +25,60 @@ namespace VCI
 
             public override string ToString()
             {
-                return string.Format("{0}_{1}_{2}_{3}", SampleRate, Channel, BytePerSec, BitPerSample);
+                return $"{SampleRate}_{Channel}_{BytePerSec}_{BitPerSample}";
             }
         }
 
-        public static bool TryReadHeader(byte[] bytes, out WaveHeaderData waveHeader)
+        public static bool TryReadHeader(MemoryStream ms, out WaveHeaderData waveHeader)
         {
             waveHeader = new WaveHeaderData();
-
-            using (Stream ms = new MemoryStream(bytes, false))
+            try
             {
-                try
-                {
-                    var br = new BinaryReader(ms);
-                    waveHeader.RiffHeader = System.Text.Encoding.GetEncoding(20127).GetString(br.ReadBytes(4));
-                    waveHeader.FileSize = BitConverter.ToInt32(br.ReadBytes(4), 0);
-                    waveHeader.WaveHeader = System.Text.Encoding.GetEncoding(20127).GetString(br.ReadBytes(4));
+                var br = new BinaryReader(ms);
+                waveHeader.RiffHeader = System.Text.Encoding.GetEncoding(20127).GetString(br.ReadBytes(4));
+                waveHeader.FileSize = BitConverter.ToInt32(br.ReadBytes(4), 0);
+                waveHeader.WaveHeader = System.Text.Encoding.GetEncoding(20127).GetString(br.ReadBytes(4));
 
-                    var bytesPerSec = 0;
-                    var readFmtChunk = false;
-                    var readDataChunk = false;
-                    while (!readFmtChunk || !readDataChunk)
+                var bytesPerSec = 0;
+                var readFmtChunk = false;
+                var readDataChunk = false;
+                while (!readFmtChunk || !readDataChunk)
+                {
+                    var chunk = System.Text.Encoding.GetEncoding(20127).GetString(br.ReadBytes(4));
+                    if (chunk.ToLower().CompareTo("fmt ") == 0)
                     {
-                        var chunk = System.Text.Encoding.GetEncoding(20127).GetString(br.ReadBytes(4));
-                        if (chunk.ToLower().CompareTo("fmt ") == 0)
-                        {
-                            waveHeader.FormatChunk = chunk;
-                            waveHeader.FormatChunkSize = BitConverter.ToInt32(br.ReadBytes(4), 0);
-                            waveHeader.FormatID = BitConverter.ToInt16(br.ReadBytes(2), 0);
-                            waveHeader.Channel = BitConverter.ToInt16(br.ReadBytes(2), 0);
-                            waveHeader.SampleRate = BitConverter.ToInt32(br.ReadBytes(4), 0);
-                            waveHeader.BytePerSec = BitConverter.ToInt32(br.ReadBytes(4), 0);
-                            waveHeader.BlockSize = BitConverter.ToInt16(br.ReadBytes(2), 0);
-                            waveHeader.BitPerSample = BitConverter.ToInt16(br.ReadBytes(2), 0);
-                            bytesPerSec = waveHeader.SampleRate * waveHeader.BlockSize;
-                            if (waveHeader.FormatChunkSize > 16) br.ReadBytes(waveHeader.FormatChunkSize - 16);
-                            readFmtChunk = true;
-                        }
-                        else if (chunk.ToLower().CompareTo("data") == 0)
-                        {
-                            waveHeader.DataChunk = chunk;
-                            waveHeader.DataChunkSize = BitConverter.ToInt32(br.ReadBytes(4), 0);
-                            waveHeader.PlayTimeMsec =
-                                (int) ((double) waveHeader.DataChunkSize / (double) bytesPerSec * 1000);
-                            readDataChunk = true;
-                        }
-                        else
-                        {
-                            var size = BitConverter.ToInt32(br.ReadBytes(4), 0);
-                            if (0 < size) br.ReadBytes(size);
-                        }
+                        waveHeader.FormatChunk = chunk;
+                        waveHeader.FormatChunkSize = BitConverter.ToInt32(br.ReadBytes(4), 0);
+                        waveHeader.FormatID = BitConverter.ToInt16(br.ReadBytes(2), 0);
+                        waveHeader.Channel = BitConverter.ToInt16(br.ReadBytes(2), 0);
+                        waveHeader.SampleRate = BitConverter.ToInt32(br.ReadBytes(4), 0);
+                        waveHeader.BytePerSec = BitConverter.ToInt32(br.ReadBytes(4), 0);
+                        waveHeader.BlockSize = BitConverter.ToInt16(br.ReadBytes(2), 0);
+                        waveHeader.BitPerSample = BitConverter.ToInt16(br.ReadBytes(2), 0);
+                        bytesPerSec = waveHeader.SampleRate * waveHeader.BlockSize;
+                        if (waveHeader.FormatChunkSize > 16) br.ReadBytes(waveHeader.FormatChunkSize - 16);
+                        readFmtChunk = true;
+                    }
+                    else if (chunk.ToLower().CompareTo("data") == 0)
+                    {
+                        waveHeader.DataChunk = chunk;
+                        waveHeader.DataChunkSize = BitConverter.ToInt32(br.ReadBytes(4), 0);
+                        waveHeader.PlayTimeMsec =
+                            (int)((double)waveHeader.DataChunkSize / (double)bytesPerSec * 1000);
+                        readDataChunk = true;
+                    }
+                    else
+                    {
+                        var size = BitConverter.ToInt32(br.ReadBytes(4), 0);
+                        if (0 < size) br.ReadBytes(size);
                     }
                 }
-                catch
-                {
-                    ms.Close();
-                    return false;
-                }
             }
-
+            catch(Exception e)
+            {
+                Debug.LogWarning(e);
+                return false;
+            }
             return true;
         }
 

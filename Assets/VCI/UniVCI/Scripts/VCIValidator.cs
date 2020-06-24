@@ -16,6 +16,8 @@ namespace VCI
         private const int MaxSpringBoneColliderCount = 10;
         private const int MaxSphereColliderCount = 10;
 
+        private const float SpawnPointAllowedHeightRange = 0.001f;
+
         public const int VersionTextLength = 30;
         public const int AuthorTextLength = 30;
         public const int ContactInformationTextLength = 255;
@@ -30,10 +32,15 @@ namespace VCI
             // VCIObject
             var vciObjectCount = 0;
             var gameObjectCount = 0;
+            var playerSpawnPointsList = new List<VCIPlayerSpawnPoint>();
 
             foreach (var t in vo.transform.Traverse())
             {
                 if (t.GetComponent<VCIObject>() != null) vciObjectCount++;
+
+                var psp = t.GetComponent<VCIPlayerSpawnPoint>();
+                if (psp != null) playerSpawnPointsList.Add(psp);
+
                 gameObjectCount++;
             }
 
@@ -82,6 +89,36 @@ namespace VCI
             var springBones = vo.GetComponents<VCISpringBone>();
 
             if (springBones != null && springBones.Length > 0) ValidateSpringBones(springBones);
+
+            // PlayerSpawnPoint
+            foreach (var psp in playerSpawnPointsList)
+            {
+                var pspT = psp.gameObject.transform;
+                if (Math.Abs(pspT.position.y) > SpawnPointAllowedHeightRange)
+                {
+                    throw new VCIValidatorException(ValidationErrorType.SpawnPointHeightRangeNotAllowed,
+                        VCIConfig.GetText($"error{(int)ValidationErrorType.SpawnPointHeightRangeNotAllowed}"));
+                }
+
+                if (Math.Abs(pspT.rotation.x) > 0.001f || Math.Abs(pspT.rotation.z) > 0.001f)
+                {
+                    throw new VCIValidatorException(ValidationErrorType.SpawnPointNotHorizontal,
+                        VCIConfig.GetText($"error{(int)ValidationErrorType.SpawnPointNotHorizontal}"));
+                }
+
+                var pspR = psp.GetComponent<VCIPlayerSpawnPointRestriction>();
+                if (pspR == null) continue;
+
+                if (pspR.LimitRectLeft > 0
+                    || pspR.LimitRectRight < 0
+                    || pspR.LimitRectForward < 0
+                    || pspR.LimitRectBackward > 0)
+                {
+                    throw new VCIValidatorException(ValidationErrorType.SpawnPointOriginNotInRange,
+                        VCIConfig.GetText($"error{(int)ValidationErrorType.SpawnPointOriginNotInRange}"));
+                }
+
+            }
         }
 
         private static void ValidateSpringBones(VCISpringBone[] targets)
@@ -165,7 +202,12 @@ namespace VCI
 
         // SpringBoneCollider
         TooManySpringBoneCollider = 410,
-        TooManySphereCollider = 411
+        TooManySphereCollider = 411,
+
+        // PlayerSpawnPoint
+        SpawnPointHeightRangeNotAllowed = 501,
+        SpawnPointNotHorizontal = 502,
+        SpawnPointOriginNotInRange = 503,
     }
 
     [Serializable]

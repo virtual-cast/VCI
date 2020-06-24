@@ -189,9 +189,12 @@ namespace VCI
             //
             // export
             //
+            GameObject cube = GameObject.CreatePrimitive (PrimitiveType.Cube);
+            var renderer = cube.GetComponent<Renderer>();
+            renderer.sharedMaterial = src;
             var gltf = new glTF();
             var exporter = new VCIExporter(gltf);
-            exporter.Materials = new System.Collections.Generic.List<Material> {src};
+            exporter.Prepare(cube);
             exporter.Export();
             var bytes = gltf.ToGlbBytes();
 

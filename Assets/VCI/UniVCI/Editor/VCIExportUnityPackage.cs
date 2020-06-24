@@ -141,7 +141,10 @@ namespace VCI
             "Assets/Effekseer/Resources",
             "Assets/Effekseer/Scripts",
 
-            "Assets/NAudio"
+            "Assets/NAudio",
+
+            // DigitalSignature files
+            "Assets/VCI-DigitalSignature",
         };
 
 
@@ -151,6 +154,9 @@ namespace VCI
             "Assets/VRM/VRM.asmdef",
             "Assets/Effekseer/EffekseerAssemblyDefinition.asmdef",
         };
+
+
+
 
 #if VCI_DEVELOP
         [MenuItem(VCIVersion.MENU + "/Export unitypackage")]
@@ -175,8 +181,19 @@ namespace VCI
                 var filesD = EnumerateFiles("Assets/NAudio", IsExclude).ToArray();
                 var files = adfFiles.Concat(filesA.Concat(filesB.Concat(filesC.Concat(filesD)))).ToArray();
 
+                // Default Package
                 Debug.LogFormat("{0}",
                     string.Join("", files.Select((x, i) => string.Format("[{0:##0}] {1}\n", i, x)).ToArray()));
+                AssetDatabase.ExportPackage(files
+                    , path,
+                    ExportPackageOptions.Default);
+
+                // DigitalSignature Package
+                var digitalSignatureFiles = EnumerateFiles("Assets/VCI-DigitalSignature", IsExclude).ToArray();
+                var fileName = Path.GetFileNameWithoutExtension(path);
+                var ext = Path.GetExtension(path);
+                path = Path.GetDirectoryName(path) + "\\" + fileName + "_digitalSignature" + ext;
+                files = files.Concat(digitalSignatureFiles).ToArray();
                 AssetDatabase.ExportPackage(files
                     , path,
                     ExportPackageOptions.Default);

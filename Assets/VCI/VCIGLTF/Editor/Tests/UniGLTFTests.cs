@@ -74,7 +74,7 @@ namespace VCIGLTF
             }
             finally
             {
-                //Debug.LogFormat("Destory, {0}", go.name);
+                //Debug.LogFormat("Destroy, {0}", go.name);
                 GameObject.DestroyImmediate(go);
                 context.EditorDestroyRootAndAssets();
             }
@@ -133,7 +133,7 @@ namespace VCIGLTF
             var hoge = UnityPath.FromUnityPath("Assets/Hoge");
             Assert.AreEqual(assetsChild, hoge);
 
-            //var children = root.TravserseDir().ToArray();
+            //var children = root.TraverseDir().ToArray();
         }
 
         [Test]
@@ -271,7 +271,7 @@ namespace VCIGLTF
             };
 
             var json = model.ToJson();
-            Assert.AreEqual(@"{""name"":""a"",""emissiveFactor"":[0.5,0.5,0.5],""doubleSided"":false}", json);
+            Assert.AreEqual(@"{""name"":""a"",""pbrMetallicRoughness"":{""baseColorFactor"":[1,1,1,1],""metallicFactor"":1,""roughnessFactor"":1},""emissiveFactor"":[0.5,0.5,0.5],""doubleSided"":false}", json);
             Debug.Log(json);
 
             var c = new JsonSchemaValidationContext("")
@@ -279,7 +279,7 @@ namespace VCIGLTF
                 EnableDiagnosisForNotRequiredFields = true,
             };
             var json2 = JsonSchema.FromType<glTFMaterial>().Serialize(model, c);
-            Assert.AreEqual(@"{""name"":""a"",""emissiveFactor"":[0.5,0.5,0.5],""doubleSided"":false}", json2);
+            Assert.AreEqual(@"{""name"":""a"",""pbrMetallicRoughness"":{""baseColorFactor"":[1,1,1,1],""metallicFactor"":1,""roughnessFactor"":1},""emissiveFactor"":[0.5,0.5,0.5],""doubleSided"":false}", json2);
         }
 
         [Test]
@@ -297,7 +297,7 @@ namespace VCIGLTF
                 EnableDiagnosisForNotRequiredFields = true,
             };
             var json = JsonSchema.FromType<glTFMaterial>().Serialize(model, c);
-            Assert.AreEqual(@"{""name"":""a"",""emissiveFactor"":[0.5,0.5,0.5],""alphaMode"":""MASK"",""alphaCutoff"":0.5,""doubleSided"":false}", json);
+            Assert.AreEqual(@"{""name"":""a"",""pbrMetallicRoughness"":{""baseColorFactor"":[1,1,1,1],""metallicFactor"":1,""roughnessFactor"":1},""emissiveFactor"":[0.5,0.5,0.5],""alphaMode"":""MASK"",""alphaCutoff"":0.5,""doubleSided"":false}", json);
         }
 
         [Test]
@@ -668,7 +668,7 @@ namespace VCIGLTF
                 {
                     var context = new ImporterContext
                     {
-                        UseUniJSONParser = true
+                        SerializerType = SerializerTypes.UniJSON
                     };
                     context.ParseJson(json, new SimpleStorage(new ArraySegment<byte>(new byte[1024 * 1024])));
                     //Debug.LogFormat("{0}", context.Json);

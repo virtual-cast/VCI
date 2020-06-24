@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using UniGLTF.UniUnlit;
+﻿using UniGLTF.UniUnlit;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 
 namespace VCIGLTF
@@ -40,7 +37,7 @@ namespace VCIGLTF
         {
             if (m.HasProperty("_Color"))
             {
-                material.pbrMetallicRoughness.baseColorFactor = m.color.ToArray();
+                material.pbrMetallicRoughness.baseColorFactor = m.color.linear.ToArray();
             }
 
             if (m.HasProperty("_MainTex"))
@@ -52,6 +49,8 @@ namespace VCIGLTF
                     {
                         index = index,
                     };
+
+                    Export_MainTextureTransform(m, material.pbrMetallicRoughness.baseColorTexture);
                 }
             }
         }
@@ -77,6 +76,8 @@ namespace VCIGLTF
                         {
                             index = index,
                         };
+
+                    Export_MainTextureTransform(m, material.pbrMetallicRoughness.metallicRoughnessTexture);
                 }
             }
 
@@ -111,6 +112,8 @@ namespace VCIGLTF
                     {
                         index = index,
                     };
+
+                    Export_MainTextureTransform(m, material.normalTexture);
                 }
 
                 if (index != -1 && m.HasProperty("_BumpScale"))
@@ -131,6 +134,8 @@ namespace VCIGLTF
                     {
                         index = index,
                     };
+
+                    Export_MainTextureTransform(m, material.occlusionTexture);
                 }
 
                 if (index != -1 && m.HasProperty("_OcclusionStrength"))
@@ -164,8 +169,49 @@ namespace VCIGLTF
                     {
                         index = index,
                     };
+
+                    Export_MainTextureTransform(m, material.emissiveTexture);
                 }
             }
+        }
+
+        static void Export_MainTextureTransform(Material m, glTFTextureInfo textureInfo)
+        {
+            Export_TextureTransform(m, textureInfo, "_MainTex");
+        }
+
+        static void Export_TextureTransform(Material m, glTFTextureInfo textureInfo, string propertyName)
+        {
+            if (textureInfo != null && m.HasProperty(propertyName))
+            {
+                var offset = m.GetTextureOffset(propertyName);
+                var scale = m.GetTextureScale(propertyName);
+                offset.y = (offset.y + scale.y - 1) * -1.0f;
+
+                textureInfo.extensions = new glTFTextureInfo_extensions
+                {
+                    KHR_texture_transform = new glTF_KHR_texture_transform()
+                    {
+                        offset = new float[] { offset.x, offset.y },
+                        scale = new float[] { scale.x, scale.y },
+                    }
+                };
+            }
+        }
+
+        public static bool UseUnlit(string shaderName)
+        {
+            switch (shaderName)
+            {
+                case "Unlit/Color":
+                case "Unlit/Texture":
+                case "Unlit/Transparent":
+                case "Unlit/Transparent Cutout":
+                case "UniGLTF/UniUnlit":
+                    return true;
+            }
+            return false;
+
         }
 
         protected virtual glTFMaterial CreateMaterial(Material m)
@@ -225,7 +271,7 @@ namespace VCIGLTF
         {
             var material = glTF_KHR_materials_unlit.CreateDefault();
 
-            var renderMode = Utils.GetRenderMode(m);
+            var renderMode = UniGLTF.UniUnlit.Utils.GetRenderMode(m);
             if (renderMode == UniUnlitRenderMode.Opaque)
             {
                 material.alphaMode = glTFBlendMode.OPAQUE.ToString();
@@ -243,7 +289,7 @@ namespace VCIGLTF
                 material.alphaMode = glTFBlendMode.OPAQUE.ToString();
             }
 
-            var cullMode = Utils.GetCullMode(m);
+            var cullMode = UniGLTF.UniUnlit.Utils.GetCullMode(m);
             if (cullMode == UniUnlitCullMode.Off)
             {
                 material.doubleSided = true;

@@ -190,9 +190,9 @@ namespace VCIGLTF
         {
             var current = self;
 
-            var splited = path.Split('/');
+            var split = path.Split('/');
 
-            foreach (var childName in splited)
+            foreach (var childName in split)
             {
                 current = current.GetChildByName(childName);
             }
@@ -220,7 +220,13 @@ namespace VCIGLTF
             }
         }
 
+        [Obsolete("Use FindDescendant(name)")]
         public static Transform FindDescenedant(this Transform t, string name)
+        {
+            return FindDescendant(t, name);
+        }
+
+        public static Transform FindDescendant(this Transform t, string name)
         {
             return t.Traverse().First(x => x.name == name);
         }
@@ -276,10 +282,7 @@ namespace VCIGLTF
         public static Mesh GetSharedMesh(this Transform t)
         {
             // Ignore TMP Mesh
-            var tmp = t.GetComponent<TextMeshPro>();
-            if (tmp != null) return null;
-            var subMesh = t.GetComponent<TMP_SubMesh>();
-            if (subMesh != null) return null;
+            if (t.HasTextMeshProComponent()) return null;
 
             var meshFilter = t.GetComponent<MeshFilter>();
             if (meshFilter != null)
@@ -294,6 +297,13 @@ namespace VCIGLTF
             }
 
             return null;
+        }
+
+        public static bool HasTextMeshProComponent(this Transform t)
+        {
+            if (t.GetComponent<TextMeshPro>() != null) return true;
+            if (t.GetComponent<TMP_SubMesh>() != null) return true;
+            return false;
         }
 
         public static Material[] GetSharedMaterials(this Transform t)
