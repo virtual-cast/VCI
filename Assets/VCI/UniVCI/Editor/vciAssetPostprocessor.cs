@@ -28,9 +28,10 @@ namespace VCI
             var prefabPath = path.Parent.Child(path.FileNameWithoutExtension + ".prefab");
 
             // save texture assets !
-            importer.ExtranctImages(prefabPath);
+            importer.ExtractImages(prefabPath);
             importer.ExtractAudio(prefabPath);
             importer.ExtractEffekseer(prefabPath);
+            importer.ExtractAnimation(prefabPath);
 
             EditorApplication.delayCall += () =>
             {
@@ -38,12 +39,13 @@ namespace VCI
                 // after textures imported
                 //
                 importer.Load();
-                importer.SetupCoroutine().CoroutinetoEnd();
+                importer.SetupCoroutine().CoroutineToEnd();
                 importer.SetupPhysics();
                 importer.SetupAttachable();
-                importer.SetupEffekseer();
+                importer.SetupEffekseer().CoroutineToEnd();
                 importer.SetupText();
                 importer.SetupSpringBone();
+                importer.SetupPlayerSpawnPoint();
                 importer.SaveAsAsset(prefabPath);
                 importer.EditorDestroyRoot();
             };

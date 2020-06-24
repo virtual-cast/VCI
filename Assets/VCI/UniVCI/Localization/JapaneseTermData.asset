@@ -60,3 +60,9 @@ MonoBehaviour:
     value: "RootBone\u304C\u5165\u308C\u5B50\u306B\u306A\u3063\u3066\u3044\u307E\u3059\u3002"
   - key: error206
     value: "\u4F7F\u7528\u3067\u304D\u306A\u3044\u30B3\u30F3\u30DD\u30FC\u30CD\u30F3\u30C8\u304C\u542B\u307E\u308C\u3066\u3044\u307E\u3059\u3002\\n{0}"
+  - key: error501
+    value: "VCIPlayerSpawnPoint\u306EPositionY\u304C\u6307\u5B9A\u3067\u304D\u308B\u7BC4\u56F2\u3092\u8D85\u3048\u3066\u3044\u307E\u3059\u3002"
+  - key: error502
+    value: "VCIPlayerSpawnPoint\u306ERotationX\u3068Z\u306F0\u3067\u306A\u3051\u308C\u3070\u306A\u308A\u307E\u305B\u3093\u3002"
+  - key: error503
+    value: "VCIPlayerSpawnPointRestriction\u306ELimitRectLeft\u3068LimitRectBackward\u306F0\u4EE5\u4E0B\u3001LimitRectRight\u3068LimitRectForward\u306F0\u4EE5\u4E0A\u3067\u306A\u3051\u308C\u3070\u306A\u308A\u307E\u305B\u3093\u3002"

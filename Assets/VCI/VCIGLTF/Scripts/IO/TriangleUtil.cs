@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Collections.Generic;
 
-
 namespace VCIGLTF
 {
     public static class TriangleUtil

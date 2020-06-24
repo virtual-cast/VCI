@@ -13,6 +13,7 @@ namespace VCI
         [MenuItem(CONVERT_OBJECT_KEY)]
         public static void ExportObject()
         {
+#if UNITY_STANDALONE_WIN && UNITY_EDITOR
             EditorApplication.isPlaying = false;
 
             if (!Validate()) return;
@@ -57,6 +58,9 @@ namespace VCI
             {
                 throw;
             }
+#else
+            Debug.LogError("this function works only on Windows");
+#endif
         }
 
         public static bool Validate()

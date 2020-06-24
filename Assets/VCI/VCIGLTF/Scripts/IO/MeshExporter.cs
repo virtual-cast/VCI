@@ -8,7 +8,25 @@ namespace VCIGLTF
     public struct MeshWithRenderer
     {
         public Mesh Mesh;
-        public Renderer Rendererer;
+        [Obsolete("Use Renderer")]
+        public Renderer Rendererer { get { return Renderer; } set { Renderer = value; } }
+        public Renderer Renderer;
+
+        public bool IsSameMeshAndMaterials(MeshWithRenderer other)
+        {
+            return IsSameMeshAndMaterials(other.Mesh, other.Renderer.sharedMaterials);
+        }
+
+        public bool IsSameMeshAndMaterials(Mesh mesh, Material[] materials)
+        {
+            if (Mesh != mesh) return false;
+            if (Renderer.sharedMaterials.Length != materials.Length) return false;
+            for (var i = 0; i < Renderer.sharedMaterials.Length; i++)
+            {
+                if (Renderer.sharedMaterials[i] != materials[i]) return false;
+            }
+            return true;
+        }
     }
 
     public static class MeshExporter
@@ -23,7 +41,7 @@ namespace VCIGLTF
             gltf.accessors[positionAccessorIndex].min = positions.Aggregate(positions[0], (a, b) => new Vector3(Mathf.Min(a.x, b.x), Math.Min(a.y, b.y), Mathf.Min(a.z, b.z))).ToArray();
             gltf.accessors[positionAccessorIndex].max = positions.Aggregate(positions[0], (a, b) => new Vector3(Mathf.Max(a.x, b.x), Math.Max(a.y, b.y), Mathf.Max(a.z, b.z))).ToArray();
 
-            var normalAccessorIndex = gltf.ExtendBufferAndGetAccessorIndex(bufferIndex, mesh.normals.Select(y => y.ReverseZ()).ToArray(), glBufferTarget.ARRAY_BUFFER);
+            var normalAccessorIndex = gltf.ExtendBufferAndGetAccessorIndex(bufferIndex, mesh.normals.Select(y => y.normalized.ReverseZ()).ToArray(), glBufferTarget.ARRAY_BUFFER);
 #if GLTF_EXPORT_TANGENTS
             var tangentAccessorIndex = gltf.ExtendBufferAndGetAccessorIndex(bufferIndex, mesh.tangents.Select(y => y.ReverseZ()).ToArray(), glBufferTarget.ARRAY_BUFFER);
 #endif
@@ -81,7 +99,7 @@ namespace VCIGLTF
                 {
                     attributes = attributes,
                     indices = indicesAccessorIndex,
-                    mode = 4, // triangels ?
+                    mode = 4, // triangles ?
                     material = unityMaterials.IndexOf(materials[j])
                 });
             }
@@ -104,13 +122,15 @@ namespace VCIGLTF
 
         static gltfMorphTarget ExportMorphTarget(glTF gltf, int bufferIndex,
             Mesh mesh, int j,
-            bool useSparseAccessorForMorphTarget)
+            bool useSparseAccessorForMorphTarget,
+            bool exportOnlyBlendShapePosition)
         {
             var blendShapeVertices = mesh.vertices;
             var usePosition = blendShapeVertices != null && blendShapeVertices.Length > 0;
 
             var blendShapeNormals = mesh.normals;
             var useNormal = usePosition && blendShapeNormals != null && blendShapeNormals.Length == blendShapeVertices.Length;
+            // var useNormal = usePosition && blendShapeNormals != null && blendShapeNormals.Length == blendShapeVertices.Length && !exportOnlyBlendShapePosition;
 
             var blendShapeTangents = mesh.tangents.Select(y => (Vector3)y).ToArray();
             //var useTangent = usePosition && blendShapeTangents != null && blendShapeTangents.Length == blendShapeVertices.Length;
@@ -226,23 +246,25 @@ namespace VCIGLTF
 
         public static void ExportMeshes(glTF gltf, int bufferIndex,
             List<MeshWithRenderer> unityMeshes, List<Material> unityMaterials,
-            bool useSparseAccessorForMorphTarget)
+            bool useSparseAccessorForMorphTarget,
+            bool exportOnlyBlendShapePosition)
         {
             for (int i = 0; i < unityMeshes.Count; ++i)
             {
                 var x = unityMeshes[i];
                 var mesh = x.Mesh;
-                var materials = x.Rendererer.sharedMaterials;
+                var materials = x.Renderer.sharedMaterials;
 
                 var gltfMesh = ExportPrimitives(gltf, bufferIndex,
-                    x.Rendererer.name,
+                    x.Renderer.name,
                     mesh, materials, unityMaterials);
 
                 for (int j = 0; j < mesh.blendShapeCount; ++j)
                 {
                     var morphTarget = ExportMorphTarget(gltf, bufferIndex,
                         mesh, j,
-                        useSparseAccessorForMorphTarget);
+                        useSparseAccessorForMorphTarget,
+                        exportOnlyBlendShapePosition);
 
                     //
                     // all primitive has same blendShape

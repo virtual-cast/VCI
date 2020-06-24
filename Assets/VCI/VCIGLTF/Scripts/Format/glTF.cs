@@ -59,10 +59,9 @@ namespace VCIGLTF
         T[] GetAttrib<T>(int count, int byteOffset, glTFBufferView view) where T : struct
         {
             var attrib = new T[count];
-            //
             var segment = buffers[view.buffer].GetBytes();
             var bytes = new ArraySegment<Byte>(segment.Array, segment.Offset + view.byteOffset + byteOffset, count * view.byteStride);
-            bytes.MarshalCoyTo(attrib);
+            bytes.MarshalCopyTo(attrib);
             return attrib;
         }
 
@@ -247,7 +246,7 @@ namespace VCIGLTF
             {
                 if (image.uri.StartsWith("data:"))
                 {
-                    textureName = !string.IsNullOrEmpty(image.name) ? image.name : string.Format("{0:00}#Base64Embeded", imageIndex);
+                    textureName = !string.IsNullOrEmpty(image.name) ? image.name : string.Format("{0:00}#Base64Embedded", imageIndex);
                 }
                 else
                 {
@@ -506,13 +505,35 @@ namespace VCIGLTF
             return f.ToString();
         }
 
-        public byte[] ToGlbBytes()
+        public byte[] ToGlbBytes(SerializerTypes serializer = SerializerTypes.UniJSON)
         {
-            var c = new JsonSchemaValidationContext(this)
+            string json;
+            if (serializer == SerializerTypes.UniJSON)
             {
-                EnableDiagnosisForNotRequiredFields = true,
-            };
-            var json = JsonSchema.FromType(GetType()).Serialize(this, c);
+                var c = new JsonSchemaValidationContext(this)
+                {
+                    EnableDiagnosisForNotRequiredFields = true,
+                };
+                json = JsonSchema.FromType(GetType()).Serialize(this, c);
+            }
+            else if (serializer == SerializerTypes.Generated)
+            {
+                // ToDo: Generate VCI Serializer
+                // var f = new JsonFormatter();
+                // f.GenSerialize(this);
+                // json = f.ToString().ParseAsJson().ToString("  ");
+                
+                throw new NotImplementedException("SerializerTypes.Generated is not Implemented.");
+            }
+            else if(serializer == SerializerTypes.JsonSerializable)
+            {
+                // Obsolete
+                json = ToJson();
+            }
+            else
+            {
+                throw new Exception("[UniVRM Export Error] unknown serializer type");
+            }
 
             RemoveUnusedExtensions(json);
 

@@ -15,7 +15,7 @@ namespace VCIGLTF
 
     public interface IglTFTextureinfo
     {
-        glTFTextureTypes TextreType { get; }
+        glTFTextureTypes TextureType { get; }
     }
 
     [Serializable]
@@ -28,23 +28,27 @@ namespace VCIGLTF
         public int texCoord;
 
         // empty schemas
-        public object extensions;
+        public glTFTextureInfo_extensions extensions;
         public object extras;
 
         protected override void SerializeMembers(GLTFJsonFormatter f)
         {
             f.KeyValue(() => index);
             f.KeyValue(() => texCoord);
+            if (extensions != null)
+            {
+                f.KeyValue(() => extensions);
+            }
         }
 
-        public abstract glTFTextureTypes TextreType { get; }
+        public abstract glTFTextureTypes TextureType { get; }
     }
 
 
     [Serializable]
     public class glTFMaterialBaseColorTextureInfo : glTFTextureInfo
     {
-        public override glTFTextureTypes TextreType
+        public override glTFTextureTypes TextureType
         {
             get { return glTFTextureTypes.BaseColor; }
         }
@@ -53,7 +57,7 @@ namespace VCIGLTF
     [Serializable]
     public class glTFMaterialMetallicRoughnessTextureInfo : glTFTextureInfo
     {
-        public override glTFTextureTypes TextreType
+        public override glTFTextureTypes TextureType
         {
             get { return glTFTextureTypes.Metallic; }
         }
@@ -70,7 +74,7 @@ namespace VCIGLTF
             base.SerializeMembers(f);
         }
 
-        public override glTFTextureTypes TextreType
+        public override glTFTextureTypes TextureType
         {
             get { return glTFTextureTypes.Normal; }
         }
@@ -88,7 +92,7 @@ namespace VCIGLTF
             base.SerializeMembers(f);
         }
 
-        public override glTFTextureTypes TextreType
+        public override glTFTextureTypes TextureType
         {
             get { return glTFTextureTypes.Occlusion; }
         }
@@ -97,7 +101,7 @@ namespace VCIGLTF
     [Serializable]
     public class glTFMaterialEmissiveTextureInfo : glTFTextureInfo
     {
-        public override glTFTextureTypes TextreType
+        public override glTFTextureTypes TextureType
         {
             get { return glTFTextureTypes.Emissive; }
         }
@@ -147,7 +151,10 @@ namespace VCIGLTF
     public class glTFMaterial : JsonSerializableBase
     {
         public string name;
-        public glTFPbrMetallicRoughness pbrMetallicRoughness;
+        public glTFPbrMetallicRoughness pbrMetallicRoughness = new glTFPbrMetallicRoughness
+        {
+            baseColorFactor = new float[] { 1.0f, 1.0f, 1.0f, 1.0f },
+        };
         public glTFMaterialNormalTextureInfo normalTexture = null;
 
         public glTFMaterialOcclusionTextureInfo occlusionTexture = null;
@@ -214,8 +221,8 @@ namespace VCIGLTF
         {
             return new glTFTextureInfo[]
             {
-                pbrMetallicRoughness.baseColorTexture,
-                pbrMetallicRoughness.metallicRoughnessTexture,
+                (pbrMetallicRoughness != null)?pbrMetallicRoughness.baseColorTexture:null,
+                (pbrMetallicRoughness != null)?pbrMetallicRoughness.metallicRoughnessTexture:null,
                 normalTexture,
                 occlusionTexture,
                 emissiveTexture

@@ -1127,4 +1127,40 @@ namespace VCIGLTF
     }
 
     #endregion
+
+    #region PlayerSpawnPoint
+
+    public partial class glTFNode_extensions
+    {
+        public glTF_VCAST_vci_player_spawn_point VCAST_vci_player_spawn_point;
+    }
+
+    /// <summary>
+    /// Extension root
+    /// </summary>
+    [Serializable]
+    public class glTF_VCAST_vci_player_spawn_point
+    {
+        public static string ExtensionName => "VCAST_vci_player_spawn_point";
+
+        public glTF_VCAST_vci_PlayerSpawnPoint playerSpawnPoint;
+    }
+
+    public partial class glTFNode_extensions
+    {
+        public glTF_VCAST_vci_player_spawn_point_restriction VCAST_vci_player_spawn_point_restriction;
+    }
+
+    /// <summary>
+    /// Extension root
+    /// </summary>
+    [Serializable]
+    public class glTF_VCAST_vci_player_spawn_point_restriction
+    {
+        public static string ExtensionName => "VCAST_vci_player_spawn_point_restriction";
+
+        public glTF_VCAST_vci_PlayerSpawnPointRestriction playerSpawnPointRestriction;
+    }
+
+    #endregion
 }

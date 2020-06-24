@@ -4,6 +4,7 @@ using UnityEngine;
 namespace VCI
 {
     [CustomEditor(typeof(VCISubItem))]
+    [CanEditMultipleObjects]
     public class VCISubItemEditor : Editor
     {
         private SerializedProperty grabbable;
