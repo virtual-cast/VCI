@@ -66,3 +66,7 @@ MonoBehaviour:
     value: "VCIPlayerSpawnPoint\u306ERotationX\u3068Z\u306F0\u3067\u306A\u3051\u308C\u3070\u306A\u308A\u307E\u305B\u3093\u3002"
   - key: error503
     value: "VCIPlayerSpawnPointRestriction\u306ELimitRectLeft\u3068LimitRectBackward\u306F0\u4EE5\u4E0B\u3001LimitRectRight\u3068LimitRectForward\u306F0\u4EE5\u4E0A\u3067\u306A\u3051\u308C\u3070\u306A\u308A\u307E\u305B\u3093\u3002"
+  - key: error601
+    value: "VCILocationBounds\u306F\u6700\u59271\u3064\u307E\u3067\u3057\u304B\u8A2D\u5B9A\u3067\u304D\u307E\u305B\u3093\u3002"
+  - key: error602
+    value: "VCILocationBounds\u306EBounds\u304C\u6307\u5B9A\u3067\u304D\u308B\u7BC4\u56F2\u3092\u8D85\u3048\u3066\u3044\u307E\u3059\u3002"

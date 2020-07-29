@@ -23,7 +23,9 @@ namespace VCI
                 // save dialog
                 var root = Selection.activeObject as GameObject;
 
-                var path = VCI.FileDialogForWindows.SaveDialog("Save " + VCIVersion.EXTENSION, root.name + VCIVersion.EXTENSION);
+                var path = VCI.FileDialogForWindows.SaveDialog("Save " + VCIVersion.EXTENSION,
+                    root.name + VCIVersion.EXTENSION);
+
                 //var path = EditorUtility.SaveFilePanel(
                 //    "Save " + VCIVersion.EXTENSION,
                 //    null,
@@ -54,9 +56,9 @@ namespace VCI
                     System.Diagnostics.Process.Start("explorer.exe", " /e,/select," + path.Replace("/", "\\"));
                 }
             }
-            catch
+            finally
             {
-                throw;
+                GUIUtility.ExitGUI();
             }
 #else
             Debug.LogError("this function works only on Windows");
@@ -102,6 +104,7 @@ namespace VCI
                     EditorGUILayout.HelpBox(e.Message, MessageType.Warning);
 
                 EditorUtility.DisplayDialog(title, text, "OK");
+                GUIUtility.ExitGUI();
                 return false;
             }
             return true;

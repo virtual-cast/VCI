@@ -5,7 +5,7 @@ namespace VCI
 {
     [CustomEditor(typeof(VCISubItem))]
     [CanEditMultipleObjects]
-    public class VCISubItemEditor : Editor
+    public sealed class VCISubItemEditor : Editor
     {
         private SerializedProperty grabbable;
         private SerializedProperty scalable;

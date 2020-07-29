@@ -3,7 +3,7 @@ using UnityEditor;
 namespace VCI
 {
     [CustomEditor(typeof(VCIConfig))]
-    public class VCIConfigEditor : Editor
+    public sealed class VCIConfigEditor : Editor
     {
         public override void OnInspectorGUI()
         {

@@ -5,7 +5,7 @@ using VCIGLTF;
 
 namespace VCI
 {
-    public class EachAnimationImporter : IAnimationImporter
+    public sealed class EachAnimationImporter : IAnimationImporter
     {
         public void Import(ImporterContext context)
         {
@@ -19,7 +19,7 @@ namespace VCI
             }
         }
 
-        private void RuntimeImport(ImporterContext context) 
+        private void RuntimeImport(ImporterContext context)
         {
             var animationClips = new AnimationClip[context.GLTF.animations.Count];
 
@@ -47,7 +47,7 @@ namespace VCI
                     {
                         clip = animationClips[animationReference.animation];
                     }
-                        
+
                     if(clip != null)
                     {
                         animation.AddClip(clip, clip.name);
@@ -67,15 +67,15 @@ namespace VCI
 
                 var gltfAnimation = context.GLTF.animations[i];
 
-                animationClips[i] = AnimationImporterUtil.ImportAnimationClip(context, gltfAnimation, context.GLTF.nodes[0]);
+                animationClips[i] = AnimationImporterUtil.ImportAnimationClip(context, gltfAnimation);
                 rootAnimation.AddClip(animationClips[i], animationClips[i].name);
             }
 
             context.AnimationClips = new List<AnimationClip>(animationClips);
-            
+
         }
 
-        private void EditorImport(ImporterContext context) 
+        private void EditorImport(ImporterContext context)
         {
             var animationClips = new AnimationClip[context.GLTF.animations.Count];
             List<AnimationClip> usedClips = new List<AnimationClip>();
@@ -106,7 +106,7 @@ namespace VCI
             var rootAnimation = context.Root.GetComponent<Animation>();
             if (rootAnimation == null)
                 rootAnimation = context.Root.AddComponent<Animation>();
-            
+
             foreach(var clip in context.AnimationClips)
             {
                 if(!usedClips.Contains(clip))

@@ -266,7 +266,9 @@ namespace VCIGLTF
                     .ToList();
 
                 #region Materials and Textures
-                Materials = Nodes.SelectMany(x => x.GetSharedMaterials()).Where(x => x != null).Distinct().ToList();
+                Materials = Nodes
+                    .Where(x => !x.HasTextMeshProComponent())
+                    .SelectMany(x => x.GetSharedMaterials()).Where(x => x != null).Distinct().ToList();
                 var unityTextures = Materials.SelectMany(x => TextureExporter.GetTextures(x)).Where(x => x.texture != null).Distinct().ToList();
 
                 TextureManager = new TextureExportManager(unityTextures.Select(x => x.texture));

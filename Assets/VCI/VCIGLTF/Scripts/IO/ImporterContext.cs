@@ -260,7 +260,7 @@ namespace VCIGLTF
         {
             var chunks = glbImporter.ParseGlbChunks(bytes);
 
-            if (chunks.Count != 2)
+            if (chunks.Count > 3)
             {
                 throw new Exception("unknown chunk count: " + chunks.Count);
             }
@@ -796,7 +796,7 @@ namespace VCIGLTF
                     if(y != null)
                     {
                         y.enabled = true;
-                    }                    
+                    }
                 }
             }
         }

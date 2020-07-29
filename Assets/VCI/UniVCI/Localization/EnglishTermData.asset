@@ -67,3 +67,7 @@ MonoBehaviour:
     value: For VCIPlayerSpawnPointRestriction, LimitRectLeft and LimitRectBackward
       must be less than or equal to 0, LimitRectRight and LimitRectForward must be
       more than or equal to 0.
+  - key: error601
+    value: Only one VCILocationBounds can be set.
+  - key: error602
+    value: Bounds of the VCILocationBounds is beyond the valid range.
