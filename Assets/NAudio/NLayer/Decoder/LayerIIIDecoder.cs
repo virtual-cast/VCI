@@ -1417,7 +1417,7 @@ namespace NLayer.Decoder
 
         float Dequantize(int idx, float val, int gr, int ch)
         {
-            if (val != 0f)
+            if (val != 0f && idx < _cbLookupS.Length)
             {
                 int cb, window;
 
