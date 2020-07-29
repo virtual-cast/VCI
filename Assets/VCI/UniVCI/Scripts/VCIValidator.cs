@@ -33,6 +33,7 @@ namespace VCI
             var vciObjectCount = 0;
             var gameObjectCount = 0;
             var playerSpawnPointsList = new List<VCIPlayerSpawnPoint>();
+            var locationBoundsList = new List<VCILocationBounds>();
 
             foreach (var t in vo.transform.Traverse())
             {
@@ -40,6 +41,9 @@ namespace VCI
 
                 var psp = t.GetComponent<VCIPlayerSpawnPoint>();
                 if (psp != null) playerSpawnPointsList.Add(psp);
+
+                var locationBounds = t.GetComponent<VCILocationBounds>();
+                if (locationBounds != null) locationBoundsList.Add(locationBounds);
 
                 gameObjectCount++;
             }
@@ -118,6 +122,27 @@ namespace VCI
                         VCIConfig.GetText($"error{(int)ValidationErrorType.SpawnPointOriginNotInRange}"));
                 }
 
+            }
+
+            // LocationBounds
+            if (locationBoundsList.Count >= 2)
+            {
+                throw new VCIValidatorException(ValidationErrorType.LocationBoundsCountLimitOver,
+                    VCIConfig.GetText($"error{(int)ValidationErrorType.LocationBoundsCountLimitOver}"));
+            }
+            if (locationBoundsList.Count > 0)
+            {
+                var locationBounds = locationBoundsList[0];
+                var min = locationBounds.Bounds.min;
+                var max = locationBounds.Bounds.max;
+
+                // 10000fを超えてないかだけチェック
+                if (Mathf.Abs(min.x) > 10000f || Mathf.Abs(min.y) > 10000f || Mathf.Abs(min.z) > 10000f ||
+                    Mathf.Abs(max.x) > 10000f || Mathf.Abs(max.y) > 10000f || Mathf.Abs(max.z) > 10000f)
+                {
+                    throw new VCIValidatorException(ValidationErrorType.LocationBoundsValueExceeded,
+                        VCIConfig.GetText($"error{(int)ValidationErrorType.LocationBoundsValueExceeded}"));
+                }
             }
         }
 
@@ -208,6 +233,10 @@ namespace VCI
         SpawnPointHeightRangeNotAllowed = 501,
         SpawnPointNotHorizontal = 502,
         SpawnPointOriginNotInRange = 503,
+
+        // LocationBounds
+        LocationBoundsCountLimitOver = 601,
+        LocationBoundsValueExceeded = 602,
     }
 
     [Serializable]

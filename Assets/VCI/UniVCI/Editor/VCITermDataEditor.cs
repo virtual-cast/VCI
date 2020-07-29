@@ -1,11 +1,10 @@
-using System;
 using UnityEditor;
 using UnityEngine;
 
 namespace VCI
 {
     [CustomEditor(typeof(VCITermData))]
-    public class VCITermDataEditor: Editor
+    public sealed class VCITermDataEditor: Editor
     {
         public override void OnInspectorGUI()
         {

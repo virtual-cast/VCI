@@ -89,7 +89,7 @@ namespace VCI
             base.ParseJson(json, storage);
             var parsed = JsonParser.Parse(Json);
 
-            if(parsed.ContainsKey("extensions") 
+            if(parsed.ContainsKey("extensions")
                 && parsed["extensions"].ContainsKey("VCAST_vci_meta")
             )
             {
@@ -109,7 +109,7 @@ namespace VCI
             {
                 // UniVCI v0.27以下のバージョンの場合は、baseColorをsrgbからlinearに変換した後にCreateMaterialを実行する
                 bool srgbToLinear = false;
-                if(parsed.ContainsKey("extensions") 
+                if(parsed.ContainsKey("extensions")
                     && parsed["extensions"].ContainsKey("VCAST_vci_meta")
                 )
                 {
@@ -295,6 +295,8 @@ namespace VCI
                     }).ToArray();
 
                     attachable.AttachableDistance = node.extensions.VCAST_vci_attachable.attachableDistance;
+                    attachable.Scalable = node.extensions.VCAST_vci_attachable.scalable;
+                    attachable.Offset = node.extensions.VCAST_vci_attachable.offset;
                     attachableCount++;
                 }
             }
@@ -558,6 +560,16 @@ namespace VCI
             }
         }
 
+        public void SetupLocationBounds()
+        {
+            if (GLTF.extensions.VCAST_vci_location_bounds == null) return;
+
+            var locationBounds = Root.AddComponent<VCILocationBounds>();
+            var values = GLTF.extensions.VCAST_vci_location_bounds.LocationBounds;
+            locationBounds.Bounds = new Bounds(values.bounds_center, values.bounds_size);
+        }
+
+
         public void ExtractAudio(UnityPath prefabPath)
         {
 #if UNITY_EDITOR
@@ -769,6 +781,13 @@ namespace VCI
                         animationClips[animationReference.animation] = clip;
                     }
                 }
+            }
+
+            // Import root animation clips.
+            for (var i = 0; i < animationClips.Length; i++)
+            {
+                if (animationClips[i] != null) continue;
+                animationClips[i] = AnimationImporterUtil.ImportAnimationClip(this, GLTF.animations[i]);
             }
 
             var saveAnimationPath = new string[GLTF.animations.Count];

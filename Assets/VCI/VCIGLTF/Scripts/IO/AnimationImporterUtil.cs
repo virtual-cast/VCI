@@ -155,44 +155,37 @@ namespace VCIGLTF
             }
         }
 
-        public static string RelativePathFrom(List<glTFNode> nodes, glTFNode root, glTFNode target, List<String> path)
+        public static string RelativePathFrom(List<glTFNode> nodes, glTFNode root, glTFNode target)
         {
-            if(path.Count() == 0)
-            {
-                path.Add(target.name);
-            }
+            if (root == target) return "";
+            var path = new List<string>();
+            return RelativePathFrom(nodes, root, target, path);
+        }
 
-            var rootIndex = nodes.IndexOf(root);
+        private static string RelativePathFrom(List<glTFNode> nodes, glTFNode root, glTFNode target, List<string> path)
+        {
+            if(path.Count == 0) path.Add(target.name);
+
             var targetIndex = nodes.IndexOf(target);
-            for(var i = 0;i< nodes.Count;i++)
+            foreach (var parent in nodes)
             {
-                var node = nodes[i];
+                if(parent.children == null || parent.children.Length == 0) continue;
 
-                if(node.children == null || !node.children.Any())
-                    continue;
-
-                foreach(var child in node.children)
+                foreach(var child in parent.children)
                 {
-                    if(child == targetIndex)
-                    {
-                        var parent = node;
-                        if(parent == root)
-                        {
-                            return String.Join("/", path.ToArray()); 
-                        }
-                        else
-                        {
-                            path.Insert(0, parent.name);
-                            return RelativePathFrom(nodes, root, parent, path);
-                        }
-                    }
+                    if(child != targetIndex) continue;
+
+                    if(parent == root) return string.Join("/", path);
+
+                    path.Insert(0, parent.name);
+                    return RelativePathFrom(nodes, root, parent, path);
                 }
             }
 
-            throw new Exception("no RelativePath"); 
+            return string.Join("/", path);
         }
 
-        public static AnimationClip ImportAnimationClip(ImporterContext ctx, glTFAnimation animation, glTFNode root)
+        public static AnimationClip ImportAnimationClip(ImporterContext ctx, glTFAnimation animation, glTFNode root = null)
         {
             var clip = new AnimationClip();
             clip.ClearCurves();
@@ -202,8 +195,7 @@ namespace VCIGLTF
 
             foreach (var channel in animation.channels)
             {
-                List<string> pathList = new List<string>();
-                var relativePath = RelativePathFrom(ctx.GLTF.nodes, root, ctx.GLTF.nodes[channel.target.node], pathList);
+                var relativePath = RelativePathFrom(ctx.GLTF.nodes, root, ctx.GLTF.nodes[channel.target.node]);
                 switch (channel.target.path)
                 {
                     case glTFAnimationTarget.PATH_TRANSLATION:

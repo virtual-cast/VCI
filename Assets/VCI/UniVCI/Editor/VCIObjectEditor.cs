@@ -6,7 +6,7 @@ using System.IO;
 namespace VCI
 {
     [CustomEditor(typeof(VCIObject))]
-    public class VCIObjectEditor : Editor
+    public sealed class VCIObjectEditor : Editor
     {
         private VCIObject _target;
         private SerializedProperty _scriptProp;
@@ -45,7 +45,7 @@ namespace VCI
             EditorGUI.EndDisabledGroup();
             EditorGUILayout.Space();
 
-            // information
+            // Information
             EditorGUILayout.LabelField("Information", EditorStyles.boldLabel);
             SetMetaPropertyField(_metaProp, "title");
             SetMetaPropertyField(_metaProp, "version");
@@ -53,7 +53,7 @@ namespace VCI
             SetMetaPropertyField(_metaProp, "contactInformation");
             SetMetaPropertyField(_metaProp, "reference");
 
-            // thumbnail
+            // Thumbnail
             SetMetaPropertyField(_metaProp, "thumbnail");
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
@@ -63,7 +63,7 @@ namespace VCI
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
-            // description
+            // Description
             SetMetaPropertyField(_metaProp, "description");
             EditorGUILayout.Space();
 
@@ -76,7 +76,7 @@ namespace VCI
             SetMetaPropertyField(_metaProp, "scriptOtherLicenseUrl");
             EditorGUILayout.Space();
 
-            // script settings
+            // Script settings
             SetMetaPropertyField(_metaProp, "scriptWriteProtected");
             SetMetaPropertyField(_metaProp, "scriptEnableDebugging");
 
@@ -96,7 +96,7 @@ namespace VCI
                 }
 
                 var duplicates = _target.Scripts.GroupBy(script => script.name)
-                    .Where(name => name.Count() > 1)
+                    .Where(n => n.Count() > 1)
                     .Select(group => group.Key).ToList();
                 if (duplicates.Any())
                 {
@@ -111,7 +111,6 @@ namespace VCI
                         EditorGUILayout.HelpBox("Contains characters that can not be used as scriptName. " + script.name, MessageType.Warning);
                     }
                 }
-                ;
             }
 
             // vci scripts

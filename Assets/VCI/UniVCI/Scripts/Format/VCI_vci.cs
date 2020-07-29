@@ -121,8 +121,9 @@ namespace VCIGLTF
     public class glTF_VCAST_vci_attachable
     {
         public List<string> attachableHumanBodyBones = new List<string>();
-
-        public float attachableDistance = 0.0f;
+        public float attachableDistance;
+        public bool scalable;
+        public Vector3 offset;
     }
 
     #endregion
@@ -1160,6 +1161,26 @@ namespace VCIGLTF
         public static string ExtensionName => "VCAST_vci_player_spawn_point_restriction";
 
         public glTF_VCAST_vci_PlayerSpawnPointRestriction playerSpawnPointRestriction;
+    }
+
+    #endregion
+
+    #region LocationBounds
+
+    public partial class glTF_extensions
+    {
+        public glTF_VCAST_vci_location_bounds VCAST_vci_location_bounds;
+    }
+
+    /// <summary>
+    /// Extension root
+    /// </summary>
+    [Serializable]
+    public class glTF_VCAST_vci_location_bounds
+    {
+        public static string ExtensionName => "VCAST_vci_location_bounds";
+
+        public glTF_VCAST_vci_LocationBounds LocationBounds;
     }
 
     #endregion

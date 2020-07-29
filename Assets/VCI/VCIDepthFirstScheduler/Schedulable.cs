@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-#if ((NET_4_6 || NET_STANDARD_2_0) && UNITY_2017_1_OR_NEWER)
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
-#endif
 
 namespace VCIDepthFirstScheduler
 {
@@ -32,16 +31,16 @@ namespace VCIDepthFirstScheduler
         }
     }
 
-    public class NoParentException: Exception
-    {              
-        public NoParentException():base("No parent task can't ContinueWith or OnExecute. First AddTask")
+    public sealed class NoParentException: Exception
+    {
+        public NoParentException(): base("No parent task can't ContinueWith or OnExecute. First AddTask")
         {
         }
     }
 
-    public class Schedulable<T> : ISchedulable
+    public sealed class Schedulable<T> : ISchedulable
     {
-        List<ISchedulable> m_children = new List<ISchedulable>();
+        private readonly List<ISchedulable> m_children = new List<ISchedulable>();
         public void AddChild(ISchedulable child)
         {
             child.Parent = this;
@@ -116,7 +115,7 @@ namespace VCIDepthFirstScheduler
                     {
                         if (status == ExecutionStatus.Error)
                         {
-                            throw x.GetError();
+                            ExceptionDispatchInfo.Capture(x.GetError()).Throw();
                         }
                         break;
                     }
@@ -205,9 +204,7 @@ namespace VCIDepthFirstScheduler
     {
         public static Schedulable<Unit> Create()
         {
-            return new Schedulable<Unit>().AddTask(Scheduler.CurrentThread, () =>
-            {
-            });
+            return new Schedulable<Unit>().AddTask(Scheduler.CurrentThread, () => { });
         }
     }
 
@@ -223,7 +220,6 @@ namespace VCIDepthFirstScheduler
             TaskChain.Schedule(schedulable.GetRoot(), onError);
         }
 
-#if ((NET_4_6 || NET_STANDARD_2_0) && UNITY_2017_1_OR_NEWER)
         public static Task<T> ToTask<T>(this Schedulable<T> schedulable)
         {
             return ToTask(schedulable, Scheduler.MainThread);
@@ -235,7 +231,5 @@ namespace VCIDepthFirstScheduler
             schedulable.Subscribe(scheduler, r => tcs.TrySetResult(r), ex => tcs.TrySetException(ex));
             return tcs.Task;
         }
-#endif
-
     }
 }

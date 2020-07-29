@@ -7,7 +7,7 @@ using VCIGLTF;
 namespace VCI
 {
 #if !VRM_STOP_ASSETPOSTPROCESSOR
-    public class vciAssetPostprocessor : AssetPostprocessor
+    public sealed class VCIAssetPostprocessor : AssetPostprocessor
     {
         private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
             string[] movedAssets, string[] movedFromAssetPaths)
@@ -46,6 +46,7 @@ namespace VCI
                 importer.SetupText();
                 importer.SetupSpringBone();
                 importer.SetupPlayerSpawnPoint();
+                importer.SetupLocationBounds();
                 importer.SaveAsAsset(prefabPath);
                 importer.EditorDestroyRoot();
             };

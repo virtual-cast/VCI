@@ -1,14 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 using System.IO;
 using System.Linq;
 
 namespace VCI
 {
-    [CustomPropertyDrawer(typeof(VCI.VCIObject.Script))]
-    public class VCIScriptPropertyDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(VCIObject.Script))]
+    public sealed class VCIScriptPropertyDrawer : PropertyDrawer
     {
 
         private float GetHeight(SerializedProperty property)

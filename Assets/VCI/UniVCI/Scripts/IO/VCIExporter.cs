@@ -26,6 +26,7 @@ namespace VCI
             gltf.extensionsUsed.Add(glTF_VCAST_vci_spring_bone.ExtensionName);
             gltf.extensionsUsed.Add(glTF_VCAST_vci_player_spawn_point.ExtensionName);
             gltf.extensionsUsed.Add(glTF_VCAST_vci_player_spawn_point_restriction.ExtensionName);
+            gltf.extensionsUsed.Add(glTF_VCAST_vci_location_bounds.ExtensionName);
 
 #if VCI_EXPORTER_USE_SPARSE
             UseSparseAccessorForBlendShape = true
@@ -234,6 +235,8 @@ namespace VCI
                     {
                         attachableHumanBodyBones = vciAttachable.AttachableHumanBodyBones.Select(x => x.ToString()).ToList(),
                         attachableDistance = vciAttachable.AttachableDistance,
+                        scalable = vciAttachable.Scalable,
+                        offset = vciAttachable.Offset
                     };
                 }
 
@@ -388,6 +391,16 @@ namespace VCI
                         isPlayOnStart = emitter.playOnStart
                     });
                 }
+            }
+
+            // LocationBounds
+            var locationBounds = exporter.Copy.GetComponent<VCILocationBounds>();
+            if (locationBounds != null)
+            {
+                gltf.extensions.VCAST_vci_location_bounds = new glTF_VCAST_vci_location_bounds
+                {
+                    LocationBounds = glTF_VCAST_vci_LocationBounds.Create(locationBounds)
+                };
             }
         }
 
