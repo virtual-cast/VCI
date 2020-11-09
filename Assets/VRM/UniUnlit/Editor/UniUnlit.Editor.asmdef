@@ -1,12 +1,17 @@
 {
     "name": "UniUnlit.Editor",
     "references": [
-        "UniUnlit"
+        "GUID:60c8346e00a8ddd4cafc5a02eceeec57"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [
         "Editor"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": false
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

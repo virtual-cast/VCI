@@ -1,16 +1,21 @@
 {
     "name": "VRM",
     "references": [
-        "MToon",
-        "UniUnlit",
-        "ShaderProperty.Runtime"
+        "GUID:a9bc101fb0471f94a8f99fd242fdd934",
+        "GUID:3c1b656429ea86147a4d76b21be3f0c0",
+        "GUID:60c8346e00a8ddd4cafc5a02eceeec57",
+        "GUID:b7aa47b240b57de44a4b2021c143c9bf",
+        "GUID:5dad3aa3e33a0ea48b088de553c50bf7",
+        "GUID:301b251fd9834274c9228e0532f444f7",
+        "GUID:cd9645c8131b9064591ac5b3a4e56fa7"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": []
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
