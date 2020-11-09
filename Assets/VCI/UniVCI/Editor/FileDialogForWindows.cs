@@ -1,4 +1,4 @@
-﻿#if UNITY_STANDALONE_WIN
+﻿#if UNITY_EDITOR_WIN
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +10,7 @@ namespace VCI
 {
     public static class FileDialogForWindows
     {
-#if UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN
         #region GetOpenFileName
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public class OpenFileName

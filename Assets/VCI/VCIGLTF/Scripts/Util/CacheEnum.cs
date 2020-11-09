@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace VCIGLTF
 {
-    public sealed class CacheEnum 
+    public static class CacheEnum
     {
         public static T Parse<T>(string name, bool ignoreCase = false) where T : struct, Enum
         {
@@ -42,10 +41,15 @@ namespace VCIGLTF
             return CacheValues<T>.Values;
         }
 
+        public static string[] GetNames<T>() where T : struct, Enum
+        {
+            return CacheNames<T>.Names;
+        }
+
         private static class CacheParse<T> where T : struct, Enum
         {
-            private static Dictionary<string, T> _values = new Dictionary<string, T>();
-            private static Dictionary<string, T> _ignoreCaseValues = new Dictionary<string, T>(StringComparer.OrdinalIgnoreCase);
+            private static readonly Dictionary<string, T> Values = new Dictionary<string, T>();
+            private static readonly Dictionary<string, T> IgnoreCaseValues = new Dictionary<string, T>(StringComparer.OrdinalIgnoreCase);
 
             static CacheParse()
             {
@@ -53,7 +57,7 @@ namespace VCIGLTF
 
             public static T ParseIgnoreCase(string name)
             {
-                if(_ignoreCaseValues.TryGetValue(name, out var value))
+                if(IgnoreCaseValues.TryGetValue(name, out var value))
                 {
                     return value;
                 }
@@ -63,14 +67,14 @@ namespace VCIGLTF
                     value =  Enum.TryParse<T>(name, true, out result)
                         ? result
                         : throw new ArgumentException(nameof(result));
-                    _ignoreCaseValues.Add(name, value);
+                    IgnoreCaseValues.Add(name, value);
                     return value;
                 }
             }
 
             public static T Parse(string name)
             {
-                if(_values.TryGetValue(name, out var value))
+                if(Values.TryGetValue(name, out var value))
                 {
                     return value;
                 }
@@ -80,7 +84,7 @@ namespace VCIGLTF
                     value =  Enum.TryParse<T>(name, false, out result)
                         ? result
                         : throw new ArgumentException(nameof(result));
-                    _values.Add(name, value);
+                    Values.Add(name, value);
                     return value;
                 }
             }
@@ -93,6 +97,15 @@ namespace VCIGLTF
             static CacheValues()
             {
                 Values = Enum.GetValues(typeof(T)) as T[];
+            }
+        }
+
+        private static class CacheNames<T> where T : struct, Enum
+        {
+            public static readonly string[] Names;
+            static CacheNames()
+            {
+                Names = Enum.GetNames(typeof(T));
             }
         }
     }

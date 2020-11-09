@@ -269,23 +269,24 @@ namespace VCIGLTF
                         {
                             var node = ctx.GLTF.nodes[channel.target.node];
                             var mesh = ctx.GLTF.meshes[node.mesh];
-                            //var primitive = mesh.primitives.FirstOrDefault();
-                            //var targets = primitive.targets;
+                            var primitive = mesh.primitives.FirstOrDefault();
+                            var targets = primitive.targets;
 
-                            List<string> blendShapeNames = new List<string>();
-                            var transform = ctx.Nodes[channel.target.node];
-                            var skinnedMeshRenderer = transform.GetComponent<SkinnedMeshRenderer>();
-                            if (skinnedMeshRenderer == null)
+                            List<string> targetNames;
+                            if(primitive != null && primitive.extras != null && primitive.extras.targetNames != null && primitive.extras.targetNames.Count > 0)
                             {
-                                continue;
+                                targetNames = primitive.extras.targetNames;
+                            }
+                            else if(mesh.extras != null && mesh.extras.targetNames != null && mesh.extras.targetNames.Count > 0)
+                            {
+                                targetNames = mesh.extras.targetNames;
+                            }
+                            else
+                            {
+                                throw new Exception("glTF BlendShape Animation. targetNames invalid.");
                             }
 
-                            for (int j = 0; j < skinnedMeshRenderer.sharedMesh.blendShapeCount; j++)
-                            {
-                                blendShapeNames.Add(skinnedMeshRenderer.sharedMesh.GetBlendShapeName(j));
-                            }
-
-                            var keyNames = blendShapeNames
+                            var keyNames = targetNames
                                 .Where(x => !string.IsNullOrEmpty(x))
                                 .Select(x => "blendShape." + x)
                                 .ToArray();
@@ -321,10 +322,10 @@ namespace VCIGLTF
             return clip;
         }
 
-        public static List<AnimationClip> ImportAnimationClips(ImporterContext ctx)
+        private static List<AnimationClip> ImportAnimationClips(ImporterContext ctx)
         {
-            List<AnimationClip> animasionClips = new List<AnimationClip>();
-            for (int i = 0; i < ctx.GLTF.animations.Count; ++i)
+            var animationClips = new List<AnimationClip>();
+            for (var i = 0; i < ctx.GLTF.animations.Count; ++i)
             {
                 var clip = new AnimationClip();
                 clip.ClearCurves();
@@ -332,20 +333,20 @@ namespace VCIGLTF
                 clip.name = ctx.GLTF.animations[i].name;
                 if (string.IsNullOrEmpty(clip.name))
                 {
-                    clip.name = "legacy_" + i;
+                    clip.name = $"legacy_{i}";
                 }
                 clip.wrapMode = WrapMode.Loop;
 
                 var animation = ctx.GLTF.animations[i];
                 if (string.IsNullOrEmpty(animation.name))
                 {
-                    animation.name = string.Format("animation:{0}", i);
+                    animation.name = $"animation:{i}";
                 }
 
-                animasionClips.Add(ImportAnimationClip(ctx, animation, ctx.GLTF.nodes[0]));
+                animationClips.Add(ImportAnimationClip(ctx, animation));
             }
 
-            return animasionClips;
+            return animationClips;
         }
 
         public static void ImportAnimation(ImporterContext ctx)

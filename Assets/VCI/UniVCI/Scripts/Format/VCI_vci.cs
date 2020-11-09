@@ -324,6 +324,16 @@ namespace VCIGLTF
             EnumValues = new object[] {BoxColliderName, SphereColliderName, CapsuleColliderName})]
         public string type;
 
+        private const string DefaultColliderLayer = "default";
+        private const string LocationColliderLayer = "location";
+        private const string PickUpColliderLayer = "pickup";
+        private const string AccessoryColliderLayer = "accessory";
+        private const string ItemColliderLayer = "item";
+
+        [JsonSchema(Required = true, EnumSerializationType = EnumSerializationType.AsString,
+            EnumValues = new object[] { DefaultColliderLayer, LocationColliderLayer, PickUpColliderLayer, AccessoryColliderLayer, ItemColliderLayer })]
+        public string layer;
+
         [JsonSchema(MinItems = 3, MaxItems = 3)]
         public float[] center;
 
@@ -967,6 +977,9 @@ namespace VCIGLTF
 
         public bool uniformScaling;
         public bool IsUniformScaling => uniformScaling;
+
+        public bool attractable;
+        public bool IsAttractable => attractable;
 
         public int groupId;
         public int GroupId => groupId;

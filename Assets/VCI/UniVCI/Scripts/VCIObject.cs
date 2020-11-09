@@ -21,8 +21,7 @@ namespace VCI
             public TargetEngine targetEngine;
 
 #if UNITY_EDITOR
-            [SerializeField, FilePath("lua")]
-            public string filePath;
+            public TextAsset textAsset;
 #endif
 
             [SerializeField, TextArea]

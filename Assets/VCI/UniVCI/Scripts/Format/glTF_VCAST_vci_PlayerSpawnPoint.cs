@@ -65,6 +65,9 @@ namespace VCI
             Description = "Avatars of players spawned at this point is forced to have the set posture.")]
         public string postureRestriction;
 
+        [JsonSchema(Description = "If postureRestriction is SitOn, the player's avatar will sit on a chair at this height.")]
+        public float seatHeight;
+
         protected override void SerializeMembers(GLTFJsonFormatter f)
         {
             f.KeyValue(() => rangeOfMovementRestriction);
@@ -76,6 +79,7 @@ namespace VCI
             f.KeyValue(() => limitRectBackward);
 
             f.KeyValue(() => postureRestriction);
+            f.KeyValue(() => seatHeight);
         }
 
         public static glTF_VCAST_vci_PlayerSpawnPointRestriction Create(VCIPlayerSpawnPointRestriction pspR)
@@ -113,7 +117,8 @@ namespace VCI
                 limitRectRight = pspR.LimitRectRight,
                 limitRectForward = pspR.LimitRectForward,
                 limitRectBackward = pspR.LimitRectBackward,
-                postureRestriction = postureRestriction
+                postureRestriction = postureRestriction,
+                seatHeight = pspR.SeatHeight
             };
         }
     }

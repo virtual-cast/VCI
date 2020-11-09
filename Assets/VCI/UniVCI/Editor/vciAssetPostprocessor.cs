@@ -42,11 +42,12 @@ namespace VCI
                 importer.SetupCoroutine().CoroutineToEnd();
                 importer.SetupPhysics();
                 importer.SetupAttachable();
-                importer.SetupEffekseer().CoroutineToEnd();
+                importer.SetupEffekseer();
                 importer.SetupText();
                 importer.SetupSpringBone();
                 importer.SetupPlayerSpawnPoint();
                 importer.SetupLocationBounds();
+                importer.ExportScriptFile(prefabPath);
                 importer.SaveAsAsset(prefabPath);
                 importer.EditorDestroyRoot();
             };

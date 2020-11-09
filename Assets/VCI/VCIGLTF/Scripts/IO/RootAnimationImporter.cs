@@ -1,6 +1,6 @@
 ﻿namespace VCIGLTF
 {
-    public class RootAnimationImporter : IAnimationImporter
+    public sealed class RootAnimationImporter : IAnimationImporter
     {
         public void Import(ImporterContext context)
         {
