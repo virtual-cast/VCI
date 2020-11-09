@@ -1,3 +1,4 @@
+#pragma warning disable
 using UnityEngine;
 using UnityEngine.Rendering;
 using System;
@@ -73,6 +74,17 @@ namespace Effekseer
 		public static void SetPausedToAllEffects(bool paused)
 		{
 			Plugin.EffekseerSetPausedToAllEffects(paused);
+		}
+
+		/// <summary xml:lang="en">
+		/// Gets the number of remaining allocated instances.
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// 残りの確保したインスタンス数を取得する。
+		/// </summary>
+		public static int restInstanceCount
+		{
+			get { return Plugin.EffekseerGetRestInstancesCount(); }
 		}
 
 		#region Network
@@ -176,6 +188,7 @@ namespace Effekseer
 				lightAmbientColor = value;
 			}
 		}
+
 		private void ReloadEffects()
 		{
 			foreach (var weakEffectAsset in EffekseerEffectAsset.enabledAssets)
@@ -286,7 +299,15 @@ namespace Effekseer
 
 				if (SystemInfo.supportsComputeShaders)
 				{
-					if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLCore)
+					int maxComputeBufferInputsVertex = 0;
+#if UNITY_2019_3_OR_NEWER
+					maxComputeBufferInputsVertex = SystemInfo.maxComputeBufferInputsVertex;
+#endif
+
+					if ((SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLCore ||
+						SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES3) && maxComputeBufferInputsVertex == 0
+
+					)
 					{
 						Debug.LogWarning("[Effekseer] Graphics API \"" + SystemInfo.graphicsDeviceType + "\" has many limitations with ComputeShader. Renderer is changed into Native.");
 						RendererType = EffekseerRendererType.Native;

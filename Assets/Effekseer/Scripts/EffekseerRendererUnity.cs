@@ -1,4 +1,5 @@
-﻿//#define EFFEKSEER_INTERNAL_DEBUG
+#pragma warning disable
+//#define EFFEKSEER_INTERNAL_DEBUG
 
 using System;
 using System.Collections.Generic;
@@ -27,9 +28,9 @@ namespace Effekseer.Internal
 		public int GetKey()
 		{
 			return (int)Blend +
-				(ZTest ? 1 : 0) << 4 +
-				(ZWrite ? 1 : 0) << 5 +
-				Cull << 6;
+				((ZTest ? 1 : 0) << 4) +
+				((ZWrite ? 1 : 0) << 5) +
+				(Cull << 6);
 		}
 	}
 	class MaterialCollection
@@ -712,12 +713,6 @@ namespace Effekseer.Internal
 			{
 				isDistortionEnabled = enableDistortion;
 
-				if(enableDistortion && renderTargetProperty != null && renderTargetProperty.colorTargetDescriptor.msaaSamples > 1)
-				{
-					Debug.LogWarning("Distortion with MSAA is differnt from Editor on [Effekseer] Effekseer(*RP)");
-					Debug.LogWarning("If LWRP or URP, please check Opacue Texture is PipelineAsset");
-				}
-
 				SetupBackgroundBuffer(isDistortionEnabled, renderTargetProperty);
 
 				// Create a command buffer that is effekseer renderer
@@ -1191,8 +1186,24 @@ namespace Effekseer.Internal
 					if (texture != null)
 					{
 						prop.SetTexture(efkMaterial.asset.textures[ti].Name, texture);
-						texture.wrapMode = TextureWrapMode.Repeat;
-						texture.filterMode = FilterMode.Bilinear;
+
+						if (parameter.TextureWrapTypes[ti] == 0)
+						{
+							texture.wrapMode = TextureWrapMode.Repeat;
+						}
+						else
+						{
+							texture.wrapMode = TextureWrapMode.Clamp;
+						}
+
+						if (parameter.TextureFilterTypes[ti] == 0)
+						{
+							texture.filterMode = FilterMode.Point;
+						}
+						else
+						{
+							texture.filterMode = FilterMode.Bilinear;
+						}
 					}
 				}
 
@@ -1395,8 +1406,24 @@ namespace Effekseer.Internal
 						if (texture != null)
 						{
 							prop.SetTexture(efkMaterial.asset.textures[ti].Name, texture);
-							texture.wrapMode = TextureWrapMode.Repeat;
-							texture.filterMode = FilterMode.Bilinear;
+
+							if (parameter.TextureWrapTypes[ti] == 0)
+							{
+								texture.wrapMode = TextureWrapMode.Repeat;
+							}
+							else
+							{
+								texture.wrapMode = TextureWrapMode.Clamp;
+							}
+
+							if (parameter.TextureFilterTypes[ti] == 0)
+							{
+								texture.filterMode = FilterMode.Point;
+							}
+							else
+							{
+								texture.filterMode = FilterMode.Bilinear;
+							}
 						}
 					}
 

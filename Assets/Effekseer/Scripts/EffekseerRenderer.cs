@@ -1,4 +1,5 @@
-﻿using System;
+#pragma warning disable
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -65,7 +66,17 @@ namespace Effekseer.Internal
 			}
 			else if(isRequiredToCopyBackground)
 			{
-				cb.CopyTexture(colorTargetIdentifier, new RenderTargetIdentifier(backgroundRenderTexture.renderTexture));
+				cb.Blit(colorTargetIdentifier, backgroundRenderTexture.renderTexture);
+
+				if (depthTargetIdentifier.HasValue)
+				{
+					cb.SetRenderTarget(colorTargetIdentifier, depthTargetIdentifier.Value);
+				}
+				else
+				{
+					cb.SetRenderTarget(colorTargetIdentifier);
+				}
+				//cb.CopyTexture(colorTargetIdentifier, new RenderTargetIdentifier(backgroundRenderTexture.renderTexture));
 			}
 			else
 			{
@@ -198,18 +209,16 @@ namespace Effekseer.Internal
 				height = renderTargetProperty.colorTargetDescriptor.height;
 			}
 
-#if UNITY_STANDALONE_WIN
 			if (renderTargetProperty != null)
 			{
-				renderTexture = new RenderTexture(width, height, 0, format, RenderTextureReadWrite.Linear);
+				renderTexture = new RenderTexture(renderTargetProperty.colorTargetDescriptor);
+				renderTexture.antiAliasing = 1;
 			}
 			else
 			{
 				renderTexture = new RenderTexture(width, height, 0, format);
 			}
-#else
-			renderTexture = new RenderTexture(width, height, 0, format);
-#endif
+
 			if(renderTexture != null)
 			{
 				renderTexture.name = "EffekseerBackground";
@@ -218,7 +227,7 @@ namespace Effekseer.Internal
 
 		public bool Create()
 		{
-			// HACK for ZenPhone (cannot understand)
+			// HACK for ZenPhone
 			if (this.renderTexture == null || !this.renderTexture.Create())
 			{
 				this.renderTexture = null;

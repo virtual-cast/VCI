@@ -1,3 +1,4 @@
+#pragma warning disable
 using UnityEngine;
 using System;
 using System.Runtime.InteropServices;
@@ -181,6 +182,12 @@ namespace Effekseer
 
 		[DllImport(pluginName)]
 		public static extern void EffekseerSetLayer(int handle, int layer);
+
+		[DllImport(pluginName)]
+		public static extern int EffekseerGetInstanceCount(int handle);
+
+		[DllImport(pluginName)]
+		public static extern int EffekseerGetRestInstancesCount();
 
 		[DllImport(pluginName)]
 		public static extern float EffekseerGetDynamicInput(int handle, int index);
