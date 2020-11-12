@@ -1,4 +1,5 @@
-﻿using System.Collections;
+#pragma warning disable
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -18,11 +19,19 @@ namespace Effekseer.Editor
 		void OnEnable()
 		{
 			emitter = (EffekseerEmitter)target;
+
+#if UNITY_2019_1_OR_NEWER
+			SceneView.duringSceneGui += SceneView_duringSceneGui;
+#endif
 		}
-		
+
 		void OnDisable()
 		{
 			TermSystem();
+
+#if UNITY_2019_1_OR_NEWER
+			SceneView.duringSceneGui -= SceneView_duringSceneGui;
+#endif
 		}
 
 		void InitSystem()
@@ -62,9 +71,14 @@ namespace Effekseer.Editor
 			foreach (var handle in emitter.handles) {
 				handle.UpdateHandle(deltaFrames);
 			}
-			EffekseerSystem.Instance.UpdateTime(deltaFrames);
-			EffekseerSystem.Instance.ApplyLightingToNative();
-			emitter.Update();
+
+			if(EffekseerSystem.Instance != null)
+			{
+				EffekseerSystem.Instance.UpdateTime(deltaFrames);
+				EffekseerSystem.Instance.ApplyLightingToNative();
+			}
+
+			emitter.UpdateSelf();
 		}
 
 		void RepaintEffect()
@@ -78,8 +92,20 @@ namespace Effekseer.Editor
 				gameview.Repaint();
 			}
 		}
-		
+
+#if UNITY_2019_1_OR_NEWER
+		private void SceneView_duringSceneGui(SceneView obj)
+		{
+			CallSceneGUI();
+		}
+#else
 		void OnSceneGUI()
+		{
+			CallSceneGUI();
+		}
+#endif
+
+		void CallSceneGUI()
 		{
 			if (emitter == null)
 				return;
@@ -91,11 +117,12 @@ namespace Effekseer.Editor
 
 			Handles.BeginGUI();
 
-			float screenWidth  = sceneView.camera.pixelWidth;
-			float screenHeight = sceneView.camera.pixelHeight;
+			float screenWidth  = sceneView.position.size.x;
+			float screenHeight = sceneView.position.size.y;
 			
 			float width = 160;
-			float height = 80;
+			float height = 120;
+
 			var boxRect  = new Rect(screenWidth - width - 30, screenHeight - height - 45, width + 20, height + 40);
 			var areaRect = new Rect(screenWidth - width - 20, screenHeight - height - 20, width, height);
 
@@ -111,6 +138,10 @@ namespace Effekseer.Editor
 				// avoid a bug playing effect sometimes causes craches after window size is changed.
 				// Unity, Effekseer, or driver bug
 				Effekseer.EffekseerSystem.Instance.renderer.CleanUp();
+
+				// Load an effect actually
+				EffekseerSystem.Instance.LoadEffect(emitter.effectAsset);
+
 				emitter.Play();
 			}
 			if (GUILayout.Button("Stop")) {
@@ -138,7 +169,17 @@ namespace Effekseer.Editor
 			GUILayout.Label("Speed", GUILayout.Width(50));
 			emitter.speed = GUILayout.HorizontalSlider(emitter.speed, 0.0f, 2.0f);
 			GUILayout.EndHorizontal();
-			
+
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Instance", GUILayout.Width(80));
+			GUILayout.Label(emitter.instanceCount.ToString());
+			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("RestInstance", GUILayout.Width(80));
+			GUILayout.Label(EffekseerSystem.restInstanceCount.ToString());
+			GUILayout.EndHorizontal();
+
 			GUILayout.EndArea();
 
 			Handles.EndGUI();

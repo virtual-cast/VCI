@@ -1,4 +1,5 @@
-﻿using System;
+#pragma warning disable
+using System;
 using System.IO;
 using System.Text;
 using UnityEngine;
@@ -109,6 +110,16 @@ namespace Effekseer
 
 #if UNITY_EDITOR
 		/// <summary>
+		/// To avoid reserved name
+		/// </summary>
+		/// <param name="name"></param>
+		/// <returns></returns>
+		static string EscapePropertyName(string name)
+		{
+			return "_" + name + "_Tex";
+		}
+
+		/// <summary>
 		/// to avoid unity bug
 		/// </summary>
 		/// <param name="path"></param>
@@ -130,13 +141,16 @@ namespace Effekseer
 			if(importingAsset.CustomData2Count > 0)
 				importingAsset.CustomData2Count = Math.Max(2, importingAsset.CustomData2Count);
 
-			// avoid space
+			// modifiy importing asset to avoid invalid name
 			foreach(var texture in importingAsset.Textures)
 			{
 				if(texture.Name == string.Empty)
 				{
 					texture.Name = texture.UniformName;
 				}
+
+				// Escape
+				texture.Name = EscapePropertyName(texture.Name);
 			}
 
 			string assetPath = Path.ChangeExtension(path, ".asset");
@@ -315,20 +329,16 @@ namespace Effekseer
 			// HACK for efk_xxx_1 and efk_xxx_12
 			{
 				var replacingUniforms = importingAsset.Uniforms.ToArray();
-				var replacingTextures = importingAsset.Textures.ToArray();
-
-				replacingTextures = replacingTextures.OrderByDescending(_ => _.UniformName.Length).ToArray();
+				
 				replacingUniforms = replacingUniforms.OrderByDescending(_ => _.UniformName.Length).ToArray();
-
-				foreach(var kv in replacingTextures)
-				{
-					code = code.Replace(kv.UniformName, kv.Name);
-					mainVSCode = mainVSCode.Replace(kv.UniformName, kv.Name);
-					mainPSCode = mainPSCode.Replace(kv.UniformName, kv.Name);
-				}
 
 				foreach (var kv in replacingUniforms)
 				{
+					if(kv.Name == string.Empty)
+					{
+						continue;
+					}
+
 					code = code.Replace(kv.UniformName, kv.Name);
 					mainVSCode = mainVSCode.Replace(kv.UniformName, kv.Name);
 					mainPSCode = mainPSCode.Replace(kv.UniformName, kv.Name);
@@ -366,6 +376,9 @@ namespace Effekseer
 				code = code.Replace("//%CUSTOM_VS_INPUT2%", string.Format("float{0} CustomData2;", importingAsset.CustomData2Count));
 				code = code.Replace("//%CUSTOM_VSPS_INOUT2%", string.Format("float{0} CustomData2 : TEXCOORD8;", importingAsset.CustomData2Count));
 			}
+
+			// change return codes
+			code = code.Replace("\r\n", "\n");
 
 			AssetDatabase.StartAssetEditing();
 
@@ -714,7 +727,7 @@ Cull[_Cull]
 			@elif defined(_MATERIAL_LIT_)
 			float3 viewDir = normalize(cameraPosition.xyz - worldPos);
 			float3 diffuse = calcDirectionalLightDiffuseColor(baseColor, pixelNormalDir, lightDirection.xyz, ambientOcclusion);
-			float3 specular = lightColor.xyz * lightScale * calcLightingGGX(worldNormal, viewDir, lightDirection.xyz, roughness, 0.9);
+			float3 specular = lightColor.xyz * lightScale * calcLightingGGX(pixelNormalDir, viewDir, lightDirection.xyz, roughness, 0.9);
 		
 			float4 Output =  float4(metallic * specular + (1.0 - metallic) * diffuse + baseColor * lightAmbientColor.xyz * ambientOcclusion, opacity);
 			Output.xyz = Output.xyz + emissive.xyz;

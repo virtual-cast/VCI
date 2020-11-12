@@ -1,4 +1,5 @@
-﻿/*
+#pragma warning disable
+/*
 
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -15,12 +16,18 @@ public class EffekseerURPRenderPassFeature : ScriptableRendererFeature
 
 		public EffekseerRenderPassURP(RenderTargetIdentifier cameraColorTarget, RenderTargetIdentifier cameraDepthTarget)
 		{
+			// HACK
+			bool isValidDepth = !cameraDepthTarget.ToString().Contains("-1");
+
 			this.cameraColorTarget = cameraColorTarget;
-			this.cameraDepthTarget = cameraDepthTarget;
+			prop.colorTargetIdentifier = cameraColorTarget;
 			this.renderPassEvent = UnityEngine.Rendering.Universal.RenderPassEvent.AfterRenderingTransparents;
 
-			prop.colorTargetIdentifier = cameraColorTarget;
-			prop.depthTargetIdentifier = cameraDepthTarget;
+			if(isValidDepth)
+			{
+				this.cameraDepthTarget = cameraDepthTarget;
+				prop.depthTargetIdentifier = cameraDepthTarget;
+			}
 		}
 
 		public override void Execute(ScriptableRenderContext context, ref UnityEngine.Rendering.Universal.RenderingData renderingData)
@@ -55,4 +62,3 @@ public class EffekseerURPRenderPassFeature : ScriptableRendererFeature
 }
 
 */
-

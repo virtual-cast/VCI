@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
 using VCIGLTF;
@@ -65,21 +66,9 @@ namespace VCI
                         {
                             int viewIndex = -1;
 #if UNITY_EDITOR
-                            if (!string.IsNullOrEmpty(x.filePath))
+                            if (x.textAsset)
                             {
-                                if(File.Exists(x.filePath))
-                                {
-                                    using (var resader = new StreamReader(x.filePath))
-                                    {
-                                        string scriptStr = resader.ReadToEnd();
-                                        viewIndex = gltf.ExtendBufferAndGetViewIndex<byte>(0, Utf8String.Encoding.GetBytes(scriptStr));
-                                    }
-                                }
-                                else
-                                {
-                                    Debug.LogError("script file not found. スクリプトファイルが見つかりませんでした: " + x.filePath);
-                                    throw new FileNotFoundException(x.filePath);
-                                }
+                                viewIndex = gltf.ExtendBufferAndGetViewIndex<byte>(0, Utf8String.Encoding.GetBytes(x.textAsset.text));
                             }
                             else
 #endif
@@ -176,6 +165,14 @@ namespace VCI
                             continue;
                         }
 
+                        if (VciColliderSetting.TryGetVciLayerLabel(node.gameObject.layer, out var label))
+                        {
+                            if (!string.IsNullOrEmpty(label))
+                            {
+                                gltfCollider.layer = label;
+                            }
+                        }
+
                         gltfNode.extensions.VCAST_vci_collider.colliders.Add(gltfCollider);
                     }
                 }
@@ -219,6 +216,7 @@ namespace VCI
                         grabbable = item.Grabbable,
                         scalable = item.Scalable,
                         uniformScaling = item.UniformScaling,
+                        attractable = item.Attractable,
                         groupId = item.GroupId,
                     };
                 }

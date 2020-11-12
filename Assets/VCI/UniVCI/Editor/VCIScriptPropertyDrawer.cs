@@ -32,12 +32,13 @@ namespace VCI
             SerializedProperty name = property.FindPropertyRelative("name");
             SerializedProperty mimeType = property.FindPropertyRelative("mimeType");
             SerializedProperty targetEngine = property.FindPropertyRelative("targetEngine");
-            SerializedProperty filePath = property.FindPropertyRelative("filePath");
+            SerializedProperty textAssetProperty = property.FindPropertyRelative("textAsset");
             SerializedProperty source = property.FindPropertyRelative("source");
 
-            if(!string.IsNullOrEmpty(filePath.stringValue) && name.stringValue != "main")
+            var textAsset = textAssetProperty.objectReferenceValue as TextAsset;
+            if(textAsset && name.stringValue != "main")
             {
-                name.stringValue = Path.GetFileNameWithoutExtension(filePath.stringValue);
+                name.stringValue = Path.GetFileNameWithoutExtension(textAsset.name);
             }
             EditorGUI.PropertyField(labelRect, name);
             labelRect.y += EditorGUIUtility.singleLineHeight;
@@ -45,10 +46,10 @@ namespace VCI
             labelRect.y += EditorGUIUtility.singleLineHeight;
             EditorGUI.PropertyField(labelRect, targetEngine);
             labelRect.y += EditorGUIUtility.singleLineHeight;
-            EditorGUI.PropertyField(labelRect, filePath);
+            EditorGUI.PropertyField(labelRect, textAssetProperty);
             labelRect.y += EditorGUIUtility.singleLineHeight;
 
-            EditorGUI.BeginDisabledGroup(!string.IsNullOrEmpty(filePath.stringValue));
+            EditorGUI.BeginDisabledGroup(textAsset);
             EditorGUI.LabelField(labelRect, "Source");
             labelRect.y += EditorGUIUtility.singleLineHeight;
 

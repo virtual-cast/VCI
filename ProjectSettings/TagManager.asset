@@ -29,10 +29,10 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
-  - 
-  - 
+  - Location
+  - VCIPickUp
+  - VCIAccessory
+  - VCIItem
   - 
   - 
   - 

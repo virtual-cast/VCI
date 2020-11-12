@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+#pragma warning disable
+using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;

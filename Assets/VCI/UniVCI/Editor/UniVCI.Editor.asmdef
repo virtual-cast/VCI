@@ -3,8 +3,6 @@
     "references": [
         "VCI",
         "Unity.TextMeshPro",
-        "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner",
         "VCIDepthFirstScheduler"
     ],
     "includePlatforms": [
@@ -13,13 +11,9 @@
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
-    "precompiledReferences": [
-        "nunit.framework.dll"
-    ],
+    "precompiledReferences": [],
     "autoReferenced": false,
-    "defineConstraints": [
-        "UNITY_INCLUDE_TESTS"
-    ],
+    "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false
 }

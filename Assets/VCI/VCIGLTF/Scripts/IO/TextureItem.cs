@@ -163,8 +163,7 @@ namespace VCIGLTF
                 var textureType = TextureExporter.GetglTFTextureType(gltf, m_textureIndex);
                 var colorSpace = TextureExporter.GetColorSpace(textureType);
                 var isLinear = colorSpace == RenderTextureReadWrite.Linear;
-                yield return m_textureLoader.ProcessOnMainThread(isLinear);
-                TextureSamplerUtil.SetSampler(Texture, gltf.GetSamplerFromTextureIndex(m_textureIndex));
+                yield return m_textureLoader.ProcessOnMainThread(isLinear, gltf.GetSamplerFromTextureIndex(m_textureIndex));
             }
         }
         #endregion

@@ -20,6 +20,8 @@ namespace VCI
 
         public Posture PostureRestriction;
 
+        public float SeatHeight;
+
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {

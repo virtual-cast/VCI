@@ -25,8 +25,9 @@ namespace VCIGLTF
         /// Call from unity main thread
         /// </summary>
         /// <param name="isLinear"></param>
+        /// <param name="sampler"></param>
         /// <returns></returns>
-        IEnumerator ProcessOnMainThread(bool isLinear);
+        IEnumerator ProcessOnMainThread(bool isLinear, glTFTextureSampler sampler);
     }
 
 #if UNITY_EDITOR
@@ -53,7 +54,7 @@ namespace VCIGLTF
         {
         }
 
-        public IEnumerator ProcessOnMainThread(bool isLinear)
+        public IEnumerator ProcessOnMainThread(bool isLinear, glTFTextureSampler sampler)
         {
             //
             // texture from assets
@@ -70,6 +71,10 @@ namespace VCIGLTF
             importer.SaveAndReimport();
 
             Texture = m_assetPath.LoadAsset<Texture2D>();
+            if (sampler != null)
+            {
+                TextureSamplerUtil.SetSampler(Texture, sampler);
+            }
 
             //Texture.name = m_textureName;
             if (Texture == null)
@@ -140,7 +145,7 @@ namespace VCIGLTF
             m_imageBytes = ToArray(segments);
         }
 
-        public IEnumerator ProcessOnMainThread(bool isLinear)
+        public IEnumerator ProcessOnMainThread(bool isLinear, glTFTextureSampler sampler)
         {
             //
             // texture from image(png etc) bytes
@@ -150,6 +155,10 @@ namespace VCIGLTF
             if (m_imageBytes != null)
             {
                 Texture.LoadImage(m_imageBytes);
+            }
+            if (sampler != null)
+            {
+                TextureSamplerUtil.SetSampler(Texture, sampler);
             }
             yield break;
         }
@@ -274,7 +283,7 @@ namespace VCIGLTF
             }
         }
 
-        public IEnumerator ProcessOnMainThread(bool isLinear)
+        public IEnumerator ProcessOnMainThread(bool isLinear, glTFTextureSampler sampler)
         {
             // tmp file
             var tmp = Path.GetTempFileName();
@@ -327,6 +336,10 @@ namespace VCIGLTF
 #else
 #error Unsupported Unity version
 #endif
+                if (sampler != null)
+                {
+                    TextureSamplerUtil.SetSampler(Texture, sampler);
+                }
             }
         }
     }

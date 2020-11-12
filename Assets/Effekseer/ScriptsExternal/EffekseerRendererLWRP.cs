@@ -1,4 +1,5 @@
-﻿/*
+#pragma warning disable
+/*
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +24,7 @@ namespace Effekseer
 
 		public override void Create()
 		{
+			Debug.LogWarning("Plese use URP, LWRP for Effekseer is deprecated.");
 		}
 
 		public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
@@ -41,12 +43,18 @@ namespace Effekseer
 
 		public EffekseerRenderPassLWRP(RenderTargetIdentifier cameraColorTarget, RenderTargetIdentifier cameraDepthTarget)
 		{
+			// HACK
+			bool isValidDepth = !cameraDepthTarget.ToString().Contains("-1");
+
 			this.cameraColorTarget = cameraColorTarget;
-			this.cameraDepthTarget = cameraDepthTarget;
+			prop.colorTargetIdentifier = cameraColorTarget;
 			this.renderPassEvent = RenderPassEvent.AfterRenderingTransparents;
 
-			prop.colorTargetIdentifier = cameraColorTarget;
-			prop.depthTargetIdentifier = cameraDepthTarget;
+			if(isValidDepth)
+			{
+				this.cameraDepthTarget = cameraDepthTarget;
+				prop.depthTargetIdentifier = cameraDepthTarget;
+			}
 		}
 
 		public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)

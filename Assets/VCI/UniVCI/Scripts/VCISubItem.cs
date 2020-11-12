@@ -23,6 +23,7 @@ namespace VCI
         public bool Grabbable;
         public bool Scalable;
         public bool UniformScaling;
+        public bool Attractable = true;
         public int GroupId;
         public int NodeIndex;
 
@@ -32,6 +33,7 @@ namespace VCI
             subItem.Grabbable = Grabbable;
             subItem.Scalable = Scalable;
             subItem.UniformScaling = UniformScaling;
+            subItem.Attractable = Attractable;
             subItem.GroupId = GroupId;
             subItem.NodeIndex = NodeIndex;
             return subItem;
@@ -71,11 +73,6 @@ namespace VCI
             RaiseCollisionEvent(EnterStatus.Enter, collision);
         }
 
-        private void OnCollisionStay(Collision collision)
-        {
-            RaiseCollisionEvent(EnterStatus.Stay, collision);
-        }
-
         private void OnCollisionExit(Collision collision)
         {
             RaiseCollisionEvent(EnterStatus.Exit, collision);
@@ -97,11 +94,6 @@ namespace VCI
         private void OnTriggerEnter(Collider other)
         {
             RaiseTrigger(EnterStatus.Enter, other);
-        }
-
-        private void OnTriggerStay(Collider other)
-        {
-            RaiseTrigger(EnterStatus.Stay, other);
         }
 
         private void OnTriggerExit(Collider other)

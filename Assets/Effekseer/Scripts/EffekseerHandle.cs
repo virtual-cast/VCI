@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+#pragma warning disable
+using UnityEngine;
 
 namespace Effekseer
 {
@@ -249,6 +250,20 @@ namespace Effekseer
 		{
 			get {
 				return Plugin.EffekseerExists(m_handle);
+			}
+		}
+
+		/// <summary xml:lang="en">
+		/// Get the number of instance which is used in this effect including root
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// Rootを含んだエフェクトに使用されているインスタンス数を取得する。
+		/// </summary>
+		public int instanceCount
+		{
+			get
+			{
+				return Plugin.EffekseerGetInstanceCount(m_handle);
 			}
 		}
 	}

@@ -1,4 +1,5 @@
-﻿using System;
+#pragma warning disable
+using System;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -59,7 +60,12 @@ namespace Effekseer.Editor
 		public override void OnInspectorGUI()
 		{
 			var asset = target as EffekseerEffectAsset;
-			
+
+			if(asset == null)
+			{
+				return;
+			}
+
 			EditorGUILayout.LabelField("Data Size", asset.efkBytes.Length.ToString() + " bytes");
 
             var scale = EditorGUILayout.FloatField("Scale", asset.Scale);
@@ -103,18 +109,21 @@ namespace Effekseer.Editor
 				EditorGUI.indentLevel--;
 			}
 
-			materialVisible = EditorGUILayout.Foldout(modelVisible, "Material Resources: " + asset.materialResources.Length);
-			if (materialVisible)
+			if(asset.materialResources != null)
 			{
-				EditorGUI.indentLevel++;
-				foreach (var res in asset.materialResources)
+				materialVisible = EditorGUILayout.Foldout(materialVisible, "Material Resources: " + asset.materialResources.Length);
+				if (materialVisible)
 				{
-					if (EffekseerMaterialResource.InspectorField(res))
+					EditorGUI.indentLevel++;
+					foreach (var res in asset.materialResources)
 					{
-						EditorUtility.SetDirty(asset);
+						if (EffekseerMaterialResource.InspectorField(res))
+						{
+							EditorUtility.SetDirty(asset);
+						}
 					}
+					EditorGUI.indentLevel--;
 				}
-				EditorGUI.indentLevel--;
 			}
 		}
 	}

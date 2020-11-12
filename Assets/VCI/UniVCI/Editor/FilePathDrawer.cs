@@ -2,6 +2,7 @@
 using System.IO;
 using UnityEngine;
 using UnityEditor;
+using System.Text.RegularExpressions;
 
 namespace VCI
 {
@@ -34,6 +35,12 @@ namespace VCI
                 var path = EditorUtility.OpenFilePanel("select file", dirpath, filepath.extensionFilter);
                 if (false == string.IsNullOrEmpty(path))
                 {
+                    if(path.StartsWith(Application.dataPath))
+                    {
+                        var regex = new Regex(Application.dataPath);
+                        path = regex.Replace(path, "Assets", 1);
+                    }
+
                     property.stringValue = path;
                     property.serializedObject.ApplyModifiedProperties();
                     GUIUtility.ExitGUI();

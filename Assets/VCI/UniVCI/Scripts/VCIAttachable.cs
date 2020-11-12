@@ -45,7 +45,7 @@ namespace VCI
         }
 
 # if UNITY_EDITOR
-        void OnDrawGizmosSelected()
+        private void OnDrawGizmosSelected()
         {
             Gizmos.color = new Color(0, 1.0f, 0, 0.3f);
             if (_scalable)

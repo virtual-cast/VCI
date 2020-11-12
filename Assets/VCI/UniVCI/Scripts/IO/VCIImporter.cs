@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,6 +26,27 @@ namespace VCI
         public VCIObject VCIObject { get; private set; }
 
         public IFontProvider FontProvider { get; set; }
+
+        private List<Collider> _colliderComponents = new List<Collider>();
+
+        public class RigidbodySetting
+        {
+            public RigidbodyConstraints Constraints { get; set; }
+            public bool IsKinematic { get; private set; }
+            public bool UseGravity { get; private set; }
+
+            public RigidbodySetting(Rigidbody rigidbody)
+            {
+                Constraints = rigidbody.constraints;
+                IsKinematic = rigidbody.isKinematic;
+                UseGravity = rigidbody.useGravity;
+            }
+        }
+
+        private readonly Dictionary<Rigidbody, RigidbodySetting> _rigidBodySettings =
+            new Dictionary<Rigidbody, RigidbodySetting>();
+
+        public Dictionary<Rigidbody, RigidbodySetting> RigidBodySettings => _rigidBodySettings;
 
         public VCIImporter()
         {
@@ -51,7 +73,7 @@ namespace VCI
 
         private string GetVersionValue(string exportedVciVersion)
         {
-            if(string.IsNullOrEmpty(exportedVciVersion))
+            if (string.IsNullOrEmpty(exportedVciVersion))
             {
                 throw new Exception("exportedVciVersion is empty.");
             }
@@ -69,14 +91,14 @@ namespace VCI
         private bool ImportableVersionCheck(string exportedVciVersion)
         {
             var version = GetVersionValue(exportedVciVersion);
-            if(string.IsNullOrEmpty(version))
+            if (string.IsNullOrEmpty(version))
             {
                 return false;
             }
 
-            int itemExportedVersion = (int)(float.Parse(version) * 100);
-            int uniVciVersion = (int)(float.Parse(VCIVersion.VERSION) * 100);
-            if( itemExportedVersion > uniVciVersion)
+            int itemExportedVersion = (int)Math.Round(float.Parse(version, CultureInfo.InvariantCulture) * 100);
+            int uniVciVersion = (int)Math.Round(float.Parse(VCIVersion.VERSION, CultureInfo.InvariantCulture) * 100);
+            if (itemExportedVersion > uniVciVersion)
             {
                 return false;
             }
@@ -89,14 +111,14 @@ namespace VCI
             base.ParseJson(json, storage);
             var parsed = JsonParser.Parse(Json);
 
-            if(parsed.ContainsKey("extensions")
+            if (parsed.ContainsKey("extensions")
                 && parsed["extensions"].ContainsKey("VCAST_vci_meta")
             )
             {
                 var meta = parsed["extensions"]["VCAST_vci_meta"];
                 var version = meta["exporterVCIVersion"];
 
-                if(!ImportableVersionCheck(version.Value.ToString()))
+                if (!ImportableVersionCheck(version.Value.ToString()))
                 {
                     throw new Exception("The current UniVCI cannot read this VCI version. " + version.Value);
                 }
@@ -109,15 +131,15 @@ namespace VCI
             {
                 // UniVCI v0.27以下のバージョンの場合は、baseColorをsrgbからlinearに変換した後にCreateMaterialを実行する
                 bool srgbToLinear = false;
-                if(parsed.ContainsKey("extensions")
+                if (parsed.ContainsKey("extensions")
                     && parsed["extensions"].ContainsKey("VCAST_vci_meta")
                 )
                 {
                     var meta = parsed["extensions"]["VCAST_vci_meta"];
                     var version = meta["exporterVCIVersion"];
 
-                    int exportedVciVersion = (int)(float.Parse(GetVersionValue(version.Value.ToString())) * 100);
-                    if(exportedVciVersion <= 27)
+                    int exportedVciVersion = (int)Math.Round(float.Parse(GetVersionValue(version.Value.ToString()), CultureInfo.InvariantCulture) * 100);
+                    if (exportedVciVersion <= 27)
                     {
                         srgbToLinear = true;
                     }
@@ -209,6 +231,8 @@ namespace VCI
                 rootAnimation.playAutomatically = false;
             }
 
+            int exportedVciVersion = (int)Math.Round(float.Parse(GetVersionValue(VCIObject.Meta.exporterVersion), CultureInfo.InvariantCulture) * 100);
+
             // SubItem
             for (var i = 0; i < GLTF.nodes.Count; i++)
             {
@@ -222,6 +246,8 @@ namespace VCI
                         item.Grabbable = node.extensions.VCAST_vci_item.grabbable;
                         item.Scalable = node.extensions.VCAST_vci_item.scalable;
                         item.UniformScaling = node.extensions.VCAST_vci_item.uniformScaling;
+                        // UniVCI0.30で追加したフラグ。それ以前のVCIではGrabbable=trueならすべてTrueに
+                        item.Attractable = node.extensions.VCAST_vci_item.grabbable && (exportedVciVersion < 30 || node.extensions.VCAST_vci_item.attractable);
                         item.GroupId = node.extensions.VCAST_vci_item.groupId;
                     }
                 }
@@ -232,7 +258,7 @@ namespace VCI
         ///
         /// </summary>
         /// <param name="replace">Rootオブジェクトのセットアップを1階層上げるのに使う</param>
-        public void SetupPhysics(GameObject rootReplaceTarget = null)
+        public void SetupPhysics(GameObject rootReplaceTarget = null, IVciColliderLayerProvider vciColliderLayer = null)
         {
             // Collider and Rigidbody
             for (var i = 0; i < GLTF.nodes.Count; i++)
@@ -246,11 +272,32 @@ namespace VCI
                 {
                     if (node.extensions.VCAST_vci_collider?.colliders != null)
                         foreach (var vciCollider in node.extensions.VCAST_vci_collider.colliders)
-                            glTF_VCAST_vci_Collider.AddColliderComponent(go, vciCollider);
+                        {
+                            var collider = glTF_VCAST_vci_Collider.AddColliderComponent(go, vciCollider);
+                            _colliderComponents.Add(collider);
+
+                            // set layer
+                            if(vciColliderLayer != null)
+                            {
+                                var layerNumber = VciColliderSetting.GetLayerNumber(VciColliderSetting.VciColliderLayerTypes.Default, vciColliderLayer);
+                                go.layer = (layerNumber != -1) ? layerNumber : 0;
+                            }
+                            if(!string.IsNullOrEmpty(vciCollider.layer) && vciColliderLayer != null)
+                            {
+                                var layer = VciColliderSetting.VciColliderLayerLabel.FirstOrDefault(x => x.Value == vciCollider.layer);
+                                if(!string.IsNullOrEmpty(layer.Value))
+                                {
+                                    go.layer = VciColliderSetting.GetLayerNumber(layer.Key, vciColliderLayer);
+                                }
+                            }
+                        }
 
                     if (node.extensions.VCAST_vci_rigidbody?.rigidbodies != null)
                         foreach (var rigidbody in node.extensions.VCAST_vci_rigidbody.rigidbodies)
-                            glTF_VCAST_vci_Rigidbody.AddRigidbodyComponent(go, rigidbody);
+                        {
+                            var rb = glTF_VCAST_vci_Rigidbody.AddRigidbodyComponent(go, rigidbody);
+                            _rigidBodySettings.Add(rb, new RigidbodySetting(rb));
+                        }
                 }
             }
 
@@ -303,7 +350,45 @@ namespace VCI
             return attachableCount;
         }
 
-        public virtual IEnumerator SetupEffekseer()
+        /// <summary>
+        /// VCI の物理挙動を有効・無効にする
+        /// </summary>
+        public void EnablePhysicalBehaviour(bool enable)
+        {
+            foreach (var collider in _colliderComponents)
+            {
+                if (collider != null)
+                {
+                    collider.enabled = enable;
+                }
+            }
+
+            foreach(var rigidBodySetting in _rigidBodySettings)
+            {
+                if (rigidBodySetting.Key != null)
+                {
+                    if (enable)
+                    {
+                        // Restore the original constraints.
+                        // NOTE: If EnablePhysicalBehaviour(false) was called before, OriginalConstraints contains
+                        //       the constraints that were present when EnablePhysicalBehaviour(false) was last called.
+                        //       If EnablePhysicalBehaviour(false) was never called, OriginalConstraints contains
+                        //       the constraints that were setup at the time when the Rigidbody was initialized.
+                        rigidBodySetting.Key.constraints = rigidBodySetting.Value.Constraints;
+                    }
+                    else
+                    {
+                        // Save constraints value to restore it later.
+                        rigidBodySetting.Value.Constraints = rigidBodySetting.Key.constraints;
+
+                        // Set constraints to FreezeAll to ensure that gameObjects aren't falling down due to gravity.
+                        rigidBodySetting.Key.constraints = RigidbodyConstraints.FreezeAll;
+                    }
+                }
+            }
+        }
+
+        public virtual void SetupEffekseer()
         {
             // Effekseer
             if (GLTF.extensions != null && GLTF.extensions.Effekseer != null)
@@ -333,8 +418,6 @@ namespace VCI
                                     continue;
                                 }
 
-                                yield return null;
-
                                 // Images
                                 var effekseerTextures = new List<Effekseer.Internal.EffekseerTextureResource>();
                                 if (effect.images != null && effect.images.Any())
@@ -361,8 +444,6 @@ namespace VCI
                                         {
                                             Debug.LogError(string.Format("image format {0} is not suppported.", image.mimeType));
                                         }
-
-                                        yield return null;
                                     }
                                 }
 
@@ -384,8 +465,6 @@ namespace VCI
                                             path = path,
                                             asset = new Effekseer.EffekseerModelAsset() { bytes = modelBuffer }
                                         });
-
-                                        yield return null;
                                     }
                                 }
 
@@ -396,8 +475,6 @@ namespace VCI
                                 effectAsset.textureResources = effekseerTextures.ToArray();
                                 effectAsset.modelResources = effekseerModels.ToArray();
                                 effectAsset.soundResources = new Effekseer.Internal.EffekseerSoundResource[0];
-
-                                yield return null;
 
                                 var emitterComponent = go.AddComponent<Effekseer.EffekseerEmitter>();
                                 emitterComponent.effectAsset = effectAsset;
@@ -421,8 +498,6 @@ namespace VCI
                     }
                 }
             }
-
-            yield break;
         }
 
         public void SetupText()
@@ -431,7 +506,7 @@ namespace VCI
             {
                 var node = GLTF.nodes[i];
 
-                if(node.extensions != null && node.extensions.VCAST_vci_text != null)
+                if (node.extensions != null && node.extensions.VCAST_vci_text != null)
                 {
                     var go = Nodes[i].gameObject;
                     var rt = go.AddComponent<RectTransform>();
@@ -457,11 +532,11 @@ namespace VCI
                     tmp.color = new Color(vci_text.color[0], vci_text.color[1], vci_text.color[2], vci_text.color[3]);
                     tmp.enableVertexGradient = vci_text.enableVertexGradient;
                     tmp.colorGradient = new VertexGradient(
-                            new Color(vci_text.topLeftColor[0], vci_text.topLeftColor[1], vci_text.topLeftColor[2], vci_text.topLeftColor[3]),
-                            new Color(vci_text.topRightColor[0], vci_text.topRightColor[1], vci_text.topRightColor[2], vci_text.topRightColor[3]),
-                            new Color(vci_text.bottomLeftColor[0], vci_text.bottomLeftColor[1], vci_text.bottomLeftColor[2], vci_text.bottomLeftColor[3]),
-                            new Color(vci_text.bottomRightColor[0], vci_text.bottomRightColor[1], vci_text.bottomRightColor[2], vci_text.bottomRightColor[3])
-                        );
+                        new Color(vci_text.topLeftColor[0], vci_text.topLeftColor[1], vci_text.topLeftColor[2], vci_text.topLeftColor[3]),
+                        new Color(vci_text.topRightColor[0], vci_text.topRightColor[1], vci_text.topRightColor[2], vci_text.topRightColor[3]),
+                        new Color(vci_text.bottomLeftColor[0], vci_text.bottomLeftColor[1], vci_text.bottomLeftColor[2], vci_text.bottomLeftColor[3]),
+                        new Color(vci_text.bottomRightColor[0], vci_text.bottomRightColor[1], vci_text.bottomRightColor[2], vci_text.bottomRightColor[3])
+                    );
                     tmp.characterSpacing = vci_text.characterSpacing;
                     tmp.wordSpacing = vci_text.wordSpacing;
                     tmp.lineSpacing = vci_text.lineSpacing;
@@ -494,7 +569,7 @@ namespace VCI
             foreach (var bone in GLTF.extensions.VCAST_vci_spring_bone.springBones)
             {
                 var sb = Root.AddComponent<VCISpringBone>();
-                if(bone.center >= 0) sb.m_center = Nodes[bone.center];
+                if (bone.center >= 0) sb.m_center = Nodes[bone.center];
                 sb.m_dragForce = bone.dragForce;
                 sb.m_gravityDir = bone.gravityDir;
                 sb.m_gravityPower = bone.gravityPower;
@@ -555,6 +630,8 @@ namespace VCI
                                 spawnPointRestriction.PostureRestriction = Posture.NoLimit;
                                 break;
                         }
+
+                        spawnPointRestriction.SeatHeight = nodePspR.seatHeight;
                     }
                 }
             }
@@ -601,7 +678,7 @@ namespace VCI
                         | System.Text.RegularExpressions.RegexOptions.Singleline);
                 var match = r.Match(audio.mimeType);
                 var ext = match.Groups["ext"].Value;
-                if(!string.IsNullOrEmpty(ext))
+                if (!string.IsNullOrEmpty(ext))
                 {
                     var path = string.Format("{0}/{1}.{2}", folder.Value, audio.name, ext);
                     File.WriteAllBytes(path, audioBuffer);
@@ -691,7 +768,7 @@ namespace VCI
                     {
                         AssetDatabase.ImportAsset(texturePath);
                         var textureImporter = (TextureImporter)TextureImporter.GetAtPath(texturePath);
-                        if(textureImporter != null)
+                        if (textureImporter != null)
                         {
                             textureImporter.isReadable = true;
                             textureImporter.textureCompression = TextureImporterCompression.Uncompressed;
@@ -708,7 +785,7 @@ namespace VCI
 
                     // find assets
                     // textures
-                    for(int t = 0; t < effectAsset.textureResources.Count(); t++)
+                    for (int t = 0; t < effectAsset.textureResources.Count(); t++)
                     {
                         var path = effectAsset.textureResources[t].path;
                         if (string.IsNullOrEmpty(path))
@@ -721,7 +798,7 @@ namespace VCI
                         Texture2D texture = UnityEditor.AssetDatabase.LoadAssetAtPath(
                             string.Format("{0}/{1}", textureDir, fileName), typeof(Texture2D)) as Texture2D;
 
-                        if(texture != null)
+                        if (texture != null)
                         {
                             effectAsset.textureResources[t].texture = texture;
                         }
@@ -817,6 +894,36 @@ namespace VCI
 #endif
         }
 
+
+        public void ExportScriptFile(UnityPath prefabPath)
+        {
+#if UNITY_EDITOR
+            var prefabParentDir = prefabPath.Parent;
+            var folder = prefabPath.GetAssetFolder(".Scripts");
+            folder.EnsureFolder();
+
+            var vciObject = this.Root.GetComponent<VCIObject>();
+            if(vciObject == null)
+            {
+                return;
+            }
+
+            foreach (var script in vciObject.Scripts)
+            {
+                var scriptPath = $"{folder.Value}/{script.name}.lua";
+                Debug.Log(scriptPath);
+                File.WriteAllBytes(scriptPath, System.Text.Encoding.UTF8.GetBytes(script.source));
+            }
+            AssetDatabase.Refresh();
+
+            foreach (var script in vciObject.Scripts)
+            {
+                var scriptPath = $"{folder.Value}/{script.name}.lua";
+                script.textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(scriptPath);
+            }
+#endif
+        }
+
         private static DirectoryInfo SafeCreateDirectory(string path)
         {
 #if UNITY_EDITOR
@@ -830,7 +937,7 @@ namespace VCI
                 AssetDatabase.ImportAsset(path);
                 return info;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw ex;
             }

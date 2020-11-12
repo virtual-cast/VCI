@@ -6,8 +6,7 @@
         "UniUnlit",
         "Effekseer",
         "Unity.TextMeshPro",
-        "NAudio",
-        "VCIDepthFirstScheduler"
+        "NAudio"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

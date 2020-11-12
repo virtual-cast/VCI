@@ -16,8 +16,6 @@ namespace VCI
         private const int MaxSpringBoneColliderCount = 10;
         private const int MaxSphereColliderCount = 10;
 
-        private const float SpawnPointAllowedHeightRange = 0.001f;
-
         public const int VersionTextLength = 30;
         public const int AuthorTextLength = 30;
         public const int ContactInformationTextLength = 255;
@@ -98,11 +96,6 @@ namespace VCI
             foreach (var psp in playerSpawnPointsList)
             {
                 var pspT = psp.gameObject.transform;
-                if (Math.Abs(pspT.position.y) > SpawnPointAllowedHeightRange)
-                {
-                    throw new VCIValidatorException(ValidationErrorType.SpawnPointHeightRangeNotAllowed,
-                        VCIConfig.GetText($"error{(int)ValidationErrorType.SpawnPointHeightRangeNotAllowed}"));
-                }
 
                 if (Math.Abs(pspT.rotation.x) > 0.001f || Math.Abs(pspT.rotation.z) > 0.001f)
                 {
@@ -230,9 +223,8 @@ namespace VCI
         TooManySphereCollider = 411,
 
         // PlayerSpawnPoint
-        SpawnPointHeightRangeNotAllowed = 501,
-        SpawnPointNotHorizontal = 502,
-        SpawnPointOriginNotInRange = 503,
+        SpawnPointNotHorizontal = 501,
+        SpawnPointOriginNotInRange = 502,
 
         // LocationBounds
         LocationBoundsCountLimitOver = 601,

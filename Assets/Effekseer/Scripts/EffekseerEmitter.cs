@@ -1,3 +1,4 @@
+#pragma warning disable
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -15,6 +16,18 @@ namespace Effekseer
 		Global,
 	}
 
+	/// <summary xml:lang="en">
+	/// Timing of the update
+	/// </summary>
+	/// <summary xml:lang="ja">
+	/// 更新のタイミング
+	/// </summary>
+	public enum EffekseerEmitterTimingOfUpdate
+	{
+		Update,
+		FixedUpdate,
+	}
+
 
 	/// <summary xml:lang="en">
 	/// A emitter of the Effekseer effect
@@ -26,6 +39,14 @@ namespace Effekseer
 	public class EffekseerEmitter : MonoBehaviour
 	{
 		float cachedMagnification = 0.0f;
+
+		/// <summary xml:lang="en">
+		/// Timing of the update
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// 更新のタイミング
+		/// </summary>
+		public EffekseerEmitterTimingOfUpdate TimingOfUpdate = EffekseerEmitterTimingOfUpdate.FixedUpdate;
 
 		/// <summary xml:lang="en">
 		/// Which scale is A scale of effect based on. 
@@ -92,8 +113,8 @@ namespace Effekseer
 			// must run after loading
 			cachedMagnification = effectAsset.Magnification;
 
-			h.SetRotation(transform.rotation);
-			h.SetScale(transform.localScale);
+			ApplyRotationAndScale(ref h);
+
 			h.layer = gameObject.layer;
 			if (speed != 1.0f) h.speed = speed;
 			if (paused) h.paused = paused;
@@ -370,6 +391,25 @@ namespace Effekseer
 			}
 		}
 
+		/// <summary xml:lang="en">
+		/// Get the number of instance which is used in this effect including root
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// Rootを含んだエフェクトに使用されているインスタンス数を取得する。
+		/// </summary>
+		public int instanceCount
+		{
+			get
+			{
+				int res = 0;
+				foreach (var handle in handles)
+				{
+					res += handle.instanceCount;
+				}
+				return res;
+			}
+		}
+
 		#region Internal Implimentation
 
 		void OnEnable()
@@ -413,22 +453,14 @@ namespace Effekseer
 		/// <summary>
 		/// Don't touch it!!
 		/// </summary>
-		public void Update()
+		public void UpdateSelf()
 		{
 			for (int i = 0; i < handles.Count; ) {
 				var handle = handles[i];
 				if (handle.exists) {
 					handle.SetLocation(transform.position);
-					handle.SetRotation(transform.rotation);
 
-					if(EmitterScale == EffekseerEmitterScale.Local)
-					{
-						handle.SetScale(transform.localScale);
-					}
-					else if(EmitterScale == EffekseerEmitterScale.Global)
-					{
-						handle.SetScale(transform.lossyScale);
-					}
+					ApplyRotationAndScale(ref handle);
 
 					i++;
 				} else if(isLooping && handles.Count == 1)
@@ -447,7 +479,37 @@ namespace Effekseer
 				}
 			}
 		}
-		
+
+		public void Update()
+		{
+			if(TimingOfUpdate == EffekseerEmitterTimingOfUpdate.Update)
+			{
+				UpdateSelf();
+			}
+		}
+
+		public void FixedUpdate()
+		{
+			if (TimingOfUpdate == EffekseerEmitterTimingOfUpdate.FixedUpdate)
+			{
+				UpdateSelf();
+			}
+		}
+
 		#endregion
+
+		void ApplyRotationAndScale(ref EffekseerHandle handle)
+		{
+			handle.SetRotation(transform.rotation);
+
+			if (EmitterScale == EffekseerEmitterScale.Local)
+			{
+				handle.SetScale(transform.localScale);
+			}
+			else if (EmitterScale == EffekseerEmitterScale.Global)
+			{
+				handle.SetScale(transform.lossyScale);
+			}
+		}
 	}
 }

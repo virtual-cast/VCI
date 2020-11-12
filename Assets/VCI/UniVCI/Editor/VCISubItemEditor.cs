@@ -10,6 +10,7 @@ namespace VCI
         private SerializedProperty grabbable;
         private SerializedProperty scalable;
         private SerializedProperty uniform;
+        private SerializedProperty attractable;
         private SerializedProperty group;
 
         private void OnEnable()
@@ -17,6 +18,7 @@ namespace VCI
             grabbable = serializedObject.FindProperty("Grabbable");
             scalable = serializedObject.FindProperty("Scalable");
             uniform = serializedObject.FindProperty("UniformScaling");
+            attractable = serializedObject.FindProperty("Attractable");
             group = serializedObject.FindProperty("GroupId");
         }
 
@@ -43,6 +45,7 @@ namespace VCI
                     scalable.boolValue = uniform.boolValue = false;
                 else if (!scalable.boolValue) uniform.boolValue = false;
 
+                EditorGUILayout.PropertyField(attractable);
                 EditorGUILayout.PropertyField(group);
             }
             serializedObject.ApplyModifiedProperties();

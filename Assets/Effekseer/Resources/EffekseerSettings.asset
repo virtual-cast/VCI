@@ -32,5 +32,6 @@ MonoBehaviour:
     type: 3}
   texture2DBlitMaterial: {fileID: 4800000, guid: 481306851e1e5834bb2c03a0fb529629,
     type: 3}
+  fakeMaterial: {fileID: 4800000, guid: 7c7fc95c6efbe1149b2f9f4747030f6e, type: 3}
   NetworkPort: 60000
   DoStartNetworkAutomatically: 0
