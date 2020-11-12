@@ -3,14 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
-#endif
 
 
 namespace VCI
 {
     public static class FileDialogForWindows
     {
-#if UNITY_EDITOR_WIN
         #region GetOpenFileName
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public class OpenFileName
@@ -121,6 +119,6 @@ namespace VCI
             return ofn.file;
         }
         #endregion
-#endif
     }
 }
+#endif

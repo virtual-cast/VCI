@@ -1,17 +1,12 @@
 {
     "name": "ShaderProperty.Editor",
     "references": [
-        "GUID:301b251fd9834274c9228e0532f444f7"
+        "ShaderProperty.Runtime"
     ],
+    "optionalUnityReferences": [],
     "includePlatforms": [
         "Editor"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+    "allowUnsafeCode": false
 }

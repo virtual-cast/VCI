@@ -23,7 +23,7 @@ namespace VCI
         public bool Grabbable;
         public bool Scalable;
         public bool UniformScaling;
-        public bool Attractable;
+        public bool Attractable = true;
         public int GroupId;
         public int NodeIndex;
 

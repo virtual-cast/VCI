@@ -40,7 +40,7 @@ namespace VCI
                 //
                 importer.Load();
                 importer.SetupCoroutine().CoroutineToEnd();
-                importer.SetupPhysics();
+                importer.SetupPhysics(vciColliderLayer: new VciColldierEditorSetting());
                 importer.SetupAttachable();
                 importer.SetupEffekseer();
                 importer.SetupText();

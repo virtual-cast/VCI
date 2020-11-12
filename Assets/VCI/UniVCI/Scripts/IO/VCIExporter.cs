@@ -149,7 +149,6 @@ namespace VCI
 
                 // 各ノードに複数のコライダーがあり得る
                 var colliders = node.GetComponents<Collider>();
-                var vciColliderSetting = node.GetComponent<VciColliderSetting>();
                 if (colliders.Any())
                 {
                     if (gltfNode.extensions == null) gltfNode.extensions = new glTFNode_extensions();
@@ -166,9 +165,12 @@ namespace VCI
                             continue;
                         }
 
-                        if(vciColliderSetting != null)
+                        if (VciColliderSetting.TryGetVciLayerLabel(node.gameObject.layer, out var label))
                         {
-                            gltfCollider.layer = vciColliderSetting.LayerType.ToString().ToLower();
+                            if (!string.IsNullOrEmpty(label))
+                            {
+                                gltfCollider.layer = label;
+                            }
                         }
 
                         gltfNode.extensions.VCAST_vci_collider.colliders.Add(gltfCollider);

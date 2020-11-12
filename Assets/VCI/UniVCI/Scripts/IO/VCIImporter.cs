@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -42,7 +43,7 @@ namespace VCI
             }
         }
 
-        private Dictionary<Rigidbody, RigidbodySetting> _rigidBodySettings =
+        private readonly Dictionary<Rigidbody, RigidbodySetting> _rigidBodySettings =
             new Dictionary<Rigidbody, RigidbodySetting>();
 
         public Dictionary<Rigidbody, RigidbodySetting> RigidBodySettings => _rigidBodySettings;
@@ -95,8 +96,8 @@ namespace VCI
                 return false;
             }
 
-            int itemExportedVersion = (int)(float.Parse(version) * 100);
-            int uniVciVersion = (int)(float.Parse(VCIVersion.VERSION) * 100);
+            int itemExportedVersion = (int)Math.Round(float.Parse(version, CultureInfo.InvariantCulture) * 100);
+            int uniVciVersion = (int)Math.Round(float.Parse(VCIVersion.VERSION, CultureInfo.InvariantCulture) * 100);
             if (itemExportedVersion > uniVciVersion)
             {
                 return false;
@@ -137,7 +138,7 @@ namespace VCI
                     var meta = parsed["extensions"]["VCAST_vci_meta"];
                     var version = meta["exporterVCIVersion"];
 
-                    int exportedVciVersion = (int)(float.Parse(GetVersionValue(version.Value.ToString())) * 100);
+                    int exportedVciVersion = (int)Math.Round(float.Parse(GetVersionValue(version.Value.ToString()), CultureInfo.InvariantCulture) * 100);
                     if (exportedVciVersion <= 27)
                     {
                         srgbToLinear = true;
@@ -230,7 +231,7 @@ namespace VCI
                 rootAnimation.playAutomatically = false;
             }
 
-            int exportedVciVersion = (int)(float.Parse(GetVersionValue(VCIObject.Meta.exporterVersion)) * 100);
+            int exportedVciVersion = (int)Math.Round(float.Parse(GetVersionValue(VCIObject.Meta.exporterVersion), CultureInfo.InvariantCulture) * 100);
 
             // SubItem
             for (var i = 0; i < GLTF.nodes.Count; i++)
@@ -257,7 +258,7 @@ namespace VCI
         ///
         /// </summary>
         /// <param name="replace">Rootオブジェクトのセットアップを1階層上げるのに使う</param>
-        public void SetupPhysics(GameObject rootReplaceTarget = null)
+        public void SetupPhysics(GameObject rootReplaceTarget = null, IVciColliderLayerProvider vciColliderLayer = null)
         {
             // Collider and Rigidbody
             for (var i = 0; i < GLTF.nodes.Count; i++)
@@ -275,10 +276,19 @@ namespace VCI
                             var collider = glTF_VCAST_vci_Collider.AddColliderComponent(go, vciCollider);
                             _colliderComponents.Add(collider);
 
-                            if(!string.IsNullOrEmpty(vciCollider.layer))
+                            // set layer
+                            if(vciColliderLayer != null)
                             {
-                                var colliderSetting = go.GetOrAddComponent<VciColliderSetting>();
-                                colliderSetting.SetLayer(vciCollider.layer);
+                                var layerNumber = VciColliderSetting.GetLayerNumber(VciColliderSetting.VciColliderLayerTypes.Default, vciColliderLayer);
+                                go.layer = (layerNumber != -1) ? layerNumber : 0;
+                            }
+                            if(!string.IsNullOrEmpty(vciCollider.layer) && vciColliderLayer != null)
+                            {
+                                var layer = VciColliderSetting.VciColliderLayerLabel.FirstOrDefault(x => x.Value == vciCollider.layer);
+                                if(!string.IsNullOrEmpty(layer.Value))
+                                {
+                                    go.layer = VciColliderSetting.GetLayerNumber(layer.Key, vciColliderLayer);
+                                }
                             }
                         }
 
