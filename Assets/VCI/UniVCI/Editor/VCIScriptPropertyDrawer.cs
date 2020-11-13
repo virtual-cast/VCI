@@ -8,11 +8,18 @@ namespace VCI
     [CustomPropertyDrawer(typeof(VCIObject.Script))]
     public sealed class VCIScriptPropertyDrawer : PropertyDrawer
     {
-
-        private float GetHeight(SerializedProperty property)
+        private static float GetHeight(SerializedProperty property)
         {
-            SerializedProperty source = property.FindPropertyRelative("source");
-            return EditorGUIUtility.singleLineHeight * (source.stringValue.Count(x => x == '\n') + 1 + 7);
+            var source = property.FindPropertyRelative("source");
+            var textAssetProperty = property.FindPropertyRelative("textAsset");
+            var textAsset = textAssetProperty.objectReferenceValue as TextAsset;
+            var lineCount = 6;
+            if (!textAsset)
+            {
+                lineCount += source.stringValue.Count(x => x == '\n') + 2;
+            }
+
+            return EditorGUIUtility.singleLineHeight * lineCount;
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
@@ -22,24 +29,27 @@ namespace VCI
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            float startHeight = position.y;
             EditorGUI.BeginProperty(position, label, property);
-            Rect labelRect = position;
+
+            var labelRect = position;
             labelRect.height = EditorGUIUtility.singleLineHeight;
             EditorGUI.PrefixLabel(labelRect, label);
             labelRect.y += EditorGUIUtility.singleLineHeight;
 
-            SerializedProperty name = property.FindPropertyRelative("name");
-            SerializedProperty mimeType = property.FindPropertyRelative("mimeType");
-            SerializedProperty targetEngine = property.FindPropertyRelative("targetEngine");
-            SerializedProperty textAssetProperty = property.FindPropertyRelative("textAsset");
-            SerializedProperty source = property.FindPropertyRelative("source");
+            var name = property.FindPropertyRelative("name");
+            var mimeType = property.FindPropertyRelative("mimeType");
+            var targetEngine = property.FindPropertyRelative("targetEngine");
+            var textAssetProperty = property.FindPropertyRelative("textAsset");
+            var source = property.FindPropertyRelative("source");
 
             var textAsset = textAssetProperty.objectReferenceValue as TextAsset;
-            if(textAsset && name.stringValue != "main")
+            if (textAsset && name.stringValue != "main")
             {
                 name.stringValue = Path.GetFileNameWithoutExtension(textAsset.name);
             }
+
+            EditorGUI.indentLevel++;
+
             EditorGUI.PropertyField(labelRect, name);
             labelRect.y += EditorGUIUtility.singleLineHeight;
             EditorGUI.PropertyField(labelRect, mimeType);
@@ -49,20 +59,21 @@ namespace VCI
             EditorGUI.PropertyField(labelRect, textAssetProperty);
             labelRect.y += EditorGUIUtility.singleLineHeight;
 
-            EditorGUI.BeginDisabledGroup(textAsset);
-            EditorGUI.LabelField(labelRect, "Source");
-            labelRect.y += EditorGUIUtility.singleLineHeight;
+            if (!textAsset)
+            {
+                EditorGUI.LabelField(labelRect, "Source");
+                labelRect.y += EditorGUIUtility.singleLineHeight;
 
-            var sourceRect = labelRect;
-            sourceRect.height = EditorGUIUtility.singleLineHeight * (source.stringValue.Count(x => x == '\n') + 1);
-            source.stringValue = EditorGUI.TextArea(sourceRect, source.stringValue);
+                var sourceRect = labelRect;
+                sourceRect.height = EditorGUIUtility.singleLineHeight * (source.stringValue.Count(x => x == '\n') + 1);
+                source.stringValue = EditorGUI.TextArea(sourceRect, source.stringValue);
 
-            labelRect.y += sourceRect.height;
-            EditorGUI.EndDisabledGroup();
+                labelRect.y += sourceRect.height;
+            }
+
+            EditorGUI.indentLevel--;
 
             EditorGUI.EndProperty();
         }
     }
 }
-
-

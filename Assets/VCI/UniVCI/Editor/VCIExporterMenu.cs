@@ -56,9 +56,21 @@ namespace VCI
                     System.Diagnostics.Process.Start("explorer.exe", " /e,/select," + path.Replace("/", "\\"));
                 }
             }
+            catch(Exception ex)
+            {
+                Debug.LogError(ex);
+            }
             finally
             {
-                GUIUtility.ExitGUI();
+                // TODO: ツールバーからExport VCIを行うとExitGUIExceptionが飛ぶため、いったん握りつぶす
+                try
+                {
+                    GUIUtility.ExitGUI();
+                }
+                catch
+                {
+                }
+                
             }
 #else
             Debug.LogError("this function works only on Windows");
