@@ -401,6 +401,11 @@ namespace VCIJSON
 
             if (Properties.Count < MinProperties) return new JsonSchemaValidationException(c, "no properties");
 
+            if(typeof(T) == typeof(VCIGLTF.glTFMaterial_extensions))
+            {
+                return null;
+            }
+
             return GenericValidator<T>.Validate(Required, Properties, c, o);
         }
 

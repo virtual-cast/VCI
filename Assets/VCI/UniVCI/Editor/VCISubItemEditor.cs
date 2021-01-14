@@ -38,14 +38,16 @@ namespace VCI
                         EditorGUI.indentLevel--;
                         EditorGUI.EndDisabledGroup();
                     }
+
+                    EditorGUILayout.PropertyField(attractable);
                     EditorGUI.EndDisabledGroup();
                 }
+               attractable.boolValue = attractable.boolValue && grabbable.boolValue;
 
                 if (!grabbable.boolValue)
-                    scalable.boolValue = uniform.boolValue = false;
+                    scalable.boolValue = uniform.boolValue = attractable.boolValue = false;
                 else if (!scalable.boolValue) uniform.boolValue = false;
 
-                EditorGUILayout.PropertyField(attractable);
                 EditorGUILayout.PropertyField(group);
             }
             serializedObject.ApplyModifiedProperties();

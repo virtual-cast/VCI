@@ -6,20 +6,10 @@ using VCIGLTF;
 
 namespace VCI
 {
-
-    public interface IVciColliderLayerProvider
-    {
-        int Default { get; }
-        int Location { get; }
-        int PickUp { get; }
-        int Accessory { get; }
-        int Item { get; }
-    }
-
     /// <summary>
     /// Editorに設定されているレイヤー
     /// </summary>
-    public class VciColldierEditorSetting : IVciColliderLayerProvider
+    public class VciColldierEditorSetting : IVciColliderLayerProvider, IVciDefaultLayerProvider
     {
         private readonly int _default = LayerMask.NameToLayer(VciColliderSetting.VciColliderLayers[VciColliderSetting.VciColliderLayerTypes.Default]);
         private readonly int _location = LayerMask.NameToLayer(VciColliderSetting.VciColliderLayers[VciColliderSetting.VciColliderLayerTypes.Location]);

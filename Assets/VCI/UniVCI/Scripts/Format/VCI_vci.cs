@@ -289,6 +289,15 @@ namespace VCIGLTF
         public List<VCI.glTF_VCI_Material> materials;
     }
 
+    /// <summary>
+    /// Extensions overwrite PBR materials
+    /// </summary>
+    public partial class glTFMaterial_extensions : ExtensionsBase<glTFMaterial_extensions>
+    {
+        [JsonSchema(Required = true)]
+        public glTF_VCAST_materials_pbr VCAST_materials_pbr;
+    }
+
     #endregion
 
     #region collider
@@ -1194,6 +1203,58 @@ namespace VCIGLTF
         public static string ExtensionName => "VCAST_vci_location_bounds";
 
         public glTF_VCAST_vci_LocationBounds LocationBounds;
+    }
+
+    #endregion
+
+    #region SceneLighting
+
+    /// <summary>
+    /// root.extension
+    /// </summary>
+    public partial class glTF_extensions
+    {
+        public glTF_VCAST_vci_location_lighting VCAST_vci_location_lighting;
+    }
+
+    [Serializable]
+    public class glTF_VCAST_vci_location_lighting
+    {
+        public static string ExtensionName => "VCAST_vci_location_lighting";
+
+        public glTF_VCAST_vci_LocationLighting locationLighting;
+    }
+
+    /// <summary>
+    /// node.extension
+    /// </summary>
+    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
+    {
+        public glTF_VCAST_vci_lightmap VCAST_vci_lightmap;
+    }
+
+    [Serializable]
+    public class glTF_VCAST_vci_lightmap
+    {
+        public static string ExtensionName => "VCAST_vci_lightmap";
+
+        public glTF_VCAST_vci_Lightmap lightmap;
+    }
+
+    /// <summary>
+    /// node.extension
+    /// </summary>
+    public partial class glTFNode_extensions
+    {
+        public glTF_VCAST_vci_reflectionProbe VCAST_vci_reflectionProbe;
+    }
+
+    [Serializable]
+    public sealed class glTF_VCAST_vci_reflectionProbe
+    {
+        public static string ExtensionName => "VCAST_vci_reflectionProbe";
+
+        public glTF_VCAST_vci_ReflectionProbe reflectionProbe;
     }
 
     #endregion
