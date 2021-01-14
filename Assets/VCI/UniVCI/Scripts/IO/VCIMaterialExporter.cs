@@ -6,6 +6,38 @@ namespace VCI
 {
     public class VCIMaterialExporter : MaterialExporter
     {
+        public override glTFMaterial ExportMaterial(Material m, TextureExportManager textureManager)
+        {
+            var material = base.ExportMaterial(m, textureManager);
+
+            ExportMaterialExtension(m, material);
+
+            return material;
+        }
+
+        static void ExportMaterialExtension(Material m, glTFMaterial material)
+        {
+            // HDR Emission
+            if (m.IsKeywordEnabled("_EMISSION") && m.HasProperty("_EmissionColor"))
+            {
+                var color = m.GetColor("_EmissionColor");
+                if (color.maxColorComponent > 1)
+                {
+                    if(material.extensions == null)
+                    {
+                        material.extensions = new glTFMaterial_extensions();
+                    }
+
+                    if(material.extensions.VCAST_materials_pbr == null)
+                    {
+                        material.extensions.VCAST_materials_pbr = new glTF_VCAST_materials_pbr();
+                    }
+
+                    material.extensions.VCAST_materials_pbr.emissiveFactor = new float[] { color.r, color.g, color.b };
+                }
+            }
+        }
+
         protected override glTFMaterial CreateMaterial(Material m)
         {
             switch (m.shader.name)

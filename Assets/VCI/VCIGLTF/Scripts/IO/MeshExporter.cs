@@ -45,7 +45,9 @@ namespace VCIGLTF
 #if GLTF_EXPORT_TANGENTS
             var tangentAccessorIndex = gltf.ExtendBufferAndGetAccessorIndex(bufferIndex, mesh.tangents.Select(y => y.ReverseZ()).ToArray(), glBufferTarget.ARRAY_BUFFER);
 #endif
-            var uvAccessorIndex = gltf.ExtendBufferAndGetAccessorIndex(bufferIndex, mesh.uv.Select(y => y.ReverseUV()).ToArray(), glBufferTarget.ARRAY_BUFFER);
+            var uvAccessorIndex0 = gltf.ExtendBufferAndGetAccessorIndex(bufferIndex, mesh.uv.Select(y => y.ReverseUV()).ToArray(), glBufferTarget.ARRAY_BUFFER);
+            var uvAccessorIndex1 = gltf.ExtendBufferAndGetAccessorIndex(bufferIndex, mesh.uv2.Select(y => y.ReverseUV()).ToArray(), glBufferTarget.ARRAY_BUFFER);
+
             var colorAccessorIndex = gltf.ExtendBufferAndGetAccessorIndex(bufferIndex, mesh.colors, glBufferTarget.ARRAY_BUFFER);
 
             var boneweights = mesh.boneWeights;
@@ -66,9 +68,13 @@ namespace VCIGLTF
                 attributes.TANGENT = tangentAccessorIndex;
             }
 #endif
-            if (uvAccessorIndex != -1)
+            if (uvAccessorIndex0 != -1)
             {
-                attributes.TEXCOORD_0 = uvAccessorIndex;
+                attributes.TEXCOORD_0 = uvAccessorIndex0;
+            }
+            if (uvAccessorIndex1 != -1)
+            {
+                attributes.TEXCOORD_1 = uvAccessorIndex1;
             }
             if (colorAccessorIndex != -1)
             {

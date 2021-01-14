@@ -19,10 +19,12 @@ namespace VCIGLTF
             var normals = new List<Vector3>();
             var tangents = new List<Vector4>();
             var uv = new List<Vector2>();
+            var useUv2 = false;
+            var uv2 = new List<Vector2>();
             var colors = new List<Color>();
             var blendShapes = new List<BlendShape>();
             var meshContext = new MeshContext();
-            
+
             // blendshapes
             var targetNames = gltfMesh.extras.targetNames;
             for (int i = 1; i < gltfMesh.primitives.Count; ++i)
@@ -38,7 +40,7 @@ namespace VCIGLTF
                 var blendShape = new BlendShape(!string.IsNullOrEmpty(targetNames[i]) ? targetNames[i] : i.ToString());
                 blendShapes.Add(blendShape);
             }
-            
+
             foreach (var prim in gltfMesh.primitives)
             {
                 var indexOffset = positions.Count;
@@ -80,6 +82,18 @@ namespace VCIGLTF
                     uv.AddRange(new Vector2[positionCount]);
                 }
 
+                // uv2
+                if (prim.attributes.TEXCOORD_1 != -1)
+                {
+                    uv2.AddRange(ctx.GLTF.GetArrayFromAccessor<Vector2>(prim.attributes.TEXCOORD_1).Select(x => x.ReverseUV()));
+                    useUv2 = true;
+                }
+                else
+                {
+                    // for inconsistent attributes in primitives
+                    uv2.AddRange(new Vector2[positionCount]);
+                }
+
                 // color
                 if (prim.attributes.COLOR_0 != -1)
                 {
@@ -111,7 +125,7 @@ namespace VCIGLTF
                         meshContext.boneWeights.Add(bw);
                     }
                 }
-                
+
                 // blendshape
                 if (prim.targets != null && prim.targets.Count > 0)
                 {
@@ -156,6 +170,10 @@ namespace VCIGLTF
             meshContext.normals = normals.ToArray();
             meshContext.tangents = tangents.ToArray();
             meshContext.uv = uv.ToArray();
+            if (useUv2)
+            {
+                meshContext.uv2 = uv2.ToArray();
+            }
             meshContext.blendShapes = blendShapes;
 
             return meshContext;
@@ -182,8 +200,10 @@ namespace VCIGLTF
             var normals = new List<Vector3>();
             var tangents = new List<Vector4>();
             var uv = new List<Vector2>();
+            var uv2 = new List<Vector2>();
             var colors = new List<Color>();
             var meshContext = new MeshContext();
+            var useUv2 = false;
             foreach (var prim in gltfMesh.primitives)
             {
                 var indexOffset = positions.Count;
@@ -223,6 +243,18 @@ namespace VCIGLTF
                 {
                     // for inconsistent attributes in primitives
                     uv.AddRange(new Vector2[positionCount]);
+                }
+
+                // uv2
+                if (prim.attributes.TEXCOORD_1 != -1)
+                {
+                    uv2.AddRange(ctx.GLTF.GetArrayFromAccessor<Vector2>(prim.attributes.TEXCOORD_1).Select(x => x.ReverseUV()));
+                    useUv2 = true;
+                }
+                else
+                {
+                    // for inconsistent attributes in primitives
+                    uv2.AddRange(new Vector2[positionCount]);
                 }
 
                 // color
@@ -307,6 +339,10 @@ namespace VCIGLTF
             meshContext.normals = normals.ToArray();
             meshContext.tangents = tangents.ToArray();
             meshContext.uv = uv.ToArray();
+            if (useUv2)
+            {
+                meshContext.uv2 = uv2.ToArray();
+            }
 
             return meshContext;
         }
@@ -352,6 +388,17 @@ namespace VCIGLTF
                 {
                     // for inconsistent attributes in primitives
                     context.uv = new Vector2[context.positions.Length];
+                }
+
+                // uv2
+                if (prim.attributes.TEXCOORD_1 != -1)
+                {
+                    context.uv2 = ctx.GLTF.GetArrayFromAccessor<Vector2>(prim.attributes.TEXCOORD_1).SelectInplace(x => x.ReverseUV());
+                }
+                else
+                {
+                    // for inconsistent attributes in primitives
+                    context.uv2 = new Vector2[0];
                 }
 
                 // color
@@ -490,6 +537,7 @@ namespace VCIGLTF
             public Vector3[] normals;
             public Vector4[] tangents;
             public Vector2[] uv;
+            public Vector2[] uv2;
             public Color[] colors;
             public List<BoneWeight> boneWeights = new List<BoneWeight>();
             public List<int[]> subMeshes = new List<int[]>();
@@ -573,6 +621,11 @@ namespace VCIGLTF
             if (meshContext.uv != null && meshContext.uv.Length > 0)
             {
                 mesh.uv = meshContext.uv;
+            }
+
+            if (meshContext.uv2 != null && meshContext.uv2.Length > 0)
+            {
+                mesh.uv2 = meshContext.uv2;
             }
 
             bool recalculateTangents = true;

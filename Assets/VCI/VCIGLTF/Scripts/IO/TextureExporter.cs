@@ -119,16 +119,24 @@ namespace VCIGLTF
             {
                 if (path.Extension == ".png")
                 {
-                    return 
+                    return
                     (
                         System.IO.File.ReadAllBytes(path.FullPath),
                         "image/png"
                     );
-                }                    
+                }
+                if (path.Extension == ".jpg")
+                {
+                    return
+                    (
+                        System.IO.File.ReadAllBytes(path.FullPath),
+                        "image/jpg"
+                    );
+                }
             }
 #endif
 
-            return 
+            return
             (
                 TextureItem.CopyTexture(texture, TextureExporter.GetColorSpace(textureType), null).EncodeToPNG(),
                 "image/png"

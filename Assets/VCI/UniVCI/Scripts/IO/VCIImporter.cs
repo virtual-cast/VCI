@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 using VCIGLTF;
 using VCIJSON;
 #if UNITY_EDITOR
@@ -25,7 +26,7 @@ namespace VCI
 
         public VCIObject VCIObject { get; private set; }
 
-        public IFontProvider FontProvider { get; set; }
+        private IFontProvider _fontProvider;
 
         private List<Collider> _colliderComponents = new List<Collider>();
 
@@ -48,8 +49,21 @@ namespace VCI
 
         public Dictionary<Rigidbody, RigidbodySetting> RigidBodySettings => _rigidBodySettings;
 
-        public VCIImporter()
+        public bool IsLocation { get; private set; }
+
+        private readonly IVciDefaultLayerProvider _vciDefaultLayerProvider;
+        private readonly IVciColliderLayerProvider _vciColliderLayerProvider;
+
+        public VCIImporter(
+            bool isLocation = false,
+            IVciDefaultLayerProvider vciDefaultLayerProvider = null,
+            IVciColliderLayerProvider vciColliderLayerProvider = null,
+            IFontProvider fontProvider = null)
         {
+            IsLocation = isLocation;
+            _vciDefaultLayerProvider = vciDefaultLayerProvider ?? new VciColldierEditorSetting();
+            _vciColliderLayerProvider = vciColliderLayerProvider ?? new VciColldierEditorSetting();
+            _fontProvider = fontProvider;
         }
 
         public override void Parse(string path, byte[] bytes)
@@ -252,21 +266,64 @@ namespace VCI
                     }
                 }
             }
+
+            // DefaultLayer
+            for (var i = 0; i < GLTF.nodes.Count; i++)
+            {
+                var node = GLTF.nodes[i];
+                var go = Nodes[i].gameObject;
+
+                if (IsLocation)
+                {
+                    go.layer = _vciDefaultLayerProvider.Location;
+                }
+                else
+                {
+                    go.layer = _vciDefaultLayerProvider.Item;
+                }
+            }
+
+            // Effekseer
+            SetupEffekseer();
+
+            // Text
+            SetupText();
+
+            // Physics
+            SetupPhysics(_vciColliderLayerProvider);
+            // Fix physics
+            EnablePhysicalBehaviour(false);
+
+            // Attachable
+            SetupAttachable();
+
+            // SpringBone
+            SetupSpringBone();
+
+            // PlayerSpawnPoint
+            SetupPlayerSpawnPoint();
+
+            // LocationBounds
+            SetupLocationBounds();
+
+
+            if(Application.isPlaying && IsLocation)
+            {
+                // Lightmap
+                SetupLightmap();
+            }
         }
 
         /// <summary>
-        ///
+        /// 物理関係のインポート
         /// </summary>
-        /// <param name="replace">Rootオブジェクトのセットアップを1階層上げるのに使う</param>
-        public void SetupPhysics(GameObject rootReplaceTarget = null, IVciColliderLayerProvider vciColliderLayer = null)
+        public void SetupPhysics(IVciColliderLayerProvider vciColliderLayer = null)
         {
             // Collider and Rigidbody
             for (var i = 0; i < GLTF.nodes.Count; i++)
             {
                 var node = GLTF.nodes[i];
                 var go = Nodes[i].gameObject;
-
-                if (go == Root && rootReplaceTarget != null) go = rootReplaceTarget;
 
                 if (node.extensions != null)
                 {
@@ -306,7 +363,6 @@ namespace VCI
             {
                 var node = GLTF.nodes[i];
                 var go = Nodes[i].gameObject;
-                if (go == Root && rootReplaceTarget != null) go = rootReplaceTarget;
 
                 if (node.extensions != null)
                     if (node.extensions.VCAST_vci_joints != null
@@ -517,9 +573,9 @@ namespace VCI
                     var vci_text = node.extensions.VCAST_vci_text.text;
 
                     // Get font
-                    if (FontProvider != null)
+                    if (_fontProvider != null)
                     {
-                        var font = FontProvider.GetDefaultFont();
+                        var font = _fontProvider.GetDefaultFont();
                         if (font != null) tmp.font = font;
                     }
 
@@ -646,6 +702,104 @@ namespace VCI
             locationBounds.Bounds = new Bounds(values.bounds_center, values.bounds_size);
         }
 
+        public void SetupLightmap()
+        {
+            var supportImporting = Application.isPlaying;
+            if (!supportImporting)
+            {
+                return;
+            }
+
+            if (GLTF.extensions.VCAST_vci_location_lighting?.locationLighting == null) return;
+            var locationLighting = GLTF.extensions.VCAST_vci_location_lighting.locationLighting;
+
+            // 現在のところはこの組み合わせしかサポートしない
+            if (locationLighting.skyboxCubemap.GetSkyboxCompressionModeAsEnum() != CubemapCompressionType.Rgbm) return;
+            if (locationLighting.GetLightmapCompressionModeAsEnum() != LightmapCompressionType.Rgbm) return;
+            if (locationLighting.GetLightmapDirectionalModeAsEnum() != LightmapDirectionalType.NonDirectional) return;
+
+            // Lightmap
+            var lightmapCompressionMode = locationLighting.GetLightmapCompressionModeAsEnum();
+            var lightmapDirectionalMode = locationLighting.GetLightmapDirectionalModeAsEnum();
+            var lightmapTextureImporter = new LightmapTextureImporter(GetTexture, lightmapCompressionMode, lightmapDirectionalMode);
+            var colorTextures = locationLighting.lightmapTextures.Select(x => lightmapTextureImporter.GetOrConvertColorTexture(x.index)).ToList();
+
+            for (var i = 0; i < GLTF.nodes.Count; i++)
+            {
+                var node = GLTF.nodes[i];
+                if (node.extensions != null && node.extensions.VCAST_vci_lightmap != null)
+                {
+                    var go = Nodes[i].gameObject;
+                    var renderer = go.GetComponent<MeshRenderer>();
+                    if (renderer == null) continue;
+
+                    var lightmap = node.extensions.VCAST_vci_lightmap.lightmap;
+                    var texture = lightmapTextureImporter.GetOrConvertColorTexture(lightmap.texture.index);
+                    var offset = new Vector2(lightmap.offset[0], lightmap.offset[1]);
+                    var scale = new Vector2(lightmap.scale[0], lightmap.scale[1]);
+
+                    // Coordinate conversion
+                    offset.y = (offset.y + scale.y - 1.0f) * -1.0f;
+
+                    // Get LightmapData Index
+                    var lightmapDataIndex = colorTextures.FindIndex(x => x == texture);
+                    if (lightmapDataIndex == -1) continue;
+
+                    // Apply to Renderer
+                    renderer.lightmapIndex = lightmapDataIndex;
+                    renderer.lightmapScaleOffset = new Vector4(scale.x, scale.y, offset.x, offset.y);
+                }
+            }
+
+            // Ambient Lighting
+            var skyboxCompressionMode = locationLighting.skyboxCubemap.GetSkyboxCompressionModeAsEnum();
+            var skyboxCubemapImporter = new CubemapTextureImporter(GetTexture, skyboxCompressionMode);
+            var skyboxImporter = new SkyboxImporter(skyboxCubemapImporter);
+            var lightProbeImporter = new LightProbeImporter();
+
+            var behaviour = Root.AddComponent<VCILocationLighting>();
+            behaviour.LightmapDataArray = colorTextures.Select(x => new LightmapData { lightmapColor = x }).ToArray();
+            switch (lightmapDirectionalMode)
+            {
+                case LightmapDirectionalType.Directional:
+                    behaviour.LightmapMode = LightmapsMode.CombinedDirectional;
+                    break;
+                case LightmapDirectionalType.NonDirectional:
+                    behaviour.LightmapMode = LightmapsMode.NonDirectional;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            behaviour.Skybox = skyboxImporter.CovertToSkybox(locationLighting.skyboxCubemap);
+            var (lightProbePosArray, lightProbeCoefficientArray) = lightProbeImporter.Import(locationLighting.lightProbes);
+            behaviour.LightProbePositions = lightProbePosArray;
+            behaviour.LightProbeCoefficients = lightProbeCoefficientArray;
+
+
+            // ReflectionProbe
+            for (var i = 0; i < GLTF.nodes.Count; i++)
+            {
+                var node = GLTF.nodes[i];
+                if (node.extensions != null && node.extensions.VCAST_vci_reflectionProbe != null)
+                {
+                    var go = Nodes[i].gameObject;
+                    var reflectionProbe = go.AddComponent<ReflectionProbe>();
+
+                    var data = node.extensions.VCAST_vci_reflectionProbe.reflectionProbe;
+                    var gltfOffset = data.boxOffset;
+                    var gltfSize = data.boxSize;
+                    var cubemapImporter = new CubemapTextureImporter(GetTexture, data.cubemap.GetSkyboxCompressionModeAsEnum());
+
+                    reflectionProbe.center = new Vector3(-gltfOffset[0], gltfOffset[1], gltfOffset[2]); // Invert X-axis
+                    reflectionProbe.size = new Vector3(gltfSize[0], gltfSize[1], gltfSize[2]);
+                    reflectionProbe.intensity = data.intensity;
+                    reflectionProbe.boxProjection = data.useBoxProjection;
+                    reflectionProbe.bakedTexture = cubemapImporter.ConvertCubemap(data.cubemap);
+
+                    reflectionProbe.mode = ReflectionProbeMode.Baked;
+                }
+            }
+        }
 
         public void ExtractAudio(UnityPath prefabPath)
         {
@@ -963,7 +1117,7 @@ namespace VCI
         }
 #endif
 
-        #region Meta
+#region Meta
 
         [Serializable]
         public struct Meta
@@ -981,28 +1135,28 @@ namespace VCI
             public string specVersion;
 
 
-            #region Model Data License Url
+#region Model Data License Url
 
             [Header("Model Data License")] public glTF_VCAST_vci_meta.LicenseType modelDataLicenseType;
             public string modelDataOtherLicenseUrl;
 
-            #endregion
+#endregion
 
-            #region Script License Url
+#region Script License Url
 
             [Header("Script License")] public glTF_VCAST_vci_meta.LicenseType scriptLicenseType;
             public string scriptOtherLicenseUrl;
 
-            #endregion
+#endregion
 
-            #region Script Settings
+#region Script Settings
 
             [Header("Script Settings")] public bool scriptWriteProtected;
             public bool scriptEnableDebugging;
 
             public glTF_VCAST_vci_meta.ScriptFormat scriptFormat;
 
-            #endregion
+#endregion
         }
 
         public IEnumerator ToUnity(Action<Meta> callback)
@@ -1047,7 +1201,7 @@ namespace VCI
             });
         }
 
-        #endregion
+#endregion
 
         /// <summary>
         /// VCIファイルとして書き出す
@@ -1077,11 +1231,6 @@ namespace VCI
             };
 
             return importer;
-        }
-
-        public interface IFontProvider
-        {
-            TMP_FontAsset GetDefaultFont();
         }
 
         public void AddMeshWitMaterials(MeshWithMaterials meshWithMats)
