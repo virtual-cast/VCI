@@ -40,10 +40,10 @@ namespace VCI
                 //
                 importer.Load();
                 importer.SetupCoroutine().CoroutineToEnd();
+                importer.EnablePhysicalBehaviour(true);
                 importer.ExportScriptFile(prefabPath);
                 importer.SaveAsAsset(prefabPath);
                 importer.EditorDestroyRoot();
-                importer.EnablePhysicalBehaviour(true);
             };
         }
     }

@@ -130,7 +130,7 @@ namespace VCIGLTF
                     return
                     (
                         System.IO.File.ReadAllBytes(path.FullPath),
-                        "image/jpg"
+                        "image/jpeg"
                     );
                 }
             }

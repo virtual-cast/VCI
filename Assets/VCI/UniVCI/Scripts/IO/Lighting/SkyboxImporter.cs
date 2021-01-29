@@ -1,7 +1,13 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 namespace VCI
 {
+    public sealed class SkyboxImporterResult
+    {
+        public Material Result { get; set; }
+    }
+
     public sealed class SkyboxImporter
     {
         private const string CubemapSkyboxPrefabPath = "CubemapSkybox";
@@ -16,13 +22,13 @@ namespace VCI
             _skyboxPrefab = Resources.Load<Material>(CubemapSkyboxPrefabPath);
         }
 
-        public Material CovertToSkybox(glTFCubemapTexture cubemapTexture)
+        public IEnumerator CovertToSkyboxCoroutine(glTFCubemapTexture cubemapTexture, SkyboxImporterResult result)
         {
-            var cubemap = _importer.ConvertCubemap(cubemapTexture);
+            var cubemapResult = new CubemapTextureImporterResult();
+            yield return _importer.ConvertCubemapCoroutine(cubemapTexture, cubemapResult);
             var mat = new Material(_skyboxPrefab);
-            mat.SetTexture(TexProperty, cubemap);
-
-            return mat;
+            mat.SetTexture(TexProperty, cubemapResult.Result);
+            result.Result = mat;
         }
     }
 }

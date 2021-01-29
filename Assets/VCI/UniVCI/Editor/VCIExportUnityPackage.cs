@@ -53,9 +53,10 @@ namespace VCI
         {
             //var date = DateTime.Today.ToString(DATE_FORMAT);
 
-            var path = string.Format("{0}/{1}.unitypackage",
+            var path = string.Format("{0}/{1}.{2}.unitypackage",
                 folder,
-                VCIVersion.VCI_VERSION
+                VCIVersion.VCI_VERSION,
+                VCIVersion.PATCH_NUMBER
             ).Replace("\\", "/");
 
             return path;

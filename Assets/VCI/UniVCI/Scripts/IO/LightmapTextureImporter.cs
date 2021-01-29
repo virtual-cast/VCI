@@ -1,9 +1,15 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 using VCIGLTF;
 
 namespace VCI
 {
+    public sealed class LightmapTextureImporterResult
+    {
+        public Texture2D Result { get; set; }
+    }
+
     public sealed class LightmapTextureImporter
     {
         private const string ConvertedTexKey = "LightmapLinearTexture";
@@ -24,31 +30,33 @@ namespace VCI
             _importFromRgbmShader = Shader.Find("Hidden/UniVCI/LightmapConversion/ImportFromRgbm");
         }
 
-        public Texture2D GetOrConvertColorTexture(int colorTextureGltfIndex)
+        public IEnumerator GetOrConvertColorTextureCoroutine(int colorTextureGltfIndex, LightmapTextureImporterResult result)
         {
             var textureItem = _textureGetter.Invoke(colorTextureGltfIndex);
 
             if (textureItem.Converts.ContainsKey(ConvertedTexKey))
             {
-                return textureItem.Converts[ConvertedTexKey];
+                result.Result = textureItem.Converts[ConvertedTexKey];
+                yield break;
             }
 
-            if (ConvertLightmapTexture(textureItem.Texture, out var converted))
+            yield return ConvertLightmapTexture(textureItem.Texture, result);
+
+            if (result.Result == null)
             {
-                textureItem.Converts.Add("LightmapLinearTexture", converted);
-                return converted;
+                yield break;
             }
 
-            return null;
+            textureItem.Converts.Add("LightmapLinearTexture", result.Result);
         }
 
-        private bool ConvertLightmapTexture(Texture2D src, out Texture2D dst)
+        private IEnumerator ConvertLightmapTexture(Texture2D src, LightmapTextureImporterResult result)
         {
             var importerShader = GetImporterShader();
             if (importerShader == null)
             {
-                dst = null;
-                return false;
+                result.Result = null;
+                yield break;
             }
 
             var importerMaterial = new Material(importerShader);
@@ -56,9 +64,10 @@ namespace VCI
 
             // Decode into Linear RenderTexture
             Graphics.Blit(src, rt, importerMaterial);
+            yield return null;
 
             // Create Linear Texture2D with settings
-            dst = new Texture2D(rt.width, rt.height, TextureFormat.RGBAHalf, mipCount: src.mipmapCount, linear: true);
+            var dst = new Texture2D(rt.width, rt.height, TextureFormat.RGBAHalf, mipCount: src.mipmapCount, linear: true);
             dst.name = $"{src.name}_decoded";
             dst.mipMapBias = src.mipMapBias;
             dst.wrapMode = src.wrapMode;
@@ -73,11 +82,12 @@ namespace VCI
             dst.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
             dst.Apply(updateMipmaps: true, makeNoLongerReadable: true);
             RenderTexture.active = tmpActive;
+            yield return null;
 
             RenderTexture.ReleaseTemporary(rt);
             UnityEngine.Object.DestroyImmediate(importerMaterial);
 
-            return true;
+            result.Result = dst;
         }
 
         private Shader GetImporterShader()

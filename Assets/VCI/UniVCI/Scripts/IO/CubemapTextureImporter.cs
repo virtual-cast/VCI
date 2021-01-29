@@ -1,9 +1,15 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 using VCIGLTF;
 
 namespace VCI
 {
+    public sealed class CubemapTextureImporterResult
+    {
+        public Cubemap Result { get; set; }
+    }
+
     public sealed class CubemapTextureImporter
     {
         private readonly Func<int, TextureItem> _textureGetter;
@@ -20,7 +26,7 @@ namespace VCI
             _importFromRgbmShader = Shader.Find("Hidden/UniVCI/CubemapConversion/ImportFromRgbm");
         }
 
-        public Cubemap ConvertCubemap(glTFCubemapTexture gltfCubemapTexture)
+        public IEnumerator ConvertCubemapCoroutine(glTFCubemapTexture gltfCubemapTexture, CubemapTextureImporterResult result)
         {
             var success = true;
             var mipLength = gltfCubemapTexture.mipmapCount; // original を含めない mipmap だけの個数
@@ -29,31 +35,35 @@ namespace VCI
             var cubemap = new Cubemap(width, TextureFormat.RGBAHalf, mipLength + 1);
 
             // Set original
-            success &= UpdateCubemapFace(gltfCubemapTexture.texture, cubemap, 0);
+            var successResult = new CoroutineSuccessResult();
+            yield return UpdateCubemapFace(gltfCubemapTexture.texture, cubemap, 0, successResult);
+            success &= successResult.Result;
 
             // Set mipmaps
             for (var idx = 0; idx < mipLength; ++idx)
             {
                 var tex = gltfCubemapTexture.mipmapTextures[idx];
                 var mipValue = idx + 1;
-                success &= UpdateCubemapFace(tex, cubemap, mipValue);
+                var mipmapSuccessResult = new CoroutineSuccessResult();
+                yield return UpdateCubemapFace(tex, cubemap, mipValue, mipmapSuccessResult);
+                success &= mipmapSuccessResult.Result;
             }
 
             // Apply
             cubemap.Apply(updateMipmaps: false, makeNoLongerReadable: true);
+            yield return null;
 
             if (success)
             {
-                return cubemap;
+                result.Result = cubemap;
             }
             else
             {
                 UnityEngine.Object.DestroyImmediate(cubemap);
-                return null;
             }
         }
 
-        private bool UpdateCubemapFace(glTFCubemapFaceTextureSet src, Cubemap dst, int mipmap)
+        private IEnumerator UpdateCubemapFace(glTFCubemapFaceTextureSet src, Cubemap dst, int mipmap, CoroutineSuccessResult result)
         {
             var positiveX = _textureGetter(src.cubemapPositiveX.index).Texture;
             var negativeX = _textureGetter(src.cubemapNegativeX.index).Texture;
@@ -62,24 +72,35 @@ namespace VCI
             var positiveZ = _textureGetter(src.cubemapPositiveZ.index).Texture;
             var negativeZ = _textureGetter(src.cubemapNegativeZ.index).Texture;
 
-            if (!RenderCubemapFaceTexture(positiveX, dst, GltfCubemapFace.PositiveX.ConvertToUnityCubemapFace(), mipmap)) return false;
-            if (!RenderCubemapFaceTexture(negativeX, dst, GltfCubemapFace.NegativeX.ConvertToUnityCubemapFace(), mipmap)) return false;
-            if (!RenderCubemapFaceTexture(positiveY, dst, GltfCubemapFace.PositiveY.ConvertToUnityCubemapFace(), mipmap)) return false;
-            if (!RenderCubemapFaceTexture(negativeY, dst, GltfCubemapFace.NegativeY.ConvertToUnityCubemapFace(), mipmap)) return false;
-            if (!RenderCubemapFaceTexture(positiveZ, dst, GltfCubemapFace.PositiveZ.ConvertToUnityCubemapFace(), mipmap)) return false;
-            if (!RenderCubemapFaceTexture(negativeZ, dst, GltfCubemapFace.NegativeZ.ConvertToUnityCubemapFace(), mipmap)) return false;
+            result.Result = false;
+            var faceResult = new CoroutineSuccessResult();
 
-            return true;
+            yield return RenderCubemapFaceTextureCoroutine(positiveX, dst, GltfCubemapFace.PositiveX.ConvertToUnityCubemapFace(), mipmap, faceResult);
+            if (!faceResult.Result) yield break;
+            yield return RenderCubemapFaceTextureCoroutine(negativeX, dst, GltfCubemapFace.NegativeX.ConvertToUnityCubemapFace(), mipmap, faceResult);
+            if (!faceResult.Result) yield break;
+            yield return RenderCubemapFaceTextureCoroutine(positiveY, dst, GltfCubemapFace.PositiveY.ConvertToUnityCubemapFace(), mipmap, faceResult);
+            if (!faceResult.Result) yield break;
+            yield return RenderCubemapFaceTextureCoroutine(negativeY, dst, GltfCubemapFace.NegativeY.ConvertToUnityCubemapFace(), mipmap, faceResult);
+            if (!faceResult.Result) yield break;
+            yield return RenderCubemapFaceTextureCoroutine(positiveZ, dst, GltfCubemapFace.PositiveZ.ConvertToUnityCubemapFace(), mipmap, faceResult);
+            if (!faceResult.Result) yield break;
+            yield return RenderCubemapFaceTextureCoroutine(negativeZ, dst, GltfCubemapFace.NegativeZ.ConvertToUnityCubemapFace(), mipmap, faceResult);
+            if (!faceResult.Result) yield break;
+
+            result.Result = true;
         }
 
-        private bool RenderCubemapFaceTexture(Texture2D src, Cubemap dst, CubemapFace srcFace, int mipmap)
+        private IEnumerator RenderCubemapFaceTextureCoroutine(Texture2D src, Cubemap dst, CubemapFace srcFace, int mipmap, CoroutineSuccessResult result)
         {
+            result.Result = false;
+
             var shader = GetImporterShader();
-            if (shader == null) return false;
+            if (shader == null) yield break;
             var importerMaterial = new Material(shader);
 
-            if (!Mathf.IsPowerOfTwo(dst.width)) return false;
-            if (!Mathf.IsPowerOfTwo(dst.height)) return false;
+            if (!Mathf.IsPowerOfTwo(dst.width)) yield break;
+            if (!Mathf.IsPowerOfTwo(dst.height)) yield break;
 
             var originalWidth = dst.width;
             var originalHeight = dst.height;
@@ -90,6 +111,7 @@ namespace VCI
             // Decode into Linear RenderTexture
             Graphics.Blit(src, rt, importerMaterial);
             UnityEngine.Object.DestroyImmediate(importerMaterial);
+            yield return null;
 
             // Copy to Linear Texture2D
             var tex = new Texture2D(rt.width, rt.height, TextureFormat.RGBAHalf, mipCount: 0, linear: true);
@@ -99,6 +121,7 @@ namespace VCI
             tex.Apply(updateMipmaps: false, makeNoLongerReadable: false);
             RenderTexture.active = tmpActive;
             RenderTexture.ReleaseTemporary(rt);
+            yield return null;
 
             // Copy to Cubemap
             var array = tex.GetPixels(0, 0, tex.width, tex.height);
@@ -120,10 +143,11 @@ namespace VCI
                 }
             }
             dst.SetPixels(array2, srcFace, mipmap);
+            yield return null;
 
             UnityEngine.Object.Destroy(tex);
 
-            return true;
+            result.Result = true;
         }
 
         private Shader GetImporterShader()
@@ -139,6 +163,11 @@ namespace VCI
                 default:
                     throw new ArgumentOutOfRangeException(nameof(CompressionType), CompressionType, null);
             }
+        }
+
+        public sealed class CoroutineSuccessResult
+        {
+            public bool Result { get; set; }
         }
     }
 }
