@@ -21,28 +21,51 @@ namespace VCI
 
         public const int MAJOR = {0};
         public const int MINOR = {1};
+        public const int PATCH = {2};
 
         public const string VERSION = ""{0}.{1}"";
+        public const string PATCH_NUMBER = ""{2}"";
     }}
 }}
 ";
 
 #if VCI_DEVELOP
-        [MenuItem(VCIVersion.MENU + "/Increment")]
+        [MenuItem(VCIVersion.MENU + "/IncrementVersion")]
 #endif
         private static void IncrementVersion()
         {
-            var source = string.Format(template, VCIVersion.MAJOR, VCIVersion.MINOR + 1);
+            var source = string.Format(template, VCIVersion.MAJOR, VCIVersion.MINOR + 1, 0);
             File.WriteAllText(path, source);
             AssetDatabase.Refresh();
         }
 
 #if VCI_DEVELOP
-        [MenuItem(VCIVersion.MENU + "/Decrement")]
+        [MenuItem(VCIVersion.MENU + "/DecrementVersion")]
 #endif
         private static void DecrementVersion()
         {
-            var source = string.Format(template, VCIVersion.MAJOR, VCIVersion.MINOR - 1);
+            var source = string.Format(template, VCIVersion.MAJOR, VCIVersion.MINOR - 1, 0);
+            File.WriteAllText(path, source);
+            AssetDatabase.Refresh();
+        }
+
+#if VCI_DEVELOP
+        [MenuItem(VCIVersion.MENU + "/IncrementPatch")]
+#endif
+        private static void IncrementPatch()
+        {
+            var source = string.Format(template, VCIVersion.MAJOR, VCIVersion.MINOR, VCIVersion.PATCH + 1);
+            File.WriteAllText(path, source);
+            AssetDatabase.Refresh();
+        }
+
+
+#if VCI_DEVELOP
+        [MenuItem(VCIVersion.MENU + "/DecrementPatch")]
+#endif
+        private static void DecrementPatch()
+        {
+            var source = string.Format(template, VCIVersion.MAJOR, VCIVersion.MINOR, VCIVersion.PATCH - 1);
             File.WriteAllText(path, source);
             AssetDatabase.Refresh();
         }

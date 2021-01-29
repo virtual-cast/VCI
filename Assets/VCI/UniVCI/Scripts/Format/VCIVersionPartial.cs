@@ -6,6 +6,6 @@
 
         public const string VCI_VERSION = "UniVCI-" + VERSION;
 
-        public const string MENU = "VCI/" + VCI_VERSION;
+        public const string MENU = "VCI/" + VCI_VERSION + "." + PATCH_NUMBER;
     }
 }

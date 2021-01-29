@@ -310,7 +310,7 @@ namespace VCI
             if(Application.isPlaying && IsLocation)
             {
                 // Lightmap
-                SetupLightmap();
+                yield return SetupLightmapCoroutine();
             }
         }
 
@@ -328,6 +328,7 @@ namespace VCI
                 if (node.extensions != null)
                 {
                     if (node.extensions.VCAST_vci_collider?.colliders != null)
+                    {
                         foreach (var vciCollider in node.extensions.VCAST_vci_collider.colliders)
                         {
                             var collider = glTF_VCAST_vci_Collider.AddColliderComponent(go, vciCollider);
@@ -348,13 +349,24 @@ namespace VCI
                                 }
                             }
                         }
+                    }
 
                     if (node.extensions.VCAST_vci_rigidbody?.rigidbodies != null)
+                    {
                         foreach (var rigidbody in node.extensions.VCAST_vci_rigidbody.rigidbodies)
                         {
                             var rb = glTF_VCAST_vci_Rigidbody.AddRigidbodyComponent(go, rigidbody);
                             _rigidBodySettings.Add(rb, new RigidbodySetting(rb));
                         }
+                    }
+                    else if(node.extensions.VCAST_vci_item != null && node.extensions.VCAST_vci_rigidbody == null)
+                    {
+                        // SubItemだがVCAST_vci_rigidbody拡張が無い場合、ここで追加する
+                        var rb = go.GetOrAddComponent<Rigidbody>();
+                        rb.isKinematic = true;
+                        rb.useGravity = false;
+                        _rigidBodySettings.Add(rb, new RigidbodySetting(rb));
+                    }
                 }
             }
 
@@ -702,27 +714,34 @@ namespace VCI
             locationBounds.Bounds = new Bounds(values.bounds_center, values.bounds_size);
         }
 
-        public void SetupLightmap()
+        public IEnumerator SetupLightmapCoroutine()
         {
             var supportImporting = Application.isPlaying;
             if (!supportImporting)
             {
-                return;
+                yield break;
             }
 
-            if (GLTF.extensions.VCAST_vci_location_lighting?.locationLighting == null) return;
+            if (GLTF.extensions.VCAST_vci_location_lighting?.locationLighting == null) yield break;
             var locationLighting = GLTF.extensions.VCAST_vci_location_lighting.locationLighting;
 
             // 現在のところはこの組み合わせしかサポートしない
-            if (locationLighting.skyboxCubemap.GetSkyboxCompressionModeAsEnum() != CubemapCompressionType.Rgbm) return;
-            if (locationLighting.GetLightmapCompressionModeAsEnum() != LightmapCompressionType.Rgbm) return;
-            if (locationLighting.GetLightmapDirectionalModeAsEnum() != LightmapDirectionalType.NonDirectional) return;
+            if (locationLighting.skyboxCubemap.GetSkyboxCompressionModeAsEnum() != CubemapCompressionType.Rgbm) yield break;
+            if (locationLighting.GetLightmapCompressionModeAsEnum() != LightmapCompressionType.Rgbm) yield break;
+            if (locationLighting.GetLightmapDirectionalModeAsEnum() != LightmapDirectionalType.NonDirectional) yield break;
 
             // Lightmap
             var lightmapCompressionMode = locationLighting.GetLightmapCompressionModeAsEnum();
             var lightmapDirectionalMode = locationLighting.GetLightmapDirectionalModeAsEnum();
             var lightmapTextureImporter = new LightmapTextureImporter(GetTexture, lightmapCompressionMode, lightmapDirectionalMode);
-            var colorTextures = locationLighting.lightmapTextures.Select(x => lightmapTextureImporter.GetOrConvertColorTexture(x.index)).ToList();
+            var colorTextures = new List<Texture2D>();
+            for (var idx = 0; idx < locationLighting.lightmapTextures.Length; ++idx)
+            {
+                var x = locationLighting.lightmapTextures[idx];
+                var importerResult = new LightmapTextureImporterResult();
+                yield return lightmapTextureImporter.GetOrConvertColorTextureCoroutine(x.index, importerResult);
+                colorTextures.Add(importerResult.Result);
+            }
 
             for (var i = 0; i < GLTF.nodes.Count; i++)
             {
@@ -734,7 +753,8 @@ namespace VCI
                     if (renderer == null) continue;
 
                     var lightmap = node.extensions.VCAST_vci_lightmap.lightmap;
-                    var texture = lightmapTextureImporter.GetOrConvertColorTexture(lightmap.texture.index);
+                    var importerResult = new LightmapTextureImporterResult();
+                    yield return lightmapTextureImporter.GetOrConvertColorTextureCoroutine(lightmap.texture.index, importerResult);
                     var offset = new Vector2(lightmap.offset[0], lightmap.offset[1]);
                     var scale = new Vector2(lightmap.scale[0], lightmap.scale[1]);
 
@@ -742,7 +762,7 @@ namespace VCI
                     offset.y = (offset.y + scale.y - 1.0f) * -1.0f;
 
                     // Get LightmapData Index
-                    var lightmapDataIndex = colorTextures.FindIndex(x => x == texture);
+                    var lightmapDataIndex = colorTextures.FindIndex(x => x == importerResult.Result);
                     if (lightmapDataIndex == -1) continue;
 
                     // Apply to Renderer
@@ -770,10 +790,14 @@ namespace VCI
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            behaviour.Skybox = skyboxImporter.CovertToSkybox(locationLighting.skyboxCubemap);
+            var skyboxResult = new SkyboxImporterResult();
+            yield return skyboxImporter.CovertToSkyboxCoroutine(locationLighting.skyboxCubemap, skyboxResult);
+            behaviour.Skybox = skyboxResult.Result;
             var (lightProbePosArray, lightProbeCoefficientArray) = lightProbeImporter.Import(locationLighting.lightProbes);
             behaviour.LightProbePositions = lightProbePosArray;
             behaviour.LightProbeCoefficients = lightProbeCoefficientArray;
+
+            yield return null;
 
 
             // ReflectionProbe
@@ -790,11 +814,14 @@ namespace VCI
                     var gltfSize = data.boxSize;
                     var cubemapImporter = new CubemapTextureImporter(GetTexture, data.cubemap.GetSkyboxCompressionModeAsEnum());
 
+                    var cubemapResult = new CubemapTextureImporterResult();
+                    yield return cubemapImporter.ConvertCubemapCoroutine(data.cubemap, cubemapResult);
+
                     reflectionProbe.center = new Vector3(-gltfOffset[0], gltfOffset[1], gltfOffset[2]); // Invert X-axis
                     reflectionProbe.size = new Vector3(gltfSize[0], gltfSize[1], gltfSize[2]);
                     reflectionProbe.intensity = data.intensity;
                     reflectionProbe.boxProjection = data.useBoxProjection;
-                    reflectionProbe.bakedTexture = cubemapImporter.ConvertCubemap(data.cubemap);
+                    reflectionProbe.bakedTexture = cubemapResult.Result;
 
                     reflectionProbe.mode = ReflectionProbeMode.Baked;
                 }
