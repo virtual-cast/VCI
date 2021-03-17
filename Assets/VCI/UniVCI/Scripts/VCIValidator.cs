@@ -1,182 +1,296 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using UnityEngine;
-using VCIGLTF;
+using UniGLTF;
+using UnityEditor;
 
 namespace VCI
 {
     public static class VCIValidator
     {
-        private const int MaxSpringBoneCount = 1;
-        private const int MaxRootBoneCount = 10;
-        private const int MaxChildBoneCount = 10;
-        private const int MaxSpringBoneColliderCount = 10;
-        private const int MaxSphereColliderCount = 10;
-
-        public const int VersionTextLength = 30;
-        public const int AuthorTextLength = 30;
-        public const int ContactInformationTextLength = 255;
-        public const int ReferenceTextLength = 255;
-        public const int TitleTextLength = 30;
-        public const int DescriptionTextLength = 500;
-        public const int ModelDataOtherLicenseUrlLength = 2048;
-        public const int ScriptOtherLicenseUrlLength = 2048;
-
         public static void ValidateVCIObject(VCIObject vo)
         {
-            // VCIObject
-            var vciObjectCount = 0;
-            var gameObjectCount = 0;
-            var playerSpawnPointsList = new List<VCIPlayerSpawnPoint>();
-            var locationBoundsList = new List<VCILocationBounds>();
-
-            foreach (var t in vo.transform.Traverse())
-            {
-                if (t.GetComponent<VCIObject>() != null) vciObjectCount++;
-
-                var psp = t.GetComponent<VCIPlayerSpawnPoint>();
-                if (psp != null) playerSpawnPointsList.Add(psp);
-
-                var locationBounds = t.GetComponent<VCILocationBounds>();
-                if (locationBounds != null) locationBoundsList.Add(locationBounds);
-
-                gameObjectCount++;
-            }
-
-            if (vciObjectCount > 1)
-                throw new VCIValidatorException(ValidationErrorType.MultipleVCIObject);
-
-            // Scripts
-            if(vo.Scripts.Any())
-            {
-                if (vo.Scripts[0].name != "main")
-                {
-                    throw new VCIValidatorException(ValidationErrorType.FirstScriptNameNotValid);
-                }
-
-                var empties = vo.Scripts.Where(x => string.IsNullOrEmpty(x.name));
-                if (empties.Any())
-                {
-                    throw new VCIValidatorException(ValidationErrorType.NoScriptName);
-                }
-
-                var duplicates = vo.Scripts.GroupBy(script => script.name)
-                    .Where(name => name.Count() > 1)
-                    .Select(group => group.Key).ToList();
-                if (duplicates.Any())
-                {
-                    throw new VCIValidatorException(ValidationErrorType.ScriptNameConfliction);
-                }
-
-                var invalidChars = Path.GetInvalidFileNameChars().Concat(new []{ '.' }).ToArray();
-                foreach (var script in vo.Scripts)
-                {
-                    if (script.name.IndexOfAny(invalidChars) >= 0)
-                    {
-                        throw new VCIValidatorException(ValidationErrorType.InvalidCharacter,
-                            string.Format(VCIConfig.GetText($"error{(int)ValidationErrorType.InvalidCharacter}"), script.name));
-                    }
-                };
-            }
-
+            ValidateVCIObjectComponentRestrictions(vo);
+            ValidateVCIScripts(vo);
             VCIMetaValidator.Validate(vo);
+            ValidateColliders(vo);
+            ValidateAnimation(vo);
+            ValidateSpringBones(vo);
+            ValidatePlayerSpawnPoints(vo);
+            ValidateLocationBounds(vo);
+        }
 
-            // Invalid Components
-            CheckInvalidComponent<MeshCollider>(vo.gameObject);
+        private static void ValidateVCIObjectComponentRestrictions(VCIObject vciObject)
+        {
+            // Check 1:「VCIObject」コンポーネントがVCIの中で一つのみ存在する
+            var vciObjectCount = 0;
 
-            // Spring Bone
-            var springBones = vo.GetComponents<VCISpringBone>();
-
-            if (springBones != null && springBones.Length > 0) ValidateSpringBones(springBones);
-
-            // PlayerSpawnPoint
-            foreach (var psp in playerSpawnPointsList)
+            foreach (var transform in vciObject.transform.Traverse())
             {
-                var pspT = psp.gameObject.transform;
-
-                if (Math.Abs(pspT.rotation.x) > 0.001f || Math.Abs(pspT.rotation.z) > 0.001f)
+                if (transform.GetComponent<VCIObject>() == null)
                 {
-                    throw new VCIValidatorException(ValidationErrorType.SpawnPointNotHorizontal,
-                        VCIConfig.GetText($"error{(int)ValidationErrorType.SpawnPointNotHorizontal}"));
+                    continue;
                 }
 
-                var pspR = psp.GetComponent<VCIPlayerSpawnPointRestriction>();
-                if (pspR == null) continue;
-
-                if (pspR.LimitRectLeft > 0
-                    || pspR.LimitRectRight < 0
-                    || pspR.LimitRectForward < 0
-                    || pspR.LimitRectBackward > 0)
+                vciObjectCount++;
+                if (vciObjectCount > 1)
                 {
-                    throw new VCIValidatorException(ValidationErrorType.SpawnPointOriginNotInRange,
-                        VCIConfig.GetText($"error{(int)ValidationErrorType.SpawnPointOriginNotInRange}"));
-                }
-
-            }
-
-            // LocationBounds
-            if (locationBoundsList.Count >= 2)
-            {
-                throw new VCIValidatorException(ValidationErrorType.LocationBoundsCountLimitOver,
-                    VCIConfig.GetText($"error{(int)ValidationErrorType.LocationBoundsCountLimitOver}"));
-            }
-            if (locationBoundsList.Count > 0)
-            {
-                var locationBounds = locationBoundsList[0];
-                var min = locationBounds.Bounds.min;
-                var max = locationBounds.Bounds.max;
-
-                // 10000fを超えてないかだけチェック
-                if (Mathf.Abs(min.x) > 10000f || Mathf.Abs(min.y) > 10000f || Mathf.Abs(min.z) > 10000f ||
-                    Mathf.Abs(max.x) > 10000f || Mathf.Abs(max.y) > 10000f || Mathf.Abs(max.z) > 10000f)
-                {
-                    throw new VCIValidatorException(ValidationErrorType.LocationBoundsValueExceeded,
-                        VCIConfig.GetText($"error{(int)ValidationErrorType.LocationBoundsValueExceeded}"));
+                    var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.MultipleVCIObject}");
+                    throw new VCIValidatorException(ValidationErrorType.MultipleVCIObject, errorText);
                 }
             }
         }
 
-        private static void ValidateSpringBones(VCISpringBone[] targets)
+        private static void ValidateVCIScripts(VCIObject vciObject)
         {
-            if (targets.Length > MaxSpringBoneCount)
+            if (!vciObject.Scripts.Any())
             {
-                throw new VCIValidatorException(ValidationErrorType.TooManySpringBone);
+                return;
             }
 
-            foreach (var t in targets)
+            // Check 1: 一つ目のスクリプトの名前が「main」である
+            if (vciObject.Scripts[0].name != "main")
             {
-                // Check RootBones
-                var rbs = t.RootBones;
-                if (rbs == null || rbs.Count == 0)
-                    throw new VCIValidatorException(ValidationErrorType.RootBoneNotFound);
-                if (rbs.Count > MaxRootBoneCount)
-                    throw new VCIValidatorException(ValidationErrorType.TooManyRootBone);
+                var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.FirstScriptNameNotValid}");
+                throw new VCIValidatorException(ValidationErrorType.FirstScriptNameNotValid, errorText);
+            }
 
-                for (var i = 0; i < rbs.Count; i++)
+            // Check 2: 名前が空のスクリプトが存在しない
+            var empties = vciObject.Scripts.Where(x => string.IsNullOrEmpty(x.name));
+            if (empties.Any())
+            {
+                var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.NoScriptName}");
+                throw new VCIValidatorException(ValidationErrorType.NoScriptName, errorText);
+            }
+
+            // Check 3: 同一の名前のスクリプトが複数存在しない
+            var duplicates = vciObject.Scripts.GroupBy(script => script.name)
+                .Where(name => name.Count() > 1)
+                .Select(group => @group.Key).ToList();
+            if (duplicates.Any())
+            {
+                var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.ScriptNameConfliction}");
+                throw new VCIValidatorException(ValidationErrorType.ScriptNameConfliction, errorText);
+            }
+
+            // Check 4: スクリプト名に無効な文字列が含まれていない
+            // - 無効な文字列 : ファイル名に含めることのできない文字 + '.'
+            var invalidChars = Path.GetInvalidFileNameChars().Concat(new[] {'.'}).ToArray();
+            foreach (var script in vciObject.Scripts)
+            {
+                if (script.name.IndexOfAny(invalidChars) >= 0)
                 {
-                    if (rbs[i] == null) continue;
-                    var t0 = rbs[i];
-                    var childCount = 0;
-                    foreach (var t1 in t0.Traverse())
-                    {
-                        if (t1.GetComponent<VCISubItem>() != null)
-                            throw new VCIValidatorException(ValidationErrorType.RootBoneContainsSubItem);
-                        childCount++;
-                        if (childCount > MaxChildBoneCount)
-                            throw new VCIValidatorException(ValidationErrorType.TooManyRootBoneChild);
+                    var errorText = string.Format(
+                        VCIConfig.GetText($"error{(int) ValidationErrorType.InvalidCharacter}"),
+                        script.name);
+                    throw new VCIValidatorException(ValidationErrorType.InvalidCharacter, errorText);
+                }
+            }
+        }
 
-                        for (var j = 0; j < rbs.Count; j++)
+        // NOTE:
+        // 現状、MeshColliderは使えない
+        // - VCI が完全に静的であることが保証できないため
+        // - BoxCollider, SphereCollider, CapsuleColliderのみ使用できる
+        private static void ValidateColliders(VCIObject vciObject)
+        {
+            // Check 1: MeshCollider が VCI にアタッチされていない
+            CheckInvalidComponent<MeshCollider>(vciObject.gameObject);
+        }
+
+        private static void ValidateAnimation(VCIObject vciObject)
+        {
+            // NOTE: Editorコードを含んでいるため、ランタイムでValidateすることができない
+            // TODO: Runtime 時にどうするかを考える
+#if UNITY_EDITOR
+            // Check 1: root の Animator/Animation で自身を animate していない
+            // NOTE: root についてる animation の export は UniGLTF 側で行われる
+            //       その時、Animator か Animation どちらか片方が一つのみアタッチされていること前提で export される
+            var animationClips = new List<AnimationClip>();
+            var animator = vciObject.GetComponent<Animator>();
+            var animation = vciObject.GetComponent<Animation>();
+            if (animator != null)
+            {
+                animationClips.AddRange(AnimationExporter.GetAnimationClips(animator));
+            }
+            else if (animation != null)
+            {
+                animationClips.AddRange(AnimationExporter.GetAnimationClips(animation));
+            }
+
+            if (!animationClips.Any())
+            {
+                return;
+            }
+
+            foreach (var animationClip in animationClips)
+            {
+                foreach (var animationCurveBindings in AnimationUtility.GetCurveBindings(animationClip))
+                {
+                    if (string.IsNullOrEmpty(animationCurveBindings.path))
+                    {
+                        var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.RootIsAnimated}");
+                        throw new VCIValidatorException(ValidationErrorType.RootIsAnimated, errorText);
+                    }
+                }
+            }
+#endif
+        }
+
+        private static void ValidateSpringBones(VCIObject vciObject)
+        {
+            // NOTE: どういう歴史的経緯があったのか分からないけど、現在これらの使われていない
+            // const int maxSpringBoneColliderCount = 10;
+            // const int maxSphereColliderCount = 10;
+
+            var springBones = vciObject.GetComponents<VCISpringBone>();
+
+            if (springBones == null)
+            {
+                return;
+            }
+
+            // Check 1: アタッチされている SpringBone コンポーネントが maxSpringBoneCount以下である
+            const int maxSpringBoneCount = 1;
+            if (springBones.Length > maxSpringBoneCount)
+            {
+                var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.TooManySpringBone}");
+                throw new VCIValidatorException(ValidationErrorType.TooManySpringBone, errorText);
+            }
+
+            const int maxRootBoneCount = 10;
+            const int maxChildBoneCount = 10;
+
+            foreach (var springBone in springBones)
+            {
+                var rootBones = springBone.RootBones;
+
+                // Check 2: RootBone が存在する
+                if (rootBones == null || rootBones.Count == 0)
+                {
+                    var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.RootBoneNotFound}");
+                    throw new VCIValidatorException(ValidationErrorType.RootBoneNotFound, errorText);
+                }
+
+                // Check 3: Root の Bone の数が MaxRootBoneCount 以下である
+                if (rootBones.Count > maxRootBoneCount)
+                {
+                    var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.TooManyRootBone}");
+                    throw new VCIValidatorException(ValidationErrorType.TooManyRootBone, errorText);
+                }
+
+                for (var i = 0; i < rootBones.Count; i++)
+                {
+                    if (rootBones[i] == null)
+                    {
+                        continue;
+                    }
+
+                    var rootBone = rootBones[i];
+                    var childCount = 0;
+                    foreach (var childBone in rootBone.Traverse())
+                    {
+                        // Check 4: SpringBone の中に SubItem が存在しない
+                        if (childBone.GetComponent<VCISubItem>() != null)
                         {
-                            if (j == i) continue;
-                            if (rbs[j] == t1)
-                                throw new VCIValidatorException(ValidationErrorType.RootBoneNested);
+                            var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.RootBoneContainsSubItem}");
+                            throw new VCIValidatorException(ValidationErrorType.RootBoneContainsSubItem, errorText);
+                        }
+
+                        // Check 5: RootBone の持つ ChildBone が MaxChildBoneCount 以下である
+                        childCount++;
+                        if (childCount > maxChildBoneCount)
+                        {
+                            var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.TooManyRootBoneChild}");
+                            throw new VCIValidatorException(ValidationErrorType.TooManyRootBoneChild, errorText);
+                        }
+
+                        // Check 6: RootBone が入れ子になっていない
+                        for (var j = 0; j < rootBones.Count; j++)
+                        {
+                            if (j == i)
+                            {
+                                continue;
+                            }
+
+                            if (rootBones[j] == childBone)
+                            {
+                                var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.RootBoneNested}");
+                                throw new VCIValidatorException(ValidationErrorType.RootBoneNested, errorText);
+                            }
                         }
                     }
                 }
             }
+        }
+
+        private static void ValidatePlayerSpawnPoints(VCIObject vciObject)
+        {
+            var playerSpawnPoints = vciObject.GetComponentsInChildren<VCIPlayerSpawnPoint>();
+
+            if (playerSpawnPoints == null)
+            {
+                return;
+            }
+
+            foreach (var playerSpawnPoint in playerSpawnPoints)
+            {
+                var spawnPointTransform = playerSpawnPoint.gameObject.transform;
+
+                // Check 1: SpawnPoint の向きが水平である
+                if (Math.Abs(spawnPointTransform.rotation.x) > 0.001f ||
+                    Math.Abs(spawnPointTransform.rotation.z) > 0.001f)
+                {
+                    var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.SpawnPointNotHorizontal}");
+                    throw new VCIValidatorException(ValidationErrorType.SpawnPointNotHorizontal, errorText);
+                }
+
+                var spawnPointRestriction = playerSpawnPoint.GetComponent<VCIPlayerSpawnPointRestriction>();
+                if (spawnPointRestriction == null) continue;
+
+                // Check 2: SpawnPoint が PlayerSpawnPointRestriction で指定した制限範囲内に存在する
+                if (spawnPointRestriction.LimitRectLeft > 0
+                    || spawnPointRestriction.LimitRectRight < 0
+                    || spawnPointRestriction.LimitRectForward < 0
+                    || spawnPointRestriction.LimitRectBackward > 0)
+                {
+                    var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.SpawnPointOriginNotInRange}");
+                    throw new VCIValidatorException(ValidationErrorType.SpawnPointOriginNotInRange, errorText);
+                }
+            }
+        }
+
+        private static void ValidateLocationBounds(VCIObject vciObject)
+        {
+            var locationBoundsList = vciObject.gameObject.GetComponentsInChildren<VCILocationBounds>();
+
+            if (locationBoundsList == null || locationBoundsList.Length == 0)
+            {
+                return;
+            }
+
+            // Check 1: LocationBounds が一つのみ存在する
+            if (locationBoundsList.Length >= 2)
+            {
+                var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.LocationBoundsCountLimitOver}");
+                throw new VCIValidatorException(ValidationErrorType.LocationBoundsCountLimitOver, errorText);
+            }
+
+            var locationBounds = locationBoundsList[0];
+            var min = locationBounds.Bounds.min;
+            var max = locationBounds.Bounds.max;
+
+            // Check 2: x, y, z の制限範囲が ±10000 に収まる
+            if (Mathf.Abs(min.x) > 10000f || Mathf.Abs(min.y) > 10000f || Mathf.Abs(min.z) > 10000f ||
+                Mathf.Abs(max.x) > 10000f || Mathf.Abs(max.y) > 10000f || Mathf.Abs(max.z) > 10000f)
+            {
+                var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.LocationBoundsValueExceeded}");
+                throw new VCIValidatorException(ValidationErrorType.LocationBoundsValueExceeded, errorText);
+            }
+
         }
 
         private static void CheckInvalidComponent<T>(GameObject target)
@@ -191,7 +305,6 @@ namespace VCI
 
             throw new VCIValidatorException(ValidationErrorType.InvalidComponent, errorText);
         }
-
     }
 
     public enum ValidationErrorType
@@ -229,31 +342,42 @@ namespace VCI
         // LocationBounds
         LocationBoundsCountLimitOver = 601,
         LocationBoundsValueExceeded = 602,
+
+        // Animation
+        RootIsAnimated = 701,
     }
 
     [Serializable]
-    public class VCIValidatorException: Exception
+    public class VCIValidatorException : Exception
     {
         public ValidationErrorType ErrorType { get; }
 
-        public VCIValidatorException() : base() {}
+        public VCIValidatorException() : base()
+        {
+        }
 
-        public VCIValidatorException(ValidationErrorType errorType): base("")
+        public VCIValidatorException(ValidationErrorType errorType) : base("")
         {
             ErrorType = errorType;
         }
 
-        public VCIValidatorException(ValidationErrorType errorType, string message): base(message)
+        public VCIValidatorException(ValidationErrorType errorType, string message) : base(message)
         {
             ErrorType = errorType;
         }
 
-        public VCIValidatorException(string message): base(message) {}
+        public VCIValidatorException(string message) : base(message)
+        {
+        }
 
         public VCIValidatorException(string message, Exception innerException)
-            : base(message, innerException) {}
+            : base(message, innerException)
+        {
+        }
 
         protected VCIValidatorException(SerializationInfo info, StreamingContext context)
-            : base(info, context) {}
+            : base(info, context)
+        {
+        }
     }
 }

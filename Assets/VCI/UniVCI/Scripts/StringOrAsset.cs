@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using UnityEngine;
-using VCIGLTF;
+using UniGLTF;
 
 namespace VCI
 {

@@ -2,7 +2,7 @@
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using VCIGLTF;
+using UniGLTF;
 
 namespace VCI
 {
@@ -33,15 +33,7 @@ namespace VCI
                 //    VCIVersion.EXTENSION.Substring(1));
                 if (string.IsNullOrEmpty(path)) return;
 
-                // export
-                var gltf = new glTF();
-                using (var exporter = new VCIExporter(gltf))
-                {
-                    exporter.Prepare(root);
-                    exporter.Export();
-                }
-
-                var bytes = gltf.ToGlbBytes();
+                var bytes = ExportVci(root);
                 File.WriteAllBytes(path, bytes);
 
                 if (path.StartsWithUnityAssetPath())
@@ -70,28 +62,48 @@ namespace VCI
                 catch
                 {
                 }
-                
             }
 #else
             Debug.LogError("this function works only on Windows");
 #endif
         }
 
+        public static byte[] ExportVci(GameObject root)
+        {
+            // export
+            var gltf = new glTF();
+            using (var exporter = new VCIExporter(gltf))
+            {
+                exporter.Prepare(root);
+                exporter.Export(default);
+            }
+
+            return gltf.ToGlbBytes();
+        }
+
         public static bool Validate()
         {
-            // Validation
             try
             {
                 var selectedGameObjects = Selection.gameObjects;
                 if (selectedGameObjects.Length == 0)
-                    throw new VCIValidatorException(ValidationErrorType.GameObjectNotSelected);
+                {
+                    var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.GameObjectNotSelected}");
+                    throw new VCIValidatorException(ValidationErrorType.GameObjectNotSelected, errorText);
+                }
 
                 if (2 <= selectedGameObjects.Length)
-                    throw new VCIValidatorException(ValidationErrorType.MultipleSelection);
+                {
+                    var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.MultipleSelection}");
+                    throw new VCIValidatorException(ValidationErrorType.MultipleSelection, errorText);
+                }
 
                 var vciObject = selectedGameObjects[0].GetComponent<VCIObject>();
                 if (vciObject == null)
-                    throw new VCIValidatorException(ValidationErrorType.VCIObjectNotAttached);
+                {
+                    var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.VCIObjectNotAttached}");
+                    throw new VCIValidatorException(ValidationErrorType.VCIObjectNotAttached, errorText);
+                }
 
                 VCIValidator.ValidateVCIObject(vciObject);
             }
@@ -99,16 +111,7 @@ namespace VCI
             {
                 var title =  $"Error{(int)e.ErrorType}";
 
-                var text = "";
-
-                if (string.IsNullOrEmpty(e.Message))
-                {
-                    text = VCIConfig.GetText($"error{(int)e.ErrorType}");
-                }
-                else
-                {
-                    text = e.Message;
-                }
+                var text = e.Message;
 
                 text = text.Replace("\\n", Environment.NewLine);
 

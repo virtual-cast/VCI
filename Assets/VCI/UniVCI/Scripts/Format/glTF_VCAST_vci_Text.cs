@@ -1,12 +1,11 @@
 ﻿using System;
 using TMPro;
-using VCIGLTF;
-using VCIJSON;
+using UniGLTF;
 
 namespace VCI
 {
     [Serializable, JsonSchema(Title = "vci.text")]
-    public class glTF_VCAST_vci_Text : JsonSerializableBase
+    public class glTF_VCAST_vci_Text
     {
         public string fontName;
 
@@ -20,21 +19,21 @@ namespace VCI
 
         public int fontStyle;
 
-        [JsonSchema(MinItems = 4, MaxItems = 4)]
+        [UniGLTF.JsonSchema(MinItems = 4, MaxItems = 4)]
         public float[] color;
 
         public bool enableVertexGradient;
 
-        [JsonSchema(MinItems = 4, MaxItems = 4)]
+        [UniGLTF.JsonSchema(MinItems = 4, MaxItems = 4)]
         public float[] topLeftColor;
 
-        [JsonSchema(MinItems = 4, MaxItems = 4)]
+        [UniGLTF.JsonSchema(MinItems = 4, MaxItems = 4)]
         public float[] topRightColor;
 
-        [JsonSchema(MinItems = 4, MaxItems = 4)]
+        [UniGLTF.JsonSchema(MinItems = 4, MaxItems = 4)]
         public float[] bottomLeftColor;
 
-        [JsonSchema(MinItems = 4, MaxItems = 4)]
+        [UniGLTF.JsonSchema(MinItems = 4, MaxItems = 4)]
         public float[] bottomRightColor;
 
         public float characterSpacing;
@@ -55,13 +54,8 @@ namespace VCI
 
         public bool extraPadding;
 
-        [JsonSchema(MinItems = 4, MaxItems = 4)]
+        [UniGLTF.JsonSchema(MinItems = 4, MaxItems = 4)]
         public float[] margin;
-
-        protected override void SerializeMembers(GLTFJsonFormatter f)
-        {
-            f.KeyValue(() => text);
-        }
 
         public static glTF_VCAST_vci_Text Create(TextMeshPro tmp)
         {

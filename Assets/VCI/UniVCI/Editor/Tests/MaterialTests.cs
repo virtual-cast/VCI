@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 using UnityEngine;
-using VCIGLTF;
-using VCIJSON;
+using UniGLTF;
+using UniJSON;
 
 namespace VCI
 {
@@ -10,6 +10,7 @@ namespace VCI
         [Test]
         public void VciMaterialUnity()
         {
+            var gltf = new glTF();
             var src = new glTF_VCAST_vci_material_unity
             {
                 materials = new System.Collections.Generic.List<glTF_VCI_Material>
@@ -20,167 +21,19 @@ namespace VCI
                 }
             };
 
-            var f = new JsonFormatter();
-            f.Serialize(src);
-            var parsed = JsonParser.Parse(new Utf8String(f.GetStore().Bytes));
+            var f = new UniJSON.JsonFormatter();
+            glTF_VCAST_vci_material_unity_Serializer.Serialize(f, src);
+            glTFExtensionExport.GetOrCreate(ref gltf.extensions).Add(glTF_VCAST_vci_material_unity.ExtensionName, f.GetStore().Bytes);
 
-            Assert.AreEqual(1, parsed["materials"].GetArrayCount());
-        }
-
-        [Test]
-        public void UnlitShaderImportTest()
-        {
-            var shaderStore = new ShaderStore(null);
-
+            var gltf2 = new glTF();
+            gltf2.extensions = (gltf.extensions as glTFExtensionExport).Deserialize();
+            if (gltf2.extensions.TryDeserializeExtensions(glTF_VCAST_vci_material_unity.ExtensionName, glTF_VCAST_vci_material_unity_Deserializer.Deserialize, out glTF_VCAST_vci_material_unity dst))
             {
-                // OPAQUE/Color
-                var shader = shaderStore.GetShader(new glTFMaterial
-                {
-                    alphaMode = "OPAQUE",
-                    pbrMetallicRoughness = new glTFPbrMetallicRoughness
-                    {
-                        baseColorFactor = new float[] {1, 0, 0, 1},
-                    },
-                    extensions = new glTFMaterial_extensions
-                    {
-                        KHR_materials_unlit = new glTF_KHR_materials_unlit { }
-                    }
-                });
-                Assert.AreEqual("UniGLTF/UniUnlit", shader.name);
+                Assert.AreEqual(1, dst.materials.Count);
             }
-
+            else
             {
-                // OPAQUE/Texture
-                var shader = shaderStore.GetShader(new glTFMaterial
-                {
-                    alphaMode = "OPAQUE",
-                    pbrMetallicRoughness = new glTFPbrMetallicRoughness
-                    {
-                        baseColorTexture = new glTFMaterialBaseColorTextureInfo(),
-                    },
-                    extensions = new glTFMaterial_extensions
-                    {
-                        KHR_materials_unlit = new glTF_KHR_materials_unlit { }
-                    }
-                });
-                Assert.AreEqual("UniGLTF/UniUnlit", shader.name);
-            }
-
-            {
-                // OPAQUE/Color/Texture
-                var shader = shaderStore.GetShader(new glTFMaterial
-                {
-                    alphaMode = "OPAQUE",
-                    pbrMetallicRoughness = new glTFPbrMetallicRoughness
-                    {
-                        baseColorFactor = new float[] {1, 0, 0, 1},
-                        baseColorTexture = new glTFMaterialBaseColorTextureInfo(),
-                    },
-                    extensions = new glTFMaterial_extensions
-                    {
-                        KHR_materials_unlit = new glTF_KHR_materials_unlit { }
-                    }
-                });
-                Assert.AreEqual("UniGLTF/UniUnlit", shader.name);
-            }
-
-            {
-                // BLEND/Color
-                var shader = shaderStore.GetShader(new glTFMaterial
-                {
-                    alphaMode = "BLEND",
-                    pbrMetallicRoughness = new glTFPbrMetallicRoughness
-                    {
-                        baseColorFactor = new float[] {1, 0, 0, 1},
-                    },
-                    extensions = new glTFMaterial_extensions
-                    {
-                        KHR_materials_unlit = new glTF_KHR_materials_unlit { }
-                    }
-                });
-                Assert.AreEqual("UniGLTF/UniUnlit", shader.name);
-            }
-
-            {
-                // BLEND/Texture
-                var shader = shaderStore.GetShader(new glTFMaterial
-                {
-                    alphaMode = "BLEND",
-                    pbrMetallicRoughness = new glTFPbrMetallicRoughness
-                    {
-                        baseColorTexture = new glTFMaterialBaseColorTextureInfo(),
-                    },
-                    extensions = new glTFMaterial_extensions
-                    {
-                        KHR_materials_unlit = new glTF_KHR_materials_unlit { }
-                    }
-                });
-                Assert.AreEqual("UniGLTF/UniUnlit", shader.name);
-            }
-
-            {
-                // BLEND/Color/Texture
-                var shader = shaderStore.GetShader(new glTFMaterial
-                {
-                    alphaMode = "BLEND",
-                    pbrMetallicRoughness = new glTFPbrMetallicRoughness
-                    {
-                        baseColorFactor = new float[] {1, 0, 0, 1},
-                        baseColorTexture = new glTFMaterialBaseColorTextureInfo(),
-                    },
-                    extensions = new glTFMaterial_extensions
-                    {
-                        KHR_materials_unlit = new glTF_KHR_materials_unlit { }
-                    }
-                });
-                Assert.AreEqual("UniGLTF/UniUnlit", shader.name);
-            }
-
-            {
-                // MASK/Texture
-                var shader = shaderStore.GetShader(new glTFMaterial
-                {
-                    alphaMode = "MASK",
-                    pbrMetallicRoughness = new glTFPbrMetallicRoughness
-                    {
-                        baseColorTexture = new glTFMaterialBaseColorTextureInfo(),
-                    },
-                    extensions = new glTFMaterial_extensions
-                    {
-                        KHR_materials_unlit = new glTF_KHR_materials_unlit { }
-                    }
-                });
-                Assert.AreEqual("UniGLTF/UniUnlit", shader.name);
-            }
-
-            {
-                // MASK/Color/Texture
-                var shader = shaderStore.GetShader(new glTFMaterial
-                {
-                    alphaMode = "MASK",
-                    pbrMetallicRoughness = new glTFPbrMetallicRoughness
-                    {
-                        baseColorFactor = new float[] {1, 0, 0, 1},
-                        baseColorTexture = new glTFMaterialBaseColorTextureInfo(),
-                    },
-                    extensions = new glTFMaterial_extensions
-                    {
-                        KHR_materials_unlit = new glTF_KHR_materials_unlit { }
-                    }
-                });
-                Assert.AreEqual("UniGLTF/UniUnlit", shader.name);
-            }
-
-            {
-                // default
-                var shader = shaderStore.GetShader(new glTFMaterial
-                {
-                    extensions = new glTFMaterial_extensions
-                    {
-                        KHR_materials_unlit = new glTF_KHR_materials_unlit { }
-                    }
-                });
-                Assert.AreEqual("UniGLTF/UniUnlit", shader.name);
+                Assert.Fail();
             }
         }
 
@@ -190,12 +43,17 @@ namespace VCI
             // export
             //
             GameObject cube = GameObject.CreatePrimitive (PrimitiveType.Cube);
+            GameObject root = new GameObject("root");
+            cube.transform.SetParent(root.transform);
+            var vciObject = root.AddComponent<VCIObject>();
+            vciObject.Meta.author = "AUTHOR";
+            vciObject.Meta.title = "TITLE";
             var renderer = cube.GetComponent<Renderer>();
             renderer.sharedMaterial = src;
             var gltf = new glTF();
             var exporter = new VCIExporter(gltf);
-            exporter.Prepare(cube);
-            exporter.Export();
+            exporter.Prepare(root);
+            exporter.Export(default);
             var bytes = gltf.ToGlbBytes();
 
             //

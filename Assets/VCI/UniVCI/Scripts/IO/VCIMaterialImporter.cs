@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using VCIGLTF;
+using UniGLTF;
 
 namespace VCI
 {
@@ -74,14 +74,19 @@ namespace VCI
 
                 var standardMaterial = base.CreateMaterial(i, src, hasVertexColor);
 
+                
                 // VCAST_materials_pbr拡張が存在する場合はパラメータを上書きする
-                if (src.extensions != null && src.extensions.VCAST_materials_pbr != null)
+                if (src.extensions != null)
                 {
-                    // emissiveFactor
-                    var emissiveFactor = src.extensions.VCAST_materials_pbr.emissiveFactor;
-                    if(emissiveFactor != null && emissiveFactor.Length == 3)
+                    glTF_VCAST_materials_pbr extensions;
+                    if(src.extensions.TryDeserializeExtensions(glTF_VCAST_materials_pbr.ExtensionName, glTF_VCAST_materials_pbr_Deserializer.Deserialize, out extensions))
                     {
-                        standardMaterial.SetColor("_EmissionColor", new Color(emissiveFactor[0], emissiveFactor[1], emissiveFactor[2]));
+                        // emissiveFactor
+                        var emissiveFactor = extensions.emissiveFactor;
+                        if (emissiveFactor != null && emissiveFactor.Length == 3)
+                        {
+                            standardMaterial.SetColor("_EmissionColor", new Color(emissiveFactor[0], emissiveFactor[1], emissiveFactor[2]));
+                        }
                     }
                 }
 

@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using VCIGLTF;
+using UniGLTF;
 
 namespace VCI
 {
@@ -27,10 +27,18 @@ namespace VCI
             for (int i = 0;i < context.GLTF.nodes.Count; i++)
             {
                 var node = context.GLTF.nodes[i];
-                if (node.extensions == null || node.extensions.VCAST_vci_animation == null)
+                if (node.extensions == null)
+                {
                     continue;
+                }
 
-                var vciAnimation = node.extensions.VCAST_vci_animation;
+                glTF_VCAST_vci_animation extensions;
+                if(!node.extensions.TryDeserializeExtensions(glTF_VCAST_vci_animation.ExtensionName, glTF_VCAST_vci_animation_Deserializer.Deserialize, out extensions))
+                {
+                    continue;
+                }
+
+                var vciAnimation = extensions;
                 var root = context.Nodes[i];
                 var animation = root.gameObject.AddComponent<Animation>();
 
@@ -40,7 +48,7 @@ namespace VCI
                     AnimationClip clip = null;
                     if(animationClips[animationReference.animation] == null)
                     {
-                        clip = AnimationImporterUtil.ImportAnimationClip(context, gltfAnimation, node);
+                        clip = AnimationImporterUtil.ConvertAnimationClip(context.GLTF, gltfAnimation, node);
                         animationClips[animationReference.animation] = clip;
                     }
                     else
@@ -67,7 +75,7 @@ namespace VCI
 
                 var gltfAnimation = context.GLTF.animations[i];
 
-                animationClips[i] = AnimationImporterUtil.ImportAnimationClip(context, gltfAnimation);
+                animationClips[i] = AnimationImporterUtil.ConvertAnimationClip(context.GLTF, gltfAnimation);
                 rootAnimation.AddClip(animationClips[i], animationClips[i].name);
             }
 
@@ -84,10 +92,18 @@ namespace VCI
             for (int i = 0;i < context.GLTF.nodes.Count; i++)
             {
                 var node = context.GLTF.nodes[i];
-                if (node.extensions == null || node.extensions.VCAST_vci_animation == null)
+                if (node.extensions == null)
+                {
                     continue;
+                }
 
-                var vciAnimation = node.extensions.VCAST_vci_animation;
+                glTF_VCAST_vci_animation extensions;
+                if (!node.extensions.TryDeserializeExtensions(glTF_VCAST_vci_animation.ExtensionName, glTF_VCAST_vci_animation_Deserializer.Deserialize, out extensions))
+                {
+                    continue;
+                }
+
+                var vciAnimation = extensions;
                 var root = context.Nodes[i];
                 var animation = root.gameObject.AddComponent<Animation>();
 

@@ -1,24 +1,18 @@
 ﻿using System;
-using VCIGLTF;
-using VCIJSON;
 
 namespace VCI
 {
     [Serializable]
-    [JsonSchema(Title = "vci.player_restriction.spawn_point")]
-    public class glTF_VCAST_vci_PlayerSpawnPoint : JsonSerializableBase
+    [UniGLTF.JsonSchema(Title = "vci.player_restriction.spawn_point")]
+    public class glTF_VCAST_vci_PlayerSpawnPoint
     {
-        [JsonSchema(Description = "Players appear in ascending order from order1. If there are no corresponding orders, they will appear from order0.")]
+        public static string ExtensionName => "VCAST_vci_PlayerSpawnPoint";
+
+        [UniGLTF.JsonSchema(Description = "Players appear in ascending order from order1. If there are no corresponding orders, they will appear from order0.")]
         public int order;
 
-        [JsonSchema(Description = "Players appear at positions randomly scattered on the horizontal plane by this amount from the set position.")]
+        [UniGLTF.JsonSchema(Description = "Players appear at positions randomly scattered on the horizontal plane by this amount from the set position.")]
         public float radius;
-
-        protected override void SerializeMembers(GLTFJsonFormatter f)
-        {
-            f.KeyValue(() => order);
-            f.KeyValue(() => radius);
-        }
 
         public static glTF_VCAST_vci_PlayerSpawnPoint Create(VCIPlayerSpawnPoint psp)
         {
@@ -31,8 +25,8 @@ namespace VCI
     }
 
     [Serializable]
-    [JsonSchema(Title = "vci.player_restriction.spawn_point.restriction")]
-    public class glTF_VCAST_vci_PlayerSpawnPointRestriction : JsonSerializableBase
+    [UniGLTF.JsonSchema(Title = "vci.player_restriction.spawn_point.restriction")]
+    public class glTF_VCAST_vci_PlayerSpawnPointRestriction
     {
         public const string NoLimit = "NoLimit";
         public const string Circle = "Circle";
@@ -40,47 +34,33 @@ namespace VCI
 
         public const string SitOn = "SitOn";
 
-        [JsonSchema(EnumValues = new object[] {NoLimit, Circle, Rectangle},
-            EnumSerializationType = EnumSerializationType.AsString,
+        [UniGLTF.JsonSchema(EnumValues = new object[] {NoLimit, Circle, Rectangle},
+            EnumSerializationType = UniGLTF.EnumSerializationType.AsString,
             Description = "Defines the type of the range players can move.")]
         public string rangeOfMovementRestriction;
 
-        [JsonSchema(Description = "If rangeOfMovementRestriction is Circle, players can move only in the circle of this radius.")]
+        [UniGLTF.JsonSchema(Description = "If rangeOfMovementRestriction is Circle, players can move only in the circle of this radius.")]
         public float limitRadius;
 
-        [JsonSchema(Description = "If rangeOfMovementRestriction is Rectangle, players can move to left only by this amount from the origin transform. 0 or less.")]
+        [UniGLTF.JsonSchema(Description = "If rangeOfMovementRestriction is Rectangle, players can move to left only by this amount from the origin transform. 0 or less.")]
         public float limitRectLeft;
 
-        [JsonSchema(Description = "If rangeOfMovementRestriction is Rectangle, players can move to right only by this amount from the origin transform. 0 or more.")]
+        [UniGLTF.JsonSchema(Description = "If rangeOfMovementRestriction is Rectangle, players can move to right only by this amount from the origin transform. 0 or more.")]
         public float limitRectRight;
 
-        [JsonSchema(Description = "If rangeOfMovementRestriction is Rectangle, players can move forward only by this amount from the origin transform. 0 or more.")]
+        [UniGLTF.JsonSchema(Description = "If rangeOfMovementRestriction is Rectangle, players can move forward only by this amount from the origin transform. 0 or more.")]
         public float limitRectForward;
 
-        [JsonSchema(Description = "If rangeOfMovementRestriction is Rectangle, players can move backward only by this amount from the origin transform. 0 or less.")]
+        [UniGLTF.JsonSchema(Description = "If rangeOfMovementRestriction is Rectangle, players can move backward only by this amount from the origin transform. 0 or less.")]
         public float limitRectBackward;
 
-        [JsonSchema(EnumValues = new object[] {NoLimit, SitOn},
-            EnumSerializationType = EnumSerializationType.AsString,
+        [UniGLTF.JsonSchema(EnumValues = new object[] {NoLimit, SitOn},
+            EnumSerializationType = UniGLTF.EnumSerializationType.AsString,
             Description = "Avatars of players spawned at this point is forced to have the set posture.")]
         public string postureRestriction;
 
-        [JsonSchema(Description = "If postureRestriction is SitOn, the player's avatar will sit on a chair at this height.")]
+        [UniGLTF.JsonSchema(Description = "If postureRestriction is SitOn, the player's avatar will sit on a chair at this height.")]
         public float seatHeight;
-
-        protected override void SerializeMembers(GLTFJsonFormatter f)
-        {
-            f.KeyValue(() => rangeOfMovementRestriction);
-
-            f.KeyValue(() => limitRadius);
-            f.KeyValue(() => limitRectLeft);
-            f.KeyValue(() => limitRectRight);
-            f.KeyValue(() => limitRectForward);
-            f.KeyValue(() => limitRectBackward);
-
-            f.KeyValue(() => postureRestriction);
-            f.KeyValue(() => seatHeight);
-        }
 
         public static glTF_VCAST_vci_PlayerSpawnPointRestriction Create(VCIPlayerSpawnPointRestriction pspR)
         {

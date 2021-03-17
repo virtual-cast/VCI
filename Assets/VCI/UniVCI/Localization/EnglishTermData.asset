@@ -69,3 +69,5 @@ MonoBehaviour:
     value: Only one VCILocationBounds can be set.
   - key: error602
     value: Bounds of the VCILocationBounds is beyond the valid range.
+  - key: error701
+    value: VCI root cannot be animated.

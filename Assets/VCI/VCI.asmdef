@@ -6,7 +6,8 @@
         "UniUnlit",
         "Effekseer",
         "Unity.TextMeshPro",
-        "NAudio"
+        "NAudio",
+        "UniGLTF"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
