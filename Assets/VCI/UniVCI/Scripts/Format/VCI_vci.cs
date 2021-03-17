@@ -2,23 +2,40 @@
 using System.Collections.Generic;
 using UnityEngine;
 using VCI;
-using VCIJSON;
+using UniGLTF;
 
 
 /// <summary>
 /// 複数の項目があるが一つのGLTF_Extensionとして扱う。
 /// そのため、一つのファイルにまとめた。
 /// </summary>
-namespace VCIGLTF
+namespace VCI
 {
     #region meta
 
     /// <summary>
-    /// gltf.extension
+    /// License from meta
     /// </summary>
-    public partial class glTF_extensions : ExtensionsBase<glTF_extensions>
+    public enum LicenseType
     {
-        public glTF_VCAST_vci_meta VCAST_vci_meta;
+        Redistribution_Prohibited,
+        CC0,
+        CC_BY,
+        CC_BY_NC,
+        CC_BY_SA,
+        CC_BY_NC_SA,
+        CC_BY_ND,
+        CC_BY_NC_ND,
+        Other
+    }
+
+    /// <summary>
+    /// ScriptFormat from meta
+    /// </summary>
+    public enum ScriptFormat
+    {
+        luaText,
+        luaBinary,
     }
 
     /// <summary>
@@ -27,79 +44,60 @@ namespace VCIGLTF
     [Serializable]
     public class glTF_VCAST_vci_meta
     {
-        public static string ExtensionName => "VCAST_vci";
-
-        public enum LicenseType
-        {
-            Redistribution_Prohibited,
-            CC0,
-            CC_BY,
-            CC_BY_NC,
-            CC_BY_SA,
-            CC_BY_NC_SA,
-            CC_BY_ND,
-            CC_BY_NC_ND,
-            Other
-        }
-
-        public enum ScriptFormat
-        {
-            luaText,
-            luaBinary,
-        }
+        public static string ExtensionName => "VCAST_vci_meta";
 
         // from UniVCI-0.5
         public string exporterVCIVersion;
 
         public string specVersion;
 
-        [JsonSchema(Description = "Title of VCI model")]
+        [UniGLTF.JsonSchema(Description = "Title of VCI model")]
         public string title;
 
-        [JsonSchema(Description = "Version of VCI model")]
+        [UniGLTF.JsonSchema(Description = "Version of VCI model")]
         public string version;
 
-        [JsonSchema(Description = "Author of VCI model")]
+        [UniGLTF.JsonSchema(Description = "Author of VCI model")]
         public string author;
 
-        [JsonSchema(Description = "Contact Information of VCI model author")]
+        [UniGLTF.JsonSchema(Description = "Contact Information of VCI model author")]
         public string contactInformation;
 
-        [JsonSchema(Description = "Reference of VCI model")]
+        [UniGLTF.JsonSchema(Description = "Reference of VCI model")]
         public string reference;
 
-        [JsonSchema(Description = "description")]
+        [UniGLTF.JsonSchema(Description = "description")]
         public string description;
 
-        [JsonSchema(Description = "Thumbnail of VCI model")]
+        [UniGLTF.JsonSchema(Description = "Thumbnail of VCI model")]
         public int thumbnail = -1;
 
         #region Distribution License
 
-        [JsonSchema(Description = "Model Data License type",
-            EnumSerializationType = EnumSerializationType.AsLowerString)]
+        [UniGLTF.JsonSchema(Description = "Model Data License type",
+            EnumSerializationType = UniGLTF.EnumSerializationType.AsLowerString)]
         public LicenseType modelDataLicenseType;
 
-        [JsonSchema(Description = "If Other is selected, put the URL link of the license document here.")]
+        [UniGLTF.JsonSchema(Description = "If Other is selected, put the URL link of the license document here.")]
         public string modelDataOtherLicenseUrl;
 
-        [JsonSchema(Description = "Script License type", EnumSerializationType = EnumSerializationType.AsLowerString)]
+        [UniGLTF.JsonSchema(Description = "Script License type", EnumSerializationType = UniGLTF.EnumSerializationType.AsLowerString)]
         public LicenseType scriptLicenseType;
 
-        [JsonSchema(Description = "If Other is selected, put the URL link of the license document here.")]
+        [UniGLTF.JsonSchema(Description = "If Other is selected, put the URL link of the license document here.")]
         public string scriptOtherLicenseUrl;
 
         #endregion
 
         #region Script
 
-        [JsonSchema(Description = "Script write protected")]
+        [UniGLTF.JsonSchema(Description = "Script write protected")]
         public bool scriptWriteProtected;
 
-        [JsonSchema(Description = "Script enable debugging")]
+        [UniGLTF.JsonSchema(Description = "Script enable debugging")]
         public bool scriptEnableDebugging;
 
-        [JsonSchema(Description = "Script Format", EnumSerializationType = EnumSerializationType.AsString)]
+        [UniGLTF.JsonSchema(Description = "Script Format", EnumSerializationType = UniGLTF.EnumSerializationType.AsString)]
         public ScriptFormat scriptFormat;
 
         #endregion
@@ -108,11 +106,6 @@ namespace VCIGLTF
     #endregion
 
     #region Attachable
-
-    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
-    {
-        public glTF_VCAST_vci_attachable VCAST_vci_attachable;
-    }
 
     /// <summary>
     /// Extension root
@@ -124,16 +117,13 @@ namespace VCIGLTF
         public float attachableDistance;
         public bool scalable;
         public Vector3 offset;
+
+        public static string ExtensionName => "VCAST_vci_attachable";
     }
 
     #endregion
 
     #region RectTransform
-
-    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
-    {
-        public glTF_VCAST_vci_rectTransform VCAST_vci_rectTransform;
-    }
 
     /// <summary>
     /// Extension root
@@ -149,11 +139,6 @@ namespace VCIGLTF
     #endregion
 
     #region Text
-
-    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
-    {
-        public glTF_VCAST_vci_text VCAST_vci_text;
-    }
 
     /// <summary>
     /// Extension root
@@ -171,19 +156,12 @@ namespace VCIGLTF
     #region audio
 
     /// <summary>
-    /// gltf.extension
-    /// </summary>
-    public partial class glTF_extensions : ExtensionsBase<glTF_extensions>
-    {
-        public glTF_VCAST_vci_audios VCAST_vci_audios;
-    }
-
-    /// <summary>
     /// Extension root
     /// </summary>
     [Serializable]
     public class glTF_VCAST_vci_audios
     {
+        public static string ExtensionName = "VCAST_vci_audios";
         [JsonSchema(Required = true, MinItems = 1, ExplicitIgnorableItemLength = 0)]
         public List<glTF_VCAST_vci_audio> audios;
     }
@@ -196,24 +174,51 @@ namespace VCIGLTF
     {
         public string name;
 
-        [JsonSchema(Required = true, Minimum = 0)]
+        [UniGLTF.JsonSchema(Required = true, Minimum = 0)]
         public int bufferView = -1;
 
-        [JsonSchema(EnumValues = new object[] {"audio/wav", "audio/mp3"}, EnumSerializationType = EnumSerializationType.AsString)]
+        [UniGLTF.JsonSchema(EnumValues = new object[] {"audio/wav", "audio/mp3"}, EnumSerializationType = UniGLTF.EnumSerializationType.AsString)]
         public string mimeType;
+    }
+
+    public partial class glTFNode_extensions
+    {
+        public glTF_VCAST_vci_audio_sources VCAST_vci_audio_sources;
+    }
+
+    /// <summary>
+    /// extension root
+    /// </summary>
+    [Serializable]
+    public class glTF_VCAST_vci_audio_sources
+    {
+        public static string ExtensionName => "VCAST_vci_audio_sources";
+        [JsonSchema(Required = true, MinItems = 1)]
+        public List<glTF_VCAST_vci_audio_source> audioSources;
+    }
+
+    [Serializable]
+    public class glTF_VCAST_vci_audio_source
+    {
+        [JsonSchema(Required = true)]
+        public int audio;
+        public float spatialBlend;
+
+        public static glTF_VCAST_vci_audio_source CreateFrom(AudioSource audioSource, glTF_VCAST_vci_audios audios)
+        {
+            var result = new glTF_VCAST_vci_audio_source
+            {
+                audio = audios.audios.FindIndex(x => x.name == audioSource.clip.name),
+                spatialBlend = audioSource.spatialBlend
+            };
+
+            return result;
+        }
     }
 
     #endregion
 
     #region script
-
-    /// <summary>
-    /// gltf.extension
-    /// </summary>
-    public partial class glTF_extensions : ExtensionsBase<glTF_extensions>
-    {
-        public glTF_VCAST_vci_embedded_script VCAST_vci_embedded_script;
-    }
 
     public class EnumStringValueAttribute : Attribute
     {
@@ -231,7 +236,9 @@ namespace VCIGLTF
     [Serializable]
     public class glTF_VCAST_vci_embedded_script
     {
-        [JsonSchema(Required = true, MinItems = 1)]
+        public static string ExtensionName => "VCAST_vci_embedded_script";
+
+        [UniGLTF.JsonSchema(Required = true, MinItems = 1)]
         public List<glTF_VCAST_vci_embedded_script_source> scripts = new List<glTF_VCAST_vci_embedded_script_source>();
 
         public int entryPoint;
@@ -253,15 +260,15 @@ namespace VCIGLTF
     [Serializable]
     public class glTF_VCAST_vci_embedded_script_source
     {
-        [JsonSchema(Description = "main.lua")] public string name;
+        [UniGLTF.JsonSchema(Description = "main.lua")] public string name;
 
-        [JsonSchema(EnumSerializationType = EnumSerializationType.AsLowerString)]
+        [UniGLTF.JsonSchema(EnumSerializationType = UniGLTF.EnumSerializationType.AsLowerString)]
         public ScriptMimeType mimeType; // "x-application/lua",
 
-        [JsonSchema(Description = "moonsharp", EnumSerializationType = EnumSerializationType.AsLowerString)]
+        [UniGLTF.JsonSchema(Description = "moonsharp", EnumSerializationType = UniGLTF.EnumSerializationType.AsLowerString)]
         public TargetEngine targetEngine;
 
-        [JsonSchema(Required = true, Minimum = 0)]
+        [UniGLTF.JsonSchema(Required = true, Minimum = 0)]
         public int source = -1;
     }
 
@@ -270,32 +277,17 @@ namespace VCIGLTF
     #region material
 
     /// <summary>
-    /// gltf.extension
-    /// </summary>
-    public partial class glTF_extensions : ExtensionsBase<glTF_extensions>
-    {
-        public glTF_VCAST_vci_material_unity VCAST_vci_material_unity;
-    }
-
-    /// <summary>
     /// Extension root
     /// </summary>
     [Serializable]
     public class glTF_VCAST_vci_material_unity
     {
+        public static string ExtensionName => "VCAST_vci_material_unity";
+
         /// <summary>
         /// Same as vci material
         /// </summary>
         public List<VCI.glTF_VCI_Material> materials;
-    }
-
-    /// <summary>
-    /// Extensions overwrite PBR materials
-    /// </summary>
-    public partial class glTFMaterial_extensions : ExtensionsBase<glTFMaterial_extensions>
-    {
-        [JsonSchema(Required = true)]
-        public glTF_VCAST_materials_pbr VCAST_materials_pbr;
     }
 
     #endregion
@@ -303,20 +295,14 @@ namespace VCIGLTF
     #region collider
 
     /// <summary>
-    /// node.extension
-    /// </summary>
-    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
-    {
-        public glTF_VCAST_vci_colliders VCAST_vci_collider;
-    }
-
-    /// <summary>
     /// Extension root
     /// </summary>
     [Serializable]
     public class glTF_VCAST_vci_colliders
     {
-        [JsonSchema(MinItems = 1)] public List<glTF_VCAST_vci_Collider> colliders;
+        public static string ExtensionName => "VCAST_vci_collider";
+
+        [UniGLTF.JsonSchema(MinItems = 1)] public List<glTF_VCAST_vci_Collider> colliders;
     }
 
     /// <summary>
@@ -329,7 +315,7 @@ namespace VCIGLTF
         private const string SphereColliderName = "sphere";
         private const string CapsuleColliderName = "capsule";
 
-        [JsonSchema(Required = true, EnumSerializationType = EnumSerializationType.AsString,
+        [UniGLTF.JsonSchema(Required = true, EnumSerializationType = UniGLTF.EnumSerializationType.AsString,
             EnumValues = new object[] {BoxColliderName, SphereColliderName, CapsuleColliderName})]
         public string type;
 
@@ -339,26 +325,26 @@ namespace VCIGLTF
         private const string AccessoryColliderLayer = "accessory";
         private const string ItemColliderLayer = "item";
 
-        [JsonSchema(Required = true, EnumSerializationType = EnumSerializationType.AsString,
+        [UniGLTF.JsonSchema(Required = true, EnumSerializationType = UniGLTF.EnumSerializationType.AsString,
             EnumValues = new object[] { DefaultColliderLayer, LocationColliderLayer, PickUpColliderLayer, AccessoryColliderLayer, ItemColliderLayer })]
         public string layer;
 
-        [JsonSchema(MinItems = 3, MaxItems = 3)]
+        [UniGLTF.JsonSchema(MinItems = 3, MaxItems = 3)]
         public float[] center;
 
-        [JsonSchema(MinItems = 1, MaxItems = 3)]
+        [UniGLTF.JsonSchema(MinItems = 1, MaxItems = 3)]
         public float[] shape;
 
-        [JsonSchema(Description = @"This collider is used for grab")]
+        [UniGLTF.JsonSchema(Description = @"This collider is used for grab")]
         public bool grabable;
 
-        [JsonSchema(Description = @"Use gravity")]
+        [UniGLTF.JsonSchema(Description = @"Use gravity")]
         public bool useGravity;
 
-        [JsonSchema(Description = @"Is Trigger")]
+        [UniGLTF.JsonSchema(Description = @"Is Trigger")]
         public bool isTrigger;
 
-        [JsonSchema(Description = @"Physic Material")]
+        [UniGLTF.JsonSchema(Description = @"Physic Material")]
         public glTF_VCAST_vci_PhysicMaterial physicMaterial;
 
         public static Collider AddColliderComponent(GameObject go, glTF_VCAST_vci_Collider collider)
@@ -470,11 +456,11 @@ namespace VCIGLTF
         public float staticFriction;
         public float bounciness;
 
-        [JsonSchema(Required = true, EnumSerializationType = EnumSerializationType.AsString,
+        [UniGLTF.JsonSchema(Required = true, EnumSerializationType = UniGLTF.EnumSerializationType.AsString,
             EnumValues = new object[] {AverageCombine, MinimumCombine, MaximumCombine, MultiplyCombine})]
         public string frictionCombine;
 
-        [JsonSchema(Required = true, EnumSerializationType = EnumSerializationType.AsString,
+        [UniGLTF.JsonSchema(Required = true, EnumSerializationType = UniGLTF.EnumSerializationType.AsString,
             EnumValues = new object[] {AverageCombine, MinimumCombine, MaximumCombine, MultiplyCombine})]
         public string bounceCombine;
 
@@ -540,20 +526,14 @@ namespace VCIGLTF
     #region rigidbody
 
     /// <summary>
-    /// node.extension
-    /// </summary>
-    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
-    {
-        public glTF_VCAST_vci_rigidbody VCAST_vci_rigidbody;
-    }
-
-    /// <summary>
     /// Extension root
     /// </summary>
     [Serializable]
     public class glTF_VCAST_vci_rigidbody
     {
-        [JsonSchema(MinItems = 1)] public List<glTF_VCAST_vci_Rigidbody> rigidbodies;
+        public static string ExtensionName => "VCAST_vci_rigidbody";
+
+        [UniGLTF.JsonSchema(MinItems = 1)] public List<glTF_VCAST_vci_Rigidbody> rigidbodies;
     }
 
     /// <summary>
@@ -608,12 +588,12 @@ namespace VCIGLTF
             }
         }
 
-        [JsonSchema(Required = true, EnumValues = new object[]
+        [UniGLTF.JsonSchema(Required = true, EnumValues = new object[]
         {
             InterpolateString.None,
             InterpolateString.Interpolate,
             InterpolateString.Extrapolate
-        }, EnumSerializationType = EnumSerializationType.AsUpperString)]
+        }, EnumSerializationType = UniGLTF.EnumSerializationType.AsUpperString)]
         public string interpolate;
 
 
@@ -656,12 +636,12 @@ namespace VCIGLTF
             }
         }
 
-        [JsonSchema(Required = true, EnumValues = new object[]
+        [UniGLTF.JsonSchema(Required = true, EnumValues = new object[]
         {
             CollisionDetectionModeString.Discrete,
             CollisionDetectionModeString.Continuous,
             CollisionDetectionModeString.ContinuousDynamic
-        }, EnumSerializationType = EnumSerializationType.AsUpperString)]
+        }, EnumSerializationType = UniGLTF.EnumSerializationType.AsUpperString)]
         public string collisionDetection;
 
         public bool freezePositionX = false;
@@ -726,20 +706,37 @@ namespace VCIGLTF
     #region joint
 
     /// <summary>
-    /// node.extension
-    /// </summary>
-    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
-    {
-        public glTF_VCAST_vci_joints VCAST_vci_joints;
-    }
-
-    /// <summary>
     /// Extension root
     /// </summary>
     [Serializable]
     public class glTF_VCAST_vci_joints
     {
-        [JsonSchema(MinItems = 1)] public List<glTF_VCAST_vci_joint> joints;
+        public static string ExtensionName => "VCAST_vci_joints";
+
+        [UniGLTF.JsonSchema(MinItems = 1)] public List<glTF_VCAST_vci_joint> joints;
+    }
+
+    // JointSpring
+    [Serializable]
+    public class Spring
+    {
+        public float spring;
+        public float damper;
+        public float minDistance;
+        public float maxDistance;
+        public float tolerance;
+        public float targetPosition;
+    }
+
+    // LimitSpring
+    [Serializable]
+    public class Limits
+    {
+        public float min;
+        public float max;
+        public float bounciness;
+        public float bounceMinVelocity = 0.2f;
+        public float contactDistance;
     }
 
     /// <summary>
@@ -756,25 +753,25 @@ namespace VCIGLTF
         }
 
 
-        [JsonSchema(Required = true, EnumValues = new object[]
+        [UniGLTF.JsonSchema(Required = true, EnumValues = new object[]
         {
             JointString.Fixed,
             JointString.Hinge,
             JointString.Spring
-        }, EnumSerializationType = EnumSerializationType.AsUpperString)]
+        }, EnumSerializationType = UniGLTF.EnumSerializationType.AsUpperString)]
         public string type;
 
         public int nodeIndex = -1;
 
-        [JsonSchema(MinItems = 3, MaxItems = 3)]
+        [UniGLTF.JsonSchema(MinItems = 3, MaxItems = 3)]
         public float[] anchor;
 
-        [JsonSchema(MinItems = 3, MaxItems = 3)]
+        [UniGLTF.JsonSchema(MinItems = 3, MaxItems = 3)]
         public float[] axis;
 
         public bool autoConfigureConnectedAnchor = true;
 
-        [JsonSchema(MinItems = 3, MaxItems = 3)]
+        [UniGLTF.JsonSchema(MinItems = 3, MaxItems = 3)]
         public float[] connectedAnchor;
 
         public bool enableCollision;
@@ -785,32 +782,8 @@ namespace VCIGLTF
 
         public float connectedMassScale = 1.0f;
 
-        // JointSpring
-        [Serializable]
-        public class Spring
-        {
-            public float spring;
-            public float damper;
-            public float minDistance;
-            public float maxDistance;
-            public float tolerance;
-            public float targetPosition;
-        }
-
         public bool useSpring;
         public Spring spring = new Spring();
-
-
-        // LimitSpring
-        [Serializable]
-        public class Limits
-        {
-            public float min;
-            public float max;
-            public float bounciness;
-            public float bounceMinVelocity = 0.2f;
-            public float contactDistance;
-        }
 
         public bool useLimits;
         public Limits limits = new Limits();
@@ -965,19 +938,13 @@ namespace VCIGLTF
     #region item
 
     /// <summary>
-    /// node.extension
-    /// </summary>
-    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
-    {
-        public glTF_VCAST_vci_item VCAST_vci_item = null;
-    }
-
-    /// <summary>
     /// Extension root
     /// </summary>
     [Serializable]
     public class glTF_VCAST_vci_item
     {
+        public static string ExtensionName => "VCAST_vci_item";
+
         public bool grabbable;
         public bool IsGrabbable => grabbable;
 
@@ -997,13 +964,6 @@ namespace VCIGLTF
     #endregion
 
     #region Effekseer
-    /// <summary>
-    /// gltf.extension
-    /// </summary>
-    public partial class glTF_extensions : ExtensionsBase<glTF_extensions>
-    {
-        public glTF_Effekseer Effekseer;
-    }
 
     /// <summary>
     /// Extension root.
@@ -1013,7 +973,7 @@ namespace VCIGLTF
     {
         public static string ExtensionName => "Effekseer";
 
-        [JsonSchema(Required = true, MinItems = 1, ExplicitIgnorableItemLength = 0)]
+        [UniGLTF.JsonSchema(Required = true, MinItems = 1, ExplicitIgnorableItemLength = 0)]
         public List<glTF_Effekseer_effect> effects;
     }
 
@@ -1033,17 +993,17 @@ namespace VCIGLTF
 
         public float scale = 1.0f;
 
-        [JsonSchema(Required = true, MinItems = 1, ExplicitIgnorableItemLength = 0)]
+        [UniGLTF.JsonSchema(Required = true, MinItems = 1, ExplicitIgnorableItemLength = 0)]
         public List<glTF_Effekseer_image> images;
 
-        [JsonSchema(Required = true, MinItems = 1, ExplicitIgnorableItemLength = 0)]
+        [UniGLTF.JsonSchema(Required = true, MinItems = 1, ExplicitIgnorableItemLength = 0)]
         public List<glTF_Effekseer_model> models;
     }
 
     [Serializable]
     public class glTF_Effekseer_body
     {
-        [JsonSchema(Required = true, Minimum = 0)]
+        [UniGLTF.JsonSchema(Required = true, Minimum = 0)]
         public int bufferView = -1;
     }
 
@@ -1056,26 +1016,18 @@ namespace VCIGLTF
             public const string Dds = "image/dds";
         }
 
-        [JsonSchema(Required = true, Minimum = 0)]
+        [UniGLTF.JsonSchema(Required = true, Minimum = 0)]
         public int bufferView = -1;
 
-        [JsonSchema(EnumValues = new object[] { MimeTypeString.Png, MimeTypeString.Dds }, EnumSerializationType = EnumSerializationType.AsString)]
+        [UniGLTF.JsonSchema(EnumValues = new object[] { MimeTypeString.Png, MimeTypeString.Dds }, EnumSerializationType = UniGLTF.EnumSerializationType.AsString)]
         public string mimeType;
     }
 
     [Serializable]
     public class glTF_Effekseer_model
     {
-        [JsonSchema(Required = true, Minimum = 0)]
+        [UniGLTF.JsonSchema(Required = true, Minimum = 0)]
         public int bufferView = -1;
-    }
-
-    /// <summary>
-    /// node.extension
-    /// </summary>
-    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
-    {
-        public glTF_Effekseer_emitters Effekseer_emitters;
     }
 
     /// <summary>
@@ -1086,14 +1038,14 @@ namespace VCIGLTF
     {
         public static string ExtensionName => "Effekseer_emitters";
 
-        [JsonSchema(MinItems = 1)]
+        [UniGLTF.JsonSchema(MinItems = 1)]
         public List<glTF_Effekseer_emitter> emitters;
     }
 
     [Serializable]
     public class glTF_Effekseer_emitter
     {
-        [JsonSchema(Required = true, Minimum = 0)]
+        [UniGLTF.JsonSchema(Required = true, Minimum = 0)]
         public int effectIndex = -1;
         public bool isPlayOnStart;
         public bool isLoop;
@@ -1103,14 +1055,6 @@ namespace VCIGLTF
     #region Animation
 
     /// <summary>
-    /// node.extension
-    /// </summary>
-    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
-    {
-        public glTF_VCAST_vci_animation VCAST_vci_animation;
-    }
-
-    /// <summary>
     /// Extension root
     /// </summary>
     [Serializable]
@@ -1118,14 +1062,14 @@ namespace VCIGLTF
     {
         public static string ExtensionName => "VCAST_vci_animation";
 
-        [JsonSchema(MinItems = 1)]
+        [UniGLTF.JsonSchema(MinItems = 1)]
         public List<glTF_VCAST_vci_animationReference> animationReferences;
     }
 
     [Serializable]
     public class glTF_VCAST_vci_animationReference
     {
-        [JsonSchema(Required = true, Minimum = 0)]
+        [UniGLTF.JsonSchema(Required = true, Minimum = 0)]
         public int animation = -1;
     }
     #endregion
@@ -1145,7 +1089,7 @@ namespace VCIGLTF
     {
         public static string ExtensionName => "VCAST_vci_spring_bone";
 
-        [JsonSchema(Required = true, MinItems = 1, ExplicitIgnorableItemLength = 0)]
+        [UniGLTF.JsonSchema(Required = true, MinItems = 1, ExplicitIgnorableItemLength = 0)]
         public List<glTF_VCAST_vci_SpringBone> springBones;
     }
 
@@ -1223,14 +1167,6 @@ namespace VCIGLTF
         public static string ExtensionName => "VCAST_vci_location_lighting";
 
         public glTF_VCAST_vci_LocationLighting locationLighting;
-    }
-
-    /// <summary>
-    /// node.extension
-    /// </summary>
-    public partial class glTFNode_extensions : ExtensionsBase<glTFNode_extensions>
-    {
-        public glTF_VCAST_vci_lightmap VCAST_vci_lightmap;
     }
 
     [Serializable]

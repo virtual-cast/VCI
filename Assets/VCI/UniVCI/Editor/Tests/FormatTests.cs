@@ -1,31 +1,80 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
-using VCIGLTF;
-using VCIJSON;
+using UniGLTF;
+using UniJSON;
 
 namespace VCI
 {
     public class FormatTests
     {
+        private T RootExtensionSerializeAndDeserialize<T>(T src, string extensionName, Action<JsonFormatter, T> serializer, Func<JsonNode, T> deserializer) where T: class
+        {
+            var gltf = new glTF();
+            var f = new UniJSON.JsonFormatter();
+            serializer(f, src);
+            glTFExtensionExport.GetOrCreate(ref gltf.extensions).Add(extensionName, f.GetStore().Bytes);
+
+            var gltf2 = new glTF();
+            gltf2.extensions = (gltf.extensions as glTFExtensionExport).Deserialize();
+
+            if (gltf2.extensions.TryDeserializeExtensions(extensionName, deserializer, out T dst))
+            {
+                return dst;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private T NodeExtensionSerializeAndDeserialize<T>(T src, string extensionName, Action<JsonFormatter, T> serializer, Func<JsonNode, T> deserializer) where T : class
+        {
+            var node = new glTFNode();
+            node.name = "testNode";
+            var f = new UniJSON.JsonFormatter();
+            serializer(f, src);
+            glTFExtensionExport.GetOrCreate(ref node.extensions).Add(extensionName, f.GetStore().Bytes);
+
+            var node2 = new glTFNode();
+            node2.extensions = (node.extensions as glTFExtensionExport).Deserialize();
+
+            if (node2.extensions.TryDeserializeExtensions(extensionName, deserializer, out T dst))
+            {
+                return dst;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         [Test]
         public void VciMeta()
         {
             var src = new glTF_VCAST_vci_meta
             {
                 author = "AUTHOR",
-                scriptFormat = glTF_VCAST_vci_meta.ScriptFormat.luaBinary,
+                scriptFormat = ScriptFormat.luaBinary,
             };
 
-            var f = new JsonFormatter();
-            f.Serialize(src);
-            var parsed = JsonParser.Parse(new Utf8String(f.GetStore().Bytes));
+            var dst = RootExtensionSerializeAndDeserialize(
+                src,
+                glTF_VCAST_vci_meta.ExtensionName,
+                glTF_VCAST_vci_meta_Serializer.Serialize,
+                glTF_VCAST_vci_meta_Deserializer.Deserialize
+                );
 
-            Assert.AreEqual("AUTHOR", parsed["author"].GetString());
-            Assert.AreEqual("luaBinary", parsed["scriptFormat"].GetString());
-
-            var dst = new glTF_VCAST_vci_meta();
-            parsed.Deserialize(ref dst);
-            Assert.AreEqual(src.scriptFormat, dst.scriptFormat);
+            if (dst != null)
+            {
+                Assert.AreEqual(src.author, dst.author);
+                Assert.AreEqual(src.scriptFormat, dst.scriptFormat);
+            }
+            else
+            {
+                Assert.Fail();
+            }
         }
 
         [Test]
@@ -42,12 +91,22 @@ namespace VCI
                 }
             };
 
-            var f = new JsonFormatter();
-            f.Serialize(src);
-            var parsed = JsonParser.Parse(new Utf8String(f.GetStore().Bytes));
+            var dst = RootExtensionSerializeAndDeserialize(
+                src,
+                glTF_VCAST_vci_audios.ExtensionName,
+                glTF_VCAST_vci_audios_Serializer.Serialize,
+                glTF_VCAST_vci_audios_Deserializer.Deserialize
+                );
 
-            Assert.AreEqual(1, parsed["audios"].GetArrayCount());
-            Assert.AreEqual("hoge.wav", parsed["audios"][0]["name"].GetString());
+            if (dst != null)
+            {
+                Assert.AreEqual(src.audios.Count, dst.audios.Count);
+                Assert.AreEqual(src.audios[0].name, dst.audios[0].name);
+            }
+            else
+            {
+                Assert.Fail();
+            }
         }
 
         [Test]
@@ -64,12 +123,22 @@ namespace VCI
                 }
             };
 
-            var f = new JsonFormatter();
-            f.Serialize(src);
-            var parsed = JsonParser.Parse(new Utf8String(f.GetStore().Bytes));
+            var dst = RootExtensionSerializeAndDeserialize(
+                src,
+                glTF_VCAST_vci_embedded_script.ExtensionName,
+                glTF_VCAST_vci_embedded_script_Serializer.Serialize,
+                glTF_VCAST_vci_embedded_script_Deserializer.Deserialize
+                );
 
-            Assert.AreEqual(1, parsed["scripts"].ArrayItems().Count());
-            Assert.AreEqual("main.lua", parsed["scripts"][0]["name"].GetString());
+            if (dst != null)
+            {
+                Assert.AreEqual(src.scripts.Count, dst.scripts.Count);
+                Assert.AreEqual(src.scripts[0].name, dst.scripts[0].name);
+            }
+            else
+            {
+                Assert.Fail();
+            }
         }
 
         [Test]
@@ -86,12 +155,22 @@ namespace VCI
                 }
             };
 
-            var f = new JsonFormatter();
-            f.Serialize(src);
-            var parsed = JsonParser.Parse(new Utf8String(f.GetStore().Bytes));
+            var dst = NodeExtensionSerializeAndDeserialize(
+                src,
+                glTF_VCAST_vci_colliders.ExtensionName,
+                glTF_VCAST_vci_colliders_Serializer.Serialize,
+                glTF_VCAST_vci_colliders_Deserializer.Deserialize
+                );
 
-            Assert.AreEqual(1, parsed["colliders"].ArrayItems().Count());
-            Assert.AreEqual(3, parsed["colliders"][0]["center"].GetArrayCount());
+            if (dst != null)
+            {
+                Assert.AreEqual(1, dst.colliders.Count());
+                Assert.AreEqual(3, dst.colliders[0].center.Count());
+            }
+            else
+            {
+                Assert.Fail();
+            }
         }
 
         [Test]
@@ -108,12 +187,23 @@ namespace VCI
                 }
             };
 
-            var f = new JsonFormatter();
-            f.Serialize(src);
-            var parsed = JsonParser.Parse(new Utf8String(f.GetStore().Bytes));
+            var dst = NodeExtensionSerializeAndDeserialize(
+                src,
+                glTF_VCAST_vci_rigidbody.ExtensionName,
+                glTF_VCAST_vci_rigidbody_Serializer.Serialize,
+                glTF_VCAST_vci_rigidbody_Deserializer.Deserialize
+                );
 
-            Assert.AreEqual(1, parsed["rigidbodies"].ArrayItems().Count());
-            Assert.AreEqual(9.8f, parsed["rigidbodies"][0]["mass"].GetSingle());
+            if (dst != null)
+            {
+                Assert.AreEqual(1, dst.rigidbodies.Count());
+                Assert.AreEqual(9.8f, dst.rigidbodies[0].mass);
+            }
+            else
+            {
+                Assert.Fail();
+            }
+
         }
 
         [Test]
@@ -125,7 +215,7 @@ namespace VCI
                 {
                     new glTF_VCAST_vci_joint
                     {
-                        spring = new glTF_VCAST_vci_joint.Spring
+                        spring = new Spring
                         {
                             tolerance = 10.5f
                         }
@@ -133,12 +223,56 @@ namespace VCI
                 }
             };
 
-            var f = new JsonFormatter();
-            f.Serialize(src);
-            var parsed = JsonParser.Parse(new Utf8String(f.GetStore().Bytes));
+            var dst = NodeExtensionSerializeAndDeserialize(
+                src,
+                glTF_VCAST_vci_joints.ExtensionName,
+                glTF_VCAST_vci_joints_Serializer.Serialize,
+                glTF_VCAST_vci_joints_Deserializer.Deserialize
+                );
 
-            Assert.AreEqual(1, parsed["joints"].ArrayItems().Count());
-            Assert.AreEqual(10.5f, parsed["joints"][0]["spring"]["tolerance"].GetSingle());
+            if (dst != null)
+            {
+                Assert.AreEqual(1, dst.joints.Count());
+                Assert.AreEqual(10.5f, dst.joints[0].spring.tolerance);
+            }
+            else
+            {
+                Assert.Fail();
+            }
+        }
+
+        [Test]
+        public void VciAudioSources()
+        {
+            var src = new glTF_VCAST_vci_audio_sources
+            {
+                audioSources = new List<glTF_VCAST_vci_audio_source>()
+                {
+                    new glTF_VCAST_vci_audio_source()
+                    {
+                        audio = 1,
+                        spatialBlend = 0.5f
+                    }
+                }
+            };
+
+            var dst = NodeExtensionSerializeAndDeserialize(
+                src,
+                glTF_VCAST_vci_audio_sources.ExtensionName,
+                glTF_VCAST_vci_audio_sources_Serializer.Serialize,
+                glTF_VCAST_vci_audio_sources_Deserializer.Deserialize
+                );
+
+            if (dst != null)
+            {
+                Assert.AreEqual(1, dst.audioSources.Count());
+                Assert.AreEqual(1, dst.audioSources[0].audio);
+                Assert.AreEqual(0.5f, dst.audioSources[0].spatialBlend);
+            }
+            else
+            {
+                Assert.Fail();
+            }
         }
 
         [Test]
@@ -149,11 +283,21 @@ namespace VCI
                 grabbable = true,
             };
 
-            var f = new JsonFormatter();
-            f.Serialize(src);
-            var parsed = JsonParser.Parse(new Utf8String(f.GetStore().Bytes));
+            var dst = NodeExtensionSerializeAndDeserialize(
+                src,
+                glTF_VCAST_vci_item.ExtensionName,
+                glTF_VCAST_vci_item_Serializer.Serialize,
+                glTF_VCAST_vci_item_Deserializer.Deserialize
+                );
 
-            Assert.AreEqual(true, parsed["grabbable"].GetBoolean());
+            if (dst != null)
+            {
+                Assert.AreEqual(true, dst.grabbable);
+            }
+            else
+            {
+                Assert.Fail();
+            }
         }
     }
 }

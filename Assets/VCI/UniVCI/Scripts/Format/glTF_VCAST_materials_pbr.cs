@@ -1,7 +1,6 @@
 ﻿using System;
-using VCIJSON;
 
-namespace VCIGLTF
+namespace VCI
 {
     [Serializable]
     public sealed class glTF_VCAST_materials_pbr

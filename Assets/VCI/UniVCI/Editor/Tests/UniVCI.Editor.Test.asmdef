@@ -3,7 +3,7 @@
     "references": [
         "VCI",
         "Unity.TextMeshPro",
-        "VCIDepthFirstScheduler"
+        "UniGLTF"
     ],
     "includePlatforms": [
         "Editor"

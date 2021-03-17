@@ -1,67 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using VCIGLTF;
-using VCIJSON;
+using UniGLTF;
 
 namespace VCI
 {
     [Serializable]
-    [JsonSchema(Title = "vci.spring_bone.spring_bone")]
-    public class glTF_VCAST_vci_SpringBone : JsonSerializableBase
+    [UniGLTF.JsonSchema(Title = "vci.spring_bone.spring_bone")]
+    public class glTF_VCAST_vci_SpringBone
     {
-        [JsonSchema(Description = "The resilience of the swaying object (the power of returning to the initial pose).")]
+        [UniGLTF.JsonSchema(Description = "The resilience of the swaying object (the power of returning to the initial pose).")]
         public float stiffiness;
 
-        [JsonSchema(Description = "The strength of gravity.")]
+        [UniGLTF.JsonSchema(Description = "The strength of gravity.")]
         public float gravityPower;
 
-        [JsonSchema(Description = "The direction of gravity. Set (0, -1, 0) for simulating the gravity. Set (1, 0, 0) for simulating the wind.")]
+        [UniGLTF.JsonSchema(Description = "The direction of gravity. Set (0, -1, 0) for simulating the gravity. Set (1, 0, 0) for simulating the wind.")]
         public Vector3 gravityDir;
 
-        [JsonSchema(Description = "The resistance (deceleration) of automatic animation.")]
+        [UniGLTF.JsonSchema(Description = "The resistance (deceleration) of automatic animation.")]
         public float dragForce;
 
         // NOTE: This value denotes index but may contain -1 as a value.
         // When the value is -1, it means that center node is not specified.
         // This is a historical issue and a compromise for forward compatibility.
-        [JsonSchema(Description = @"The reference point of a swaying object can be set at any location except the origin. When implementing UI moving with warp, the parent node to move with warp can be specified if you don't want to make the object swaying with warp movement.")]
+        [UniGLTF.JsonSchema(Description = @"The reference point of a swaying object can be set at any location except the origin. When implementing UI moving with warp, the parent node to move with warp can be specified if you don't want to make the object swaying with warp movement.")]
         public int center;
 
-        [JsonSchema(Description = "The radius of the sphere used for the collision detection with colliders.")]
+        [UniGLTF.JsonSchema(Description = "The radius of the sphere used for the collision detection with colliders.")]
         public float hitRadius;
 
-        [JsonSchema(Description = "Specify the node index of the root bone of the swaying object.")]
+        [UniGLTF.JsonSchema(Description = "Specify the node index of the root bone of the swaying object.")]
         [ItemJsonSchema(Minimum = 0)]
         public int[] bones = {};
 
-        [JsonSchema(Description = "Specify the index of the collider group for collisions with swaying objects.")]
+        [UniGLTF.JsonSchema(Description = "Specify the index of the collider group for collisions with swaying objects.")]
         [ItemJsonSchema(Minimum = 0)]
         public int[] colliderIds = {};
-
-        protected override void SerializeMembers(GLTFJsonFormatter f)
-        {
-            f.KeyValue(() => stiffiness);
-            f.KeyValue(() => gravityPower);
-            f.KeyValue(() => gravityDir);
-            f.KeyValue(() => dragForce);
-            f.KeyValue(() => center);
-            f.KeyValue(() => hitRadius);
-            f.KeyValue(() => bones);
-            f.KeyValue(() => colliderIds);
-        }
     }
 
     [Serializable]
-    [JsonSchema(Title = "vci.spring_bone.spring_bone_group", Description = "The setting of automatic animation of string-like objects such as tails and hairs.")]
-    public class glTF_VCAST_vci_SpringBoneGroup : JsonSerializableBase
+    [UniGLTF.JsonSchema(Title = "vci.spring_bone.spring_bone_group", Description = "The setting of automatic animation of string-like objects such as tails and hairs.")]
+    public class glTF_VCAST_vci_SpringBoneGroup
     {
-        [JsonSchema(ExplicitIgnorableItemLength = 0)]
+        [UniGLTF.JsonSchema(ExplicitIgnorableItemLength = 0)]
         public List<glTF_VCAST_vci_SpringBone> boneGroups = new List<glTF_VCAST_vci_SpringBone>();
-
-        protected override void SerializeMembers(GLTFJsonFormatter f)
-        {
-            f.Key("boneGroups"); f.GLTFValue(boneGroups);
-        }
     }
 }

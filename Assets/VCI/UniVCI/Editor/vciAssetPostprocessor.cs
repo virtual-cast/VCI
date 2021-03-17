@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using UnityEditor;
-using VCIDepthFirstScheduler;
-using VCIGLTF;
+using DepthFirstScheduler;
+using UniGLTF;
 
 namespace VCI
 {

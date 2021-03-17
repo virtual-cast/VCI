@@ -18,17 +18,26 @@ namespace VCI
             }
         }
 
+        static readonly int VersionTextLength = 30;
+        static readonly int AuthorTextLength = 30;
+        static readonly int ContactInformationTextLength = 255;
+        static readonly int ReferenceTextLength = 255;
+        static readonly int TitleTextLength = 30;
+        static readonly int DescriptionTextLength = 500;
+        static readonly int ModelDataOtherLicenseUrlLength = 2048;
+        static readonly int ScriptOtherLicenseUrlLength = 2048;
+
         private static readonly Dictionary<string, ValidationRule> ValidationRules =
             new Dictionary<string, ValidationRule>
             {
-                {"Version", new ValidationRule(false, VCIValidator.VersionTextLength)},
-                {"Author", new ValidationRule(true, VCIValidator.AuthorTextLength)},
-                {"ContactInformation", new ValidationRule(false, VCIValidator.ContactInformationTextLength)},
-                {"Reference", new ValidationRule(false, VCIValidator.ReferenceTextLength)},
-                {"Title", new ValidationRule(true, VCIValidator.TitleTextLength)},
-                {"Description", new ValidationRule(false, VCIValidator.DescriptionTextLength)},
-                {"ModelDataOtherLicenseUrl", new ValidationRule(false, VCIValidator.ModelDataOtherLicenseUrlLength)},
-                {"ScriptOtherLicenseUrl", new ValidationRule(false, VCIValidator.ScriptOtherLicenseUrlLength)}
+                {"Version", new ValidationRule(false, VersionTextLength)},
+                {"Author", new ValidationRule(true, AuthorTextLength)},
+                {"ContactInformation", new ValidationRule(false, ContactInformationTextLength)},
+                {"Reference", new ValidationRule(false, ReferenceTextLength)},
+                {"Title", new ValidationRule(true, TitleTextLength)},
+                {"Description", new ValidationRule(false, DescriptionTextLength)},
+                {"ModelDataOtherLicenseUrl", new ValidationRule(false, ModelDataOtherLicenseUrlLength)},
+                {"ScriptOtherLicenseUrl", new ValidationRule(false, ScriptOtherLicenseUrlLength)}
             };
 
         private static string ValidateField(string fieldName, string text)

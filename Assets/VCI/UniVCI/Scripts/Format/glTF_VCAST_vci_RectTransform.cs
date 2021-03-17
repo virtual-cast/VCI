@@ -1,37 +1,27 @@
 ﻿using System;
 using UnityEngine;
-using VCIGLTF;
-using VCIJSON;
+using UniGLTF;
 
 namespace VCI
 {
     [Serializable]
-    [JsonSchema(Title = "vci.rect_transform")]
-    public class glTF_VCAST_vci_RectTransform : JsonSerializableBase
+    [UniGLTF.JsonSchema(Title = "vci.rect_transform")]
+    public class glTF_VCAST_vci_RectTransform
     {
-        [JsonSchema(MinItems = 2, MaxItems = 2)]
+        [UniGLTF.JsonSchema(MinItems = 2, MaxItems = 2)]
         public float[] anchorMin;
 
-        [JsonSchema(MinItems = 2, MaxItems = 2)]
+        [UniGLTF.JsonSchema(MinItems = 2, MaxItems = 2)]
         public float[] anchorMax;
 
-        [JsonSchema(MinItems = 2, MaxItems = 2)]
+        [UniGLTF.JsonSchema(MinItems = 2, MaxItems = 2)]
         public float[] anchoredPosition;
 
-        [JsonSchema(MinItems = 2, MaxItems = 2)]
+        [UniGLTF.JsonSchema(MinItems = 2, MaxItems = 2)]
         public float[] sizeDelta;
 
-        [JsonSchema(MinItems = 2, MaxItems = 2)]
+        [UniGLTF.JsonSchema(MinItems = 2, MaxItems = 2)]
         public float[] pivot;
-
-        protected override void SerializeMembers(GLTFJsonFormatter f)
-        {
-            f.KeyValue(() => anchorMin);
-            f.KeyValue(() => anchorMax);
-            f.KeyValue(() => anchoredPosition);
-            f.KeyValue(() => sizeDelta);
-            f.KeyValue(() => pivot);
-        }
 
         public static glTF_VCAST_vci_RectTransform CreateFromRectTransform(RectTransform rt)
         {

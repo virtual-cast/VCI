@@ -1,18 +1,18 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.IO;
 using System.Threading.Tasks;
 using NAudio.Wave;
 using NLayer.NAudioSupport;
 using UnityEngine;
-using VCIGLTF;
+using UniGLTF;
 using Debug = UnityEngine.Debug;
 
 namespace VCI
 {
     public static class AudioImporter
     {
-        public static IEnumerator Import(glTF_VCAST_vci_audio audio, ArraySegment<byte> bytes, GameObject target)
+        public static IEnumerator Import(glTF_VCAST_vci_audio audio, ArraySegment<byte> bytes, Action<AudioClip> callback)
         {
             if (audio.mimeType == "audio/mp3")
             {
@@ -29,14 +29,14 @@ namespace VCI
 
                 using (wavStream)
                 {
-                    yield return CreateClip(wavStream, 0, audio.name, target);
+                    yield return CreateClip(wavStream, 0, audio.name, callback);
                 }
             }
             else
             {
                 using (var wavStream = new MemoryStream(bytes.Array, bytes.Offset, bytes.Count, false, true))
                 {
-                    yield return CreateClip(wavStream, bytes.Offset, audio.name, target);
+                    yield return CreateClip(wavStream, bytes.Offset, audio.name, callback);
                 }
             }
         }
@@ -61,7 +61,7 @@ namespace VCI
             }
         }
 
-        private static IEnumerator CreateClip(MemoryStream ms, int offset, string name, GameObject target)
+        private static IEnumerator CreateClip(MemoryStream ms, int offset, string name, Action<AudioClip> callback)
         {
             if (!WaveUtil.TryReadHeader(ms, out var waveHeader))
             {
@@ -69,7 +69,6 @@ namespace VCI
                 yield break;
             }
 
-            AudioClip audioClip = null;
             yield return AudioClipMaker.Create(
                 name,
                 ms.GetBuffer(),
@@ -79,14 +78,7 @@ namespace VCI
                 waveHeader.Channel,
                 waveHeader.SampleRate,
                 false,
-                clip => { audioClip = clip; });
-
-            if (audioClip == null) yield break;
-            
-            var audioSource = target.AddComponent<AudioSource>();
-            audioSource.clip = audioClip;
-            audioSource.playOnAwake = false;
-            audioSource.loop = false;
+                callback);
         }
     }
 }
