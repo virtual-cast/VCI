@@ -183,6 +183,22 @@ namespace VCI
             yield break;
         }
 
+        protected override IEnumerable<UnityEngine.Object> ObjectsForSubAsset()
+        {
+            HashSet<Texture2D> textures = new HashSet<Texture2D>();
+            foreach (var x in GetTextures().SelectMany(y => y.GetTexturesForSaveAssets()))
+            {
+                if (!textures.Contains(x))
+                {
+                    textures.Add(x);
+                }
+            }
+            foreach (var x in textures) { yield return x; }
+            foreach (var x in GetMaterials()) { yield return x; }
+            foreach (var x in Meshes) { yield return x.Mesh; }
+            // Animationは独自に管理される
+        }
+
         public IEnumerator SetupCoroutine()
         {
             VCIObject = Root.AddComponent<VCIObject>();

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
+using UniGLTF;
 using UnityEditor;
 using UnityEngine;
-using UniGLTF;
 
 namespace VCI
 {
@@ -16,15 +16,24 @@ namespace VCI
 #if UNITY_STANDALONE_WIN && UNITY_EDITOR
             EditorApplication.isPlaying = false;
 
-            if (!Validate()) return;
+            var rootGameObject = default(GameObject);
+            try
+            {
+                rootGameObject = GameObjectSelectionService.GetSingleSelectedObject();
+                VCIValidator.ValidateVCIRequirements(rootGameObject);
+            }
+            catch(VCIValidatorException e)
+            {
+                VCIValidationErrorDialog.ShowErrorDialog(e);
+                GUIUtility.ExitGUI();
+                return;
+            }
 
             try
             {
                 // save dialog
-                var root = Selection.activeObject as GameObject;
-
                 var path = VCI.FileDialogForWindows.SaveDialog("Save " + VCIVersion.EXTENSION,
-                    root.name + VCIVersion.EXTENSION);
+                    rootGameObject.name + VCIVersion.EXTENSION);
 
                 //var path = EditorUtility.SaveFilePanel(
                 //    "Save " + VCIVersion.EXTENSION,
@@ -33,7 +42,7 @@ namespace VCI
                 //    VCIVersion.EXTENSION.Substring(1));
                 if (string.IsNullOrEmpty(path)) return;
 
-                var bytes = ExportVci(root);
+                var bytes = ExportVci(rootGameObject);
                 File.WriteAllBytes(path, bytes);
 
                 if (path.StartsWithUnityAssetPath())
@@ -79,50 +88,6 @@ namespace VCI
             }
 
             return gltf.ToGlbBytes();
-        }
-
-        public static bool Validate()
-        {
-            try
-            {
-                var selectedGameObjects = Selection.gameObjects;
-                if (selectedGameObjects.Length == 0)
-                {
-                    var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.GameObjectNotSelected}");
-                    throw new VCIValidatorException(ValidationErrorType.GameObjectNotSelected, errorText);
-                }
-
-                if (2 <= selectedGameObjects.Length)
-                {
-                    var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.MultipleSelection}");
-                    throw new VCIValidatorException(ValidationErrorType.MultipleSelection, errorText);
-                }
-
-                var vciObject = selectedGameObjects[0].GetComponent<VCIObject>();
-                if (vciObject == null)
-                {
-                    var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.VCIObjectNotAttached}");
-                    throw new VCIValidatorException(ValidationErrorType.VCIObjectNotAttached, errorText);
-                }
-
-                VCIValidator.ValidateVCIObject(vciObject);
-            }
-            catch (VCIValidatorException e)
-            {
-                var title =  $"Error{(int)e.ErrorType}";
-
-                var text = e.Message;
-
-                text = text.Replace("\\n", Environment.NewLine);
-
-                if(e.ErrorType == ValidationErrorType.InvalidCharacter)
-                    EditorGUILayout.HelpBox(e.Message, MessageType.Warning);
-
-                EditorUtility.DisplayDialog(title, text, "OK");
-                GUIUtility.ExitGUI();
-                return false;
-            }
-            return true;
         }
     }
 }

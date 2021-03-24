@@ -122,8 +122,17 @@ namespace VCI
             // Export Button
             if (GUILayout.Button(VCIConfig.GetText("validate_button"), GUILayout.MinHeight(32)))
             {
-                if (VCIObjectExporterMenu.Validate())
+                try
+                {
+                    var rootGameObject = GameObjectSelectionService.GetSingleSelectedObject();
+                    VCIValidator.ValidateVCIRequirements(rootGameObject);
                     EditorUtility.DisplayDialog("Result", VCIConfig.GetText("no_error"), "OK");
+                }
+                catch(VCIValidatorException e)
+                {
+                    VCIValidationErrorDialog.ShowErrorDialog(e);
+                    GUIUtility.ExitGUI();
+                }
             }
 
             EditorGUILayout.Space();
