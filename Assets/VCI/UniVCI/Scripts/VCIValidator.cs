@@ -11,21 +11,34 @@ namespace VCI
 {
     public static class VCIValidator
     {
-        public static void ValidateVCIObject(VCIObject vo)
+        public static void ValidateVCIRequirements(GameObject gameObject)
         {
-            ValidateVCIObjectComponentRestrictions(vo);
-            ValidateVCIScripts(vo);
-            VCIMetaValidator.Validate(vo);
-            ValidateColliders(vo);
-            ValidateAnimation(vo);
-            ValidateSpringBones(vo);
-            ValidatePlayerSpawnPoints(vo);
-            ValidateLocationBounds(vo);
+            ValidateVCIObjectComponentRestrictions(gameObject);
+
+            var vciObject = gameObject.GetComponent<VCIObject>();
+            ValidateVCIScripts(vciObject);
+            VCIMetaValidator.Validate(vciObject);
+            ValidateColliders(gameObject);
+            ValidateAnimation(gameObject);
+            ValidateSpringBones(gameObject);
+            ValidatePlayerSpawnPoints(gameObject);
+            ValidateLocationBounds(gameObject);
         }
 
-        private static void ValidateVCIObjectComponentRestrictions(VCIObject vciObject)
+        private static void ValidateVCIObjectComponentRestrictions(GameObject gameObject)
         {
-            // Check 1:「VCIObject」コンポーネントがVCIの中で一つのみ存在する
+            // Check 1: RootのGameObjectにVCIObjectがアタッチされている
+            var vciObject = gameObject.GetComponent<VCIObject>();
+            if (vciObject == null)
+            {
+                if (vciObject == null)
+                {
+                    var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.VCIObjectNotAttached}");
+                    throw new VCIValidatorException(ValidationErrorType.VCIObjectNotAttached, errorText);
+                }
+            }
+
+            // Check 2:「VCIObject」コンポーネントがVCIの中で一つのみ存在する
             var vciObjectCount = 0;
 
             foreach (var transform in vciObject.transform.Traverse())
@@ -95,13 +108,13 @@ namespace VCI
         // 現状、MeshColliderは使えない
         // - VCI が完全に静的であることが保証できないため
         // - BoxCollider, SphereCollider, CapsuleColliderのみ使用できる
-        private static void ValidateColliders(VCIObject vciObject)
+        private static void ValidateColliders(GameObject gameObject)
         {
             // Check 1: MeshCollider が VCI にアタッチされていない
-            CheckInvalidComponent<MeshCollider>(vciObject.gameObject);
+            CheckInvalidComponent<MeshCollider>(gameObject);
         }
 
-        private static void ValidateAnimation(VCIObject vciObject)
+        private static void ValidateAnimation(GameObject gameObject)
         {
             // NOTE: Editorコードを含んでいるため、ランタイムでValidateすることができない
             // TODO: Runtime 時にどうするかを考える
@@ -110,8 +123,8 @@ namespace VCI
             // NOTE: root についてる animation の export は UniGLTF 側で行われる
             //       その時、Animator か Animation どちらか片方が一つのみアタッチされていること前提で export される
             var animationClips = new List<AnimationClip>();
-            var animator = vciObject.GetComponent<Animator>();
-            var animation = vciObject.GetComponent<Animation>();
+            var animator = gameObject.GetComponent<Animator>();
+            var animation = gameObject.GetComponent<Animation>();
             if (animator != null)
             {
                 animationClips.AddRange(AnimationExporter.GetAnimationClips(animator));
@@ -140,13 +153,13 @@ namespace VCI
 #endif
         }
 
-        private static void ValidateSpringBones(VCIObject vciObject)
+        private static void ValidateSpringBones(GameObject gameObject)
         {
             // NOTE: どういう歴史的経緯があったのか分からないけど、現在これらの使われていない
             // const int maxSpringBoneColliderCount = 10;
             // const int maxSphereColliderCount = 10;
 
-            var springBones = vciObject.GetComponents<VCISpringBone>();
+            var springBones = gameObject.GetComponents<VCISpringBone>();
 
             if (springBones == null)
             {
@@ -227,9 +240,9 @@ namespace VCI
             }
         }
 
-        private static void ValidatePlayerSpawnPoints(VCIObject vciObject)
+        private static void ValidatePlayerSpawnPoints(GameObject gameObject)
         {
-            var playerSpawnPoints = vciObject.GetComponentsInChildren<VCIPlayerSpawnPoint>();
+            var playerSpawnPoints = gameObject.GetComponentsInChildren<VCIPlayerSpawnPoint>();
 
             if (playerSpawnPoints == null)
             {
@@ -263,9 +276,9 @@ namespace VCI
             }
         }
 
-        private static void ValidateLocationBounds(VCIObject vciObject)
+        private static void ValidateLocationBounds(GameObject gameObject)
         {
-            var locationBoundsList = vciObject.gameObject.GetComponentsInChildren<VCILocationBounds>();
+            var locationBoundsList = gameObject.GetComponentsInChildren<VCILocationBounds>();
 
             if (locationBoundsList == null || locationBoundsList.Length == 0)
             {
