@@ -16,7 +16,7 @@ using UnityEditor;
 
 namespace VCI
 {
-    public class VCIImporter : ImporterContext
+    public class VCIImporter : UniGLTF.Legacy.LegacyImporterContext
     {
         private VCI.glTF_VCAST_vci_meta VciMeta { get; set; }
 

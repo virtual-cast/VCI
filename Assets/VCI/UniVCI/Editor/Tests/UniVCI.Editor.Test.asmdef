@@ -3,7 +3,8 @@
     "references": [
         "VCI",
         "Unity.TextMeshPro",
-        "UniGLTF"
+        "UniGLTF",
+        "UniGLTF.Legacy"
     ],
     "includePlatforms": [
         "Editor"

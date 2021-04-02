@@ -1,14 +1,9 @@
 {
-    "name": "VCI",
+    "name": "UniGLTF.Legacy",
     "references": [
-        "VRM",
-        "ShaderProperty.Runtime",
-        "UniUnlit",
-        "Effekseer",
-        "Unity.TextMeshPro",
-        "NAudio",
         "UniGLTF",
-        "UniGLTF.Legacy"
+        "VRMShaders",
+        "UniUnlit"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
