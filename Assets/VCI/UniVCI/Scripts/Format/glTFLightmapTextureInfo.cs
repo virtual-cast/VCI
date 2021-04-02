@@ -6,7 +6,7 @@ namespace VCI
     [Serializable]
     public sealed class glTFLightmapTextureInfo : glTFTextureInfo
     {
-        public override glTFTextureTypes TextureType => glTFTextureTypes.Unknown;
+        public override glTFTextureTypes TextureType => glTFTextureTypes.SRGB;
 
         public glTFLightmapTextureInfo()
         {

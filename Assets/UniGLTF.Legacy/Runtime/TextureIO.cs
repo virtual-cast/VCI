@@ -17,13 +17,10 @@ namespace UniGLTF.Legacy
         {
             switch (textureType)
             {
-                case glTFTextureTypes.Metallic:
-                case glTFTextureTypes.Occlusion:
+                case glTFTextureTypes.OcclusionMetallicRoughness:
                 case glTFTextureTypes.Normal:
                     return RenderTextureReadWrite.Linear;
-                case glTFTextureTypes.BaseColor:
-                case glTFTextureTypes.Emissive:
-                case glTFTextureTypes.Unknown:
+                case glTFTextureTypes.SRGB:
                     return RenderTextureReadWrite.sRGB;
                 default:
                     return RenderTextureReadWrite.sRGB;
@@ -35,17 +32,17 @@ namespace UniGLTF.Legacy
             switch (propName)
             {
                 case "_Color":
-                    return glTFTextureTypes.BaseColor;
+                    return glTFTextureTypes.SRGB;
                 case "_MetallicGlossMap":
-                    return glTFTextureTypes.Metallic;
+                    return glTFTextureTypes.OcclusionMetallicRoughness;
                 case "_BumpMap":
                     return glTFTextureTypes.Normal;
                 case "_OcclusionMap":
-                    return glTFTextureTypes.Occlusion;
+                    return glTFTextureTypes.OcclusionMetallicRoughness;
                 case "_EmissionMap":
-                    return glTFTextureTypes.Emissive;
+                    return glTFTextureTypes.SRGB;
                 default:
-                    return glTFTextureTypes.Unknown;
+                    return glTFTextureTypes.SRGB;
             }
         }
 
@@ -59,7 +56,7 @@ namespace UniGLTF.Legacy
                     return textureInfo.TextureType;
                 }
             }
-            return glTFTextureTypes.Unknown;
+            return glTFTextureTypes.SRGB;
         }
 
 #if UNITY_EDITOR

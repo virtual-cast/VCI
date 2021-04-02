@@ -2,6 +2,7 @@
 using System.Linq;
 using UnityEngine;
 using UniGLTF;
+using UniGLTF.Legacy;
 
 namespace VCI
 {
@@ -11,8 +12,8 @@ namespace VCI
 
         private bool m_srgbToLinearColor = false;
 
-        public VCIMaterialImporter(ImporterContext context, List<glTF_VCI_Material> materials, bool srgbToLinearColor) : base(
-            new ShaderStore(context), (int index) => context.GetTexture(index))
+        public VCIMaterialImporter(LegacyImporterContext context, List<glTF_VCI_Material> materials, bool srgbToLinearColor) : base(
+            new ShaderStore(), (int index) => context.GetTexture(index))
         {
             m_materials = materials;
             m_srgbToLinearColor = srgbToLinearColor;

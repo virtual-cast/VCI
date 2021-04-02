@@ -53,7 +53,7 @@ namespace VCI
             var gltf = new glTF();
             var exporter = new VCIExporter(gltf);
             exporter.Prepare(root);
-            exporter.Export(default);
+            exporter.Export(default, VRMShaders.AssetTextureUtil.UseAsset);
             var bytes = gltf.ToGlbBytes();
 
             //

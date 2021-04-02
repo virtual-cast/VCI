@@ -20,7 +20,7 @@ namespace UniGLTF.Legacy
 
         public static Texture2D Convert(Texture2D texture, glTFTextureTypes textureType, ColorConversion colorConversion, Material convertMaterial)
         {
-            var copyTexture = TextureItem.CopyTexture(texture, textureType == glTFTextureTypes.Metallic ? RenderTextureReadWrite.Linear : RenderTextureReadWrite.sRGB, convertMaterial);
+            var copyTexture = TextureItem.CopyTexture(texture, textureType == glTFTextureTypes.OcclusionMetallicRoughness ? RenderTextureReadWrite.Linear : RenderTextureReadWrite.sRGB, convertMaterial);
             if (colorConversion != null)
             {
                 copyTexture.SetPixels32(copyTexture.GetPixels32().Select(x => colorConversion(x)).ToArray());
@@ -60,14 +60,14 @@ namespace UniGLTF.Legacy
 
         public Texture2D GetImportTexture(Texture2D texture)
         {
-            var converted = TextureConverter.Convert(texture, glTFTextureTypes.Metallic, Import, null);
+            var converted = TextureConverter.Convert(texture, glTFTextureTypes.OcclusionMetallicRoughness, Import, null);
             TextureConverter.AppendTextureExtension(converted, m_extension);
             return converted;
         }
 
         public Texture2D GetExportTexture(Texture2D texture)
         {
-            var converted = TextureConverter.Convert(texture, glTFTextureTypes.Metallic, Export, null);
+            var converted = TextureConverter.Convert(texture, glTFTextureTypes.OcclusionMetallicRoughness, Export, null);
             TextureConverter.RemoveTextureExtension(converted, m_extension);
             return converted;
         }
@@ -164,14 +164,14 @@ namespace UniGLTF.Legacy
 
         public Texture2D GetImportTexture(Texture2D texture)
         {
-            var converted = TextureConverter.Convert(texture, glTFTextureTypes.Occlusion, Import, null);
+            var converted = TextureConverter.Convert(texture, glTFTextureTypes.OcclusionMetallicRoughness, Import, null);
             TextureConverter.AppendTextureExtension(converted, m_extension);
             return converted;
         }
 
         public Texture2D GetExportTexture(Texture2D texture)
         {
-            var converted = TextureConverter.Convert(texture, glTFTextureTypes.Occlusion, Export, null);
+            var converted = TextureConverter.Convert(texture, glTFTextureTypes.OcclusionMetallicRoughness, Export, null);
             TextureConverter.RemoveTextureExtension(converted, m_extension);
             return converted;
         }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TMPro;
@@ -52,14 +53,12 @@ namespace VCI
             _originalNodes = go.transform.Traverse().Skip(go.transform.childCount == 0 ? 0 : 1).ToList();
         }
 
-        public override void Export(MeshExportSettings configuration)
+        public override void Export(MeshExportSettings configuration, Func<Texture, bool> useAsset)
         {
-            base.Export(configuration);
+            base.Export(configuration, useAsset);
 
             var gltf = glTF;
             var exporter = this;
-
-
 
             // VCIのmaterial拡張
             {
@@ -67,7 +66,7 @@ namespace VCI
                 VCAST_vci_material_unity.materials = new List<glTF_VCI_Material>();
                 foreach (var material in exporter.Materials)
                 {
-                    VCAST_vci_material_unity.materials.Add(VCIMaterialExporter.CreateFromMaterial(material, TextureManager.Textures));
+                    VCAST_vci_material_unity.materials.Add(VCIMaterialExporter.CreateFromMaterial(material, TextureManager.GetTextureIndex));
                 }
 
                 var f = new UniJSON.JsonFormatter();
@@ -174,8 +173,7 @@ namespace VCI
                     };
                     if (meta.thumbnail != null)
                     {
-                        VCAST_vci_meta.thumbnail = TextureExporter.ExportTexture(
-                            gltf, gltf.buffers.Count - 1, meta.thumbnail, glTFTextureTypes.Unknown);
+                        VCAST_vci_meta.thumbnail = TextureManager.ExportSRGB(meta.thumbnail);
                     }
 
                     var f = new UniJSON.JsonFormatter();
@@ -463,7 +461,7 @@ namespace VCI
                     foreach (var index in clipIndices)
                     {
                         VCAST_vci_animation.animationReferences.Add(
-                            new glTF_VCAST_vci_animationReference() {animation = index});
+                            new glTF_VCAST_vci_animationReference() { animation = index });
                     }
 
                     var f = new UniJSON.JsonFormatter();
@@ -538,11 +536,18 @@ namespace VCI
 #if VCI_DEVELOP
             ExportSceneLighting(exporter, gltf);
 #endif
+
+            // Extension で Texture が増える場合があるので最後に呼ぶ
+            for (int i = 0; i < TextureManager.Exported.Count; ++i)
+            {
+                var unityTexture = TextureManager.Exported[i];
+                glTF.PushGltfTexture(bufferIndex, unityTexture);
+            }
         }
 
         private void ExportSceneLighting(VCIExporter exporter, glTF gltf)
         {
-            var lightmapTextureExporter = new LightmapTextureExporter(TextureExporter, gltf);
+            var lightmapTextureExporter = new LightmapTextureExporter(TextureManager, gltf);
 
             var existsLightmappedMesh = false;
             for (var i = 0; i < exporter.Nodes.Count; i++)
@@ -602,7 +607,7 @@ namespace VCI
             var enableLocationLightingExtension = existsLightmappedMesh;
             if (enableLocationLightingExtension)
             {
-                var cubemapExporter = new CubemapTextureExporter(TextureExporter, glTF);
+                var cubemapExporter = new CubemapTextureExporter(TextureManager, glTF);
                 var skyboxExporter = new SkyboxExporter(cubemapExporter);
                 var lightProbeExporter = new LightProbeExporter();
 
@@ -617,7 +622,7 @@ namespace VCI
                             glTF_VCAST_vci_LocationLighting.ConvertLightmapDirectionalMode(lightmapTextureExporter
                                 .DirectionalType),
                         lightmapTextures = lightmapTextureExporter.RegisteredColorTextureIndexArray
-                            .Select(x => new glTFLightmapTextureInfo {index = x})
+                            .Select(x => new glTFLightmapTextureInfo { index = x })
                             .ToArray(),
                         skyboxCubemap = skyboxExporter.Export(1024),
                         lightProbes = lightProbeExporter.Export(),
@@ -645,7 +650,7 @@ namespace VCI
                 exportReflectionProbeExtension = !Application.isPlaying && isModeActive && isTextureExists;
                 if (!exportReflectionProbeExtension) continue;
 
-                var reflectionProbeCubemapExporter = new CubemapTextureExporter(TextureExporter, glTF);
+                var reflectionProbeCubemapExporter = new CubemapTextureExporter(TextureManager, glTF);
 
                 var offset = reflectionProbe.center;
                 var size = reflectionProbe.size;
@@ -654,8 +659,8 @@ namespace VCI
                 {
                     reflectionProbe = new glTF_VCAST_vci_ReflectionProbe
                     {
-                        boxOffset = new[] {-offset.x, offset.y, offset.z}, // invert X-axis
-                        boxSize = new[] {size.x, size.y, size.z},
+                        boxOffset = new[] { -offset.x, offset.y, offset.z }, // invert X-axis
+                        boxSize = new[] { size.x, size.y, size.z },
                         intensity = reflectionProbe.intensity,
                         useBoxProjection = reflectionProbe.boxProjection,
                         cubemap = reflectionProbeCubemapExporter.Export(texture, reflectionProbe.resolution,
@@ -730,7 +735,7 @@ namespace VCI
 
         private int AddEffekseerEffect(glTF gltf, glTF_Effekseer effekseer, Effekseer.EffekseerEmitter emitter)
         {
-            if(effekseer.effects.FirstOrDefault(x => x.effectName == emitter.effectAsset.name) == null)
+            if (effekseer.effects.FirstOrDefault(x => x.effectName == emitter.effectAsset.name) == null)
             {
                 var viewIndex = gltf.ExtendBufferAndGetViewIndex(0, emitter.effectAsset.efkBytes);
 
@@ -741,7 +746,7 @@ namespace VCI
                     nodeName = "Root",
                     effectName = emitter.effectAsset.name,
                     scale = emitter.effectAsset.Scale,
-                    body = new glTF_Effekseer_body() {bufferView = viewIndex},
+                    body = new glTF_Effekseer_body() { bufferView = viewIndex },
                     images = new List<glTF_Effekseer_image>(),
                     models = new List<glTF_Effekseer_model>()
                 };
@@ -757,7 +762,7 @@ namespace VCI
 #if UNITY_EDITOR
                     var texturePath = UnityEditor.AssetDatabase.GetAssetPath(texture.texture);
                     var textureImporter =
-                        (UnityEditor.TextureImporter) UnityEditor.TextureImporter.GetAtPath(texturePath);
+                        (UnityEditor.TextureImporter)UnityEditor.TextureImporter.GetAtPath(texturePath);
                     if (textureImporter != null)
                     {
                         textureImporter.isReadable = true;
@@ -766,7 +771,7 @@ namespace VCI
                     }
 
 #endif
-                    var textureBytes = TextureExporter.GetBytesWithMime(texture.texture, glTFTextureTypes.Unknown);
+                    var textureBytes = GltfTextureExporter.GetBytesWithMime(texture.texture);
                     var image = new glTF_Effekseer_image()
                     {
                         bufferView = gltf.ExtendBufferAndGetViewIndex(0, textureBytes.bytes),

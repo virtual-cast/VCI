@@ -143,7 +143,8 @@ namespace UniGLTF.Legacy
         public void ProcessOnAnyThread(glTF gltf, IStorage storage)
         {
             var gltfTexture = gltf.textures[m_textureIndex];
-            var segments = gltf.GetImageBytes(storage, gltfTexture.source, out m_textureName);
+            m_textureName = gltfTexture.name;
+            var segments = gltf.GetImageBytes(storage, gltfTexture.source);
             m_imageBytes = ToArray(segments);
         }
 
@@ -196,7 +197,8 @@ namespace UniGLTF.Legacy
         public void ProcessOnAnyThread(glTF gltf, IStorage storage)
         {
             var gltfTexture = gltf.textures[m_textureIndex];
-            m_segments = gltf.GetImageBytes(storage, gltfTexture.source, out m_textureName);
+            m_textureName = gltfTexture.name;
+            m_segments = gltf.GetImageBytes(storage, gltfTexture.source);
         }
 
 #if false

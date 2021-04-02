@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
-using UniGLTF;
+using UniGLTF.Legacy;
 
 namespace VCI
 {

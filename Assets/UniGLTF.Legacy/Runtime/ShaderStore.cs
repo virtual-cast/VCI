@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 
-namespace UniGLTF.Legacy
+namespace UniGLTF
 {
     public interface IShaderStore
     {
