@@ -42,7 +42,7 @@ namespace VCI
             //
             // export
             //
-            GameObject cube = GameObject.CreatePrimitive (PrimitiveType.Cube);
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             GameObject root = new GameObject("root");
             cube.transform.SetParent(root.transform);
             var vciObject = root.AddComponent<VCIObject>();
@@ -53,7 +53,7 @@ namespace VCI
             var gltf = new glTF();
             var exporter = new VCIExporter(gltf);
             exporter.Prepare(root);
-            exporter.Export(default, VRMShaders.AssetTextureUtil.UseAsset);
+            exporter.Export(default, VRMShaders.AssetTextureUtil.IsTextureEditorAsset);
             var bytes = gltf.ToGlbBytes();
 
             //
