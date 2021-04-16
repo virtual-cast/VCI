@@ -4,12 +4,13 @@ using UniGLTF;
 using UniGLTF.ShaderPropExporter;
 using System.Collections.Generic;
 using System.Linq;
+using VRMShaders;
 
 namespace VCI
 {
     public class VCIMaterialExporter : MaterialExporter
     {
-        public override glTFMaterial ExportMaterial(Material m, TextureExportManager textureManager)
+        public override glTFMaterial ExportMaterial(Material m, TextureExporter textureManager)
         {
             var material = base.ExportMaterial(m, textureManager);
 
@@ -109,7 +110,7 @@ namespace VCI
                     break;
             }
 
-            switch ((int) m.GetFloat("_CullMode"))
+            switch ((int)m.GetFloat("_CullMode"))
             {
                 case 0:
                     material.doubleSided = true;
@@ -137,7 +138,19 @@ namespace VCI
             // "Queue",
         };
 
-        public static glTF_VCI_Material CreateFromMaterial(Material m, List<Texture> textures)
+        static TextureExporter.ConvertTypes TextureType(string propName)
+        {
+            if (propName == "_BumpMap")
+            {
+                return TextureExporter.ConvertTypes.Normal;
+            }
+            else
+            {
+                return TextureExporter.ConvertTypes.None;
+            }
+        }
+
+        public static glTF_VCI_Material CreateFromMaterial(Material m, Func<Texture, TextureExporter.ConvertTypes, int> textureIndex)
         {
             var material = new glTF_VCI_Material
             {
@@ -190,7 +203,7 @@ namespace VCI
                                 var texture = m.GetTexture(kv.Key);
                                 if (texture != null)
                                 {
-                                    var value = textures.IndexOf(texture);
+                                    var value = textureIndex(texture, TextureType(kv.Key));
                                     if (value == -1)
                                     {
                                         Debug.LogFormat("not found {0}", texture.name);

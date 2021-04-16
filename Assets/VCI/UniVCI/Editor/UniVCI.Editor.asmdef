@@ -4,7 +4,9 @@
         "VCI",
         "Unity.TextMeshPro",
         "UniGLTF",
-        "UniGLTF.Editor"
+        "UniGLTF.Editor",
+        "UniGLTF.Legacy",
+        "VRMShaders.Editor"
     ],
     "includePlatforms": [
         "Editor"

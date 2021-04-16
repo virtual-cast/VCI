@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UniGLTF;
+using VRMShaders;
 
 namespace VCI
 {
@@ -35,7 +36,7 @@ namespace VCI
     /// </summary>
     public sealed class LightmapTextureExporter
     {
-        private readonly ITextureExporter _exporter;
+        private readonly TextureExporter _exporter;
         private readonly glTF _gltf;
         private readonly Shader _exportAsDLdrShader;
         private readonly Shader _exportAsRgbmShader;
@@ -56,7 +57,7 @@ namespace VCI
         /// </summary>
         public IEnumerable<int> RegisteredColorTextureIndexArray => _colorTextureMapping.Values;
 
-        public LightmapTextureExporter(ITextureExporter exporter, glTF gltf)
+        public LightmapTextureExporter(TextureExporter exporter, glTF gltf)
         {
             _exporter = exporter;
             _gltf = gltf;
@@ -84,7 +85,7 @@ namespace VCI
 
         private int ConvertAndAddTexture(Texture src)
         {
-            if (QualitySettings.activeColorSpace != ColorSpace.Linear)
+            if (QualitySettings.activeColorSpace != UnityEngine.ColorSpace.Linear)
             {
                 throw new NotSupportedException("ColorSpace の設定は Linear である必要があります。");
             }
@@ -96,7 +97,7 @@ namespace VCI
             var srgbRt = RenderTexture.GetTemporary(src.width, src.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
 
             Graphics.Blit(src, srgbRt, exporterMaterial);
-            var idx = _exporter.ExportTexture(_gltf, _gltf.buffers.Count - 1, srgbRt, glTFTextureTypes.Unknown);
+            var idx = _exporter.ExportSRGB(srgbRt);
 
             RenderTexture.ReleaseTemporary(srgbRt);
             UnityEngine.Object.DestroyImmediate(exporterMaterial);

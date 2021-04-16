@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UniGLTF;
+using UniGLTF.Legacy;
 #if UNITY_EDITOR
 using UnityEditor;
 
@@ -34,7 +35,7 @@ namespace VCI
 #endif
         }
 
-        private ImporterContext m_loaded;
+        private LegacyImporterContext m_loaded;
 
         private IEnumerator Load(string path)
         {
