@@ -199,6 +199,17 @@ namespace VCI
             // Animationは独自に管理される
         }
 
+        private static AudioSource AddAudioClip(GameObject go, AudioClip clip, float spatialBlend = 0.0f)
+        {
+            var audioSource = go.AddComponent<AudioSource>();
+            audioSource.clip = clip;
+            audioSource.playOnAwake = false;
+            audioSource.loop = false;
+            audioSource.spatialBlend = spatialBlend;
+            audioSource.dopplerLevel = 0;
+            return audioSource;
+        }
+
         public IEnumerator SetupCoroutine()
         {
             VCIObject = Root.AddComponent<VCIObject>();
@@ -295,16 +306,13 @@ namespace VCI
                 {
                     foreach (var audioClip in audioClips)
                     {
-                        var audioSource = Root.AddComponent<AudioSource>();
-                        audioSource.clip = audioClip;
-                        audioSource.playOnAwake = false;
-                        audioSource.loop = false;
-                        audioSource.spatialBlend = 0;
-                        audioSource.dopplerLevel = 0;
+                        AddAudioClip(Root, audioClip);
                     }
                 }
                 else
                 {
+                    var remainIndices = new HashSet<int>(Enumerable.Range(0, audioClips.Count));
+
                     for (var i = 0; i < GLTF.nodes.Count; i++)
                     {
                         var node = GLTF.nodes[i];
@@ -317,12 +325,8 @@ namespace VCI
 
                                 if (audioClip != null)
                                 {
-                                    var audioSource = Nodes[i].gameObject.AddComponent<AudioSource>();
-                                    audioSource.clip = audioClip;
-                                    audioSource.playOnAwake = false;
-                                    audioSource.loop = false;
-                                    audioSource.spatialBlend = audioSourceExtension.spatialBlend;
-                                    audioSource.dopplerLevel = 0;
+                                    AddAudioClip(Nodes[i].gameObject, audioClip, audioSourceExtension.spatialBlend);
+                                    remainIndices.Remove(audioSourceExtension.audio);
                                 }
                                 else
                                 {
@@ -330,6 +334,11 @@ namespace VCI
                                 }
                             }
                         }
+                    }
+
+                    foreach (var index in remainIndices)
+                    {
+                        AddAudioClip(Root, audioClips[index]);
                     }
                 }
             }
