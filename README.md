@@ -24,3 +24,6 @@ UnityのEditorから `VCI` をエクスポートすることができます。
 * UniVRM開発版の一部(UniGLTF, MToon)を含んでいます。
 * Effekseerライブラリ https://github.com/effekseer/Effekseer
 
+## お問い合わせ先
+- お問い合わせフォーム https://virtualcast.jp/contact/
+- 公式 Discord コミュニティ https://discord.gg/jtsXVVA
