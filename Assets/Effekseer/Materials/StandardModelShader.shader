@@ -28,6 +28,14 @@ SubShader{
 
 	#include "UnityCG.cginc"
 
+	#if defined(UNITY_INSTANCING_ENABLED) || defined(UNITY_PROCEDURAL_INSTANCING_ENABLED) || defined(UNITY_STEREO_INSTANCING_ENABLED)
+	#define VERTEX_INPUT_INSTANCE_ID UNITY_VERTEX_INPUT_INSTANCE_ID
+	#define GET_INSTANCE_ID(input) unity_InstanceID
+	#else
+	#define VERTEX_INPUT_INSTANCE_ID uint inst : SV_InstanceID;
+	#define GET_INSTANCE_ID(input) input.inst
+	#endif
+
 	sampler2D _ColorTex;
 
 	struct SimpleVertex
@@ -55,23 +63,35 @@ SubShader{
 	StructuredBuffer<int> buf_vertex_offsets;
 	StructuredBuffer<int> buf_index_offsets;
 
+	struct vs_input
+	{
+		uint id : SV_VertexID;
+		VERTEX_INPUT_INSTANCE_ID
+	};
+
 	struct ps_input
 	{
 		float4 pos : SV_POSITION;
 		float2 uv : TEXCOORD0;
 		float4 color : COLOR0;
+		UNITY_VERTEX_OUTPUT_STEREO
 	};
 
-	ps_input vert(uint id : SV_VertexID, uint inst : SV_InstanceID)
+	ps_input vert(vs_input i)
 	{
 		ps_input o;
-		uint v_id = id;
+		UNITY_SETUP_INSTANCE_ID(i);
+		UNITY_INITIALIZE_OUTPUT(ps_input, o);
+		UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
-		float4x4 buf_matrix = buf_model_parameter[inst].Mat;
-		float4 buf_uv = buf_model_parameter[inst].UV;
-		float4 buf_color = buf_model_parameter[inst].Color;
-		float buf_vertex_offset = buf_vertex_offsets[buf_model_parameter[inst].Time];
-		float buf_index_offset = buf_index_offsets[buf_model_parameter[inst].Time];
+		uint v_id = i.id;
+		uint inst_ind = GET_INSTANCE_ID(i);
+
+		float4x4 buf_matrix = buf_model_parameter[inst_ind].Mat;
+		float4 buf_uv = buf_model_parameter[inst_ind].UV;
+		float4 buf_color = buf_model_parameter[inst_ind].Color;
+		float buf_vertex_offset = buf_vertex_offsets[buf_model_parameter[inst_ind].Time];
+		float buf_index_offset = buf_index_offsets[buf_model_parameter[inst_ind].Time];
 
 		SimpleVertex v = buf_vertex[buf_index[v_id + buf_index_offset] + buf_vertex_offset];
 

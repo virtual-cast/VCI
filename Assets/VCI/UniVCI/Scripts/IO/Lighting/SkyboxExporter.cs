@@ -12,7 +12,7 @@ namespace VCI
             _exporter = exporter;
         }
 
-        public glTFCubemapTexture Export(int width)
+        public CubemapTextureJsonObject Export(int width)
         {
             using (var rt = RenderCurrentSceneSkybox(width))
             {

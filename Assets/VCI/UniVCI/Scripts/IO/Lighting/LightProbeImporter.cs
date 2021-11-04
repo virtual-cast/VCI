@@ -8,7 +8,7 @@ namespace VCI
     {
         private const int CoefCount = 9;
 
-        public (Vector3[], SphericalHarmonicsL2[]) Import(glTF_VCAST_vci_LocationLighting_LightProbe[] lightProbes)
+        public (Vector3[], SphericalHarmonicsL2[]) Import(LightProbeJsonObject[] lightProbes)
         {
             var positions = new List<Vector3>();
             var coefficients = new List<SphericalHarmonicsL2>();

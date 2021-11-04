@@ -1,0 +1,21 @@
+{
+    "name": "VCI",
+    "references": [
+        "GUID:6cd0664e68c0e6544bb81fede698d559",
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "GUID:9530b821cc81cff439e7e0b1086b9319",
+        "GUID:8d76e605759c3f64a957d63ef96ada7c",
+        "GUID:da3e51d19d51a544fa14d43fee843098",
+        "GUID:05dd262a0c0a2f841b8252c8c3815582",
+        "GUID:301b251fd9834274c9228e0532f444f7"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

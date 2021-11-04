@@ -292,7 +292,7 @@ namespace Effekseer.Internal
 
 				}
 
-				
+
 			}
 
 			VertexBuffer.SetData(vertex, 0, 0, vertex.Count);
@@ -669,7 +669,7 @@ namespace Effekseer.Internal
 			public CustomDataBufferCollection customDataBuffers = null;
 
 			List<DelayEvent> delayEvents = null;
-			
+
 			public RenderPath(Camera camera, CameraEvent cameraEvent, int renderId, bool isCommandBufferFromExternal)
 			{
 				this.camera = camera;
@@ -1043,7 +1043,7 @@ namespace Effekseer.Internal
 			RenderInternal(path.commandBuffer, path.computeBufferBack, path.materiaProps, path.modelBuffers, path.customDataBuffers, path.renderTexture);
 
 			// Distortion
-			if (EffekseerRendererUtils.IsDistortionEnabled && 
+			if (EffekseerRendererUtils.IsDistortionEnabled &&
 				(path.renderTexture != null || renderTargetProperty != null))
 			{
 				// Add a blit command that copy to the distortion texture
@@ -1069,7 +1069,7 @@ namespace Effekseer.Internal
 				else
 				{
 					path.commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, path.renderTexture.renderTexture);
-					path.commandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
+                    path.commandBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget, 0, CubemapFace.Unknown, -1);
 				}
 			}
 
@@ -1116,7 +1116,7 @@ namespace Effekseer.Internal
 				for (int i = 0; i < renderParameterCount; i++)
 				{
 					Plugin.GetUnityRenderParameter(ref parameter, i);
-					
+
 					if(parameter.RenderMode == 1)
 					{
 						RenderModdel(parameter, infoBuffer, commandBuffer, matPropCol, modelBufferCol, customDataBufferCol, background);
@@ -1265,7 +1265,7 @@ namespace Effekseer.Internal
 				{
 					normalTexture.filterMode = FilterMode.Bilinear;
 				}
-				
+
 				prop.SetTexture("_ColorTex", colorTexture);
 				prop.SetTexture("_NormalTex", normalTexture);
 

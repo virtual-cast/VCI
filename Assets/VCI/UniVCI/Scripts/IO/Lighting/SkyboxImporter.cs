@@ -1,13 +1,10 @@
 ﻿using System.Collections;
+using System.Threading.Tasks;
 using UnityEngine;
+using VRMShaders;
 
 namespace VCI
 {
-    public sealed class SkyboxImporterResult
-    {
-        public Material Result { get; set; }
-    }
-
     public sealed class SkyboxImporter
     {
         private const string CubemapSkyboxPrefabPath = "CubemapSkybox";
@@ -22,13 +19,12 @@ namespace VCI
             _skyboxPrefab = Resources.Load<Material>(CubemapSkyboxPrefabPath);
         }
 
-        public IEnumerator CovertToSkyboxCoroutine(glTFCubemapTexture cubemapTexture, SkyboxImporterResult result)
+        public async Task<Material> CovertToSkyboxAsync(CubemapTextureJsonObject cubemapTexture, IAwaitCaller awaitCaller)
         {
-            var cubemapResult = new CubemapTextureImporterResult();
-            yield return _importer.ConvertCubemapCoroutine(cubemapTexture, cubemapResult);
+            var cubemap = await _importer.ConvertCubemapAsync(cubemapTexture, awaitCaller);
             var mat = new Material(_skyboxPrefab);
-            mat.SetTexture(TexProperty, cubemapResult.Result);
-            result.Result = mat;
+            mat.SetTexture(TexProperty, cubemap);
+            return mat;
         }
     }
 }
