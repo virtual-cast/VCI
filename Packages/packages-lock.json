@@ -168,6 +168,16 @@
       },
       "hash": "7935258363b081afae968ec19f3dc46a65732033"
     },
+    "com.vrmc.vrm": {
+      "version": "https://github.com/vrm-c/UniVRM.git?path=/Assets/VRM10#v0.88.0",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.vrmc.vrmshaders": "0.88.0",
+        "com.vrmc.gltf": "0.88.0"
+      },
+      "hash": "7935258363b081afae968ec19f3dc46a65732033"
+    },
     "com.vrmc.vrmshaders": {
       "version": "https://github.com/vrm-c/UniVRM.git?path=/Assets/VRMShaders#v0.88.0",
       "depth": 0,
