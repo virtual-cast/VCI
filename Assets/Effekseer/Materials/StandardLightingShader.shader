@@ -33,6 +33,14 @@
 
 		#include "UnityCG.cginc"
 
+		#if defined(UNITY_INSTANCING_ENABLED) || defined(UNITY_PROCEDURAL_INSTANCING_ENABLED) || defined(UNITY_STEREO_INSTANCING_ENABLED)
+		#define VERTEX_INPUT_INSTANCE_ID UNITY_VERTEX_INPUT_INSTANCE_ID
+		#define GET_INSTANCE_ID(input) unity_InstanceID
+		#else
+		#define VERTEX_INPUT_INSTANCE_ID uint inst : SV_InstanceID;
+		#define GET_INSTANCE_ID(input) input.inst
+		#endif
+
 		sampler2D _ColorTex;
 		sampler2D _NormalTex;
 
@@ -80,6 +88,12 @@
 
 		#endif
 
+		struct vs_input
+		{
+			uint id : SV_VertexID;
+			VERTEX_INPUT_INSTANCE_ID
+		};
+
 		struct ps_input
 		{
 			float4 Position		: SV_POSITION;
@@ -91,6 +105,7 @@
 			float3 WorldT : TEXCOORD4;
 			float3 WorldB : TEXCOORD5;
 			float2 ScreenUV : TEXCOORD6;
+			UNITY_VERTEX_OUTPUT_STEREO
 		};
 
 		float4 lightDirection;
@@ -109,14 +124,22 @@
 			return uv;
 		}
 
-		ps_input vert(uint id : SV_VertexID, uint inst : SV_InstanceID)
+		ps_input vert(vs_input i)
 		{
+			ps_input Output;
+
+			UNITY_SETUP_INSTANCE_ID(i);
+			UNITY_INITIALIZE_OUTPUT(ps_input, Output);
+			UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(Output);
+
+			uint inst = GET_INSTANCE_ID(i);
+
 			// Unity
 			float4 cameraPosition = float4(UNITY_MATRIX_V[3].xyzw);
 
 			#if _MODEL_
 
-			uint v_id = id;
+			uint v_id = i.id;
 
 			float4x4 buf_matrix = buf_model_parameter[inst].Mat;
 			float4 buf_uv = buf_model_parameter[inst].UV;
@@ -132,8 +155,8 @@
 
 			#else
 
-			int qind = (id) / 6;
-			int vind = (id) % 6;
+			int qind = (i.id) / 6;
+			int vind = (i.id) % 6;
 
 			int v_offset[6];
 			v_offset[0] = 2;
@@ -146,8 +169,6 @@
 			Vertex Input = buf_vertex[buf_offset + qind * 4 + v_offset[vind]];
 
 			#endif
-
-			ps_input Output;
 
 			#if _MODEL_
 			float3x3 matRotModel = (float3x3)buf_matrix;

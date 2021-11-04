@@ -176,7 +176,6 @@ namespace Effekseer
 			foreach (var handle in handles) {
 				handle.StopRoot();
 			}
-			handles.Clear();
 		}
 
 		/// <summary xml:lang="en">

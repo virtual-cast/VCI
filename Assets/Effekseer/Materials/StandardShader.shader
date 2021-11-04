@@ -28,6 +28,14 @@
 
 	#include "UnityCG.cginc"
 
+	#if defined(UNITY_INSTANCING_ENABLED) || defined(UNITY_PROCEDURAL_INSTANCING_ENABLED) || defined(UNITY_STEREO_INSTANCING_ENABLED)
+	#define VERTEX_INPUT_INSTANCE_ID UNITY_VERTEX_INPUT_INSTANCE_ID
+	#define GET_INSTANCE_ID(input) unity_InstanceID
+	#else
+	#define VERTEX_INPUT_INSTANCE_ID uint inst : SV_InstanceID;
+	#define GET_INSTANCE_ID(input) input.inst
+	#endif
+
 	sampler2D _ColorTex;
 
 	struct SimpleVertex
@@ -40,19 +48,29 @@
 	StructuredBuffer<SimpleVertex> buf_vertex;
 	float buf_offset;
 
+	struct vs_input
+	{
+		uint id : SV_VertexID;
+		VERTEX_INPUT_INSTANCE_ID
+	};
+
 	struct ps_input
 	{
 		float4 pos : SV_POSITION;
 		float2 uv : TEXCOORD0;
 		float4 color : COLOR0;
+		UNITY_VERTEX_OUTPUT_STEREO
 	};
 
-	ps_input vert(uint id : SV_VertexID, uint inst : SV_InstanceID)
+	ps_input vert(vs_input i)
 	{
 		ps_input o;
-
-		int qind = (id) / 6;
-		int vind = (id) % 6;
+		UNITY_SETUP_INSTANCE_ID(i);
+		UNITY_INITIALIZE_OUTPUT(ps_input, o);
+		UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+	
+		int qind = (i.id) / 6;
+		int vind = (i.id) % 6;
 
 		int v_offset[6];
 		v_offset[0] = 2;

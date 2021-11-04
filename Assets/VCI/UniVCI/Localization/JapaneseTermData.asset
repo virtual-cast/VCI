@@ -13,30 +13,17 @@ MonoBehaviour:
   m_Name: JapaneseTermData
   m_EditorClassIdentifier: UniVCI.Editor:VCI:VCILanguageResource
   _texts:
-  - key: export_button
-    value: "VCI\u3092\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8"
-  - key: validate_button
-    value: "\u691C\u8A3C"
-  - key: error400
-    value: "SpringBone\u306E\u6570\u304C\u591A\u3059\u304E\u307E\u3059\u3002"
-  - key: error401
-    value: "RootBone\u304C\u672A\u8A2D\u5B9A\u3067\u3059\u3002"
-  - key: error402
-    value: "RootBone\u306E\u6570\u304C\u591A\u3059\u304E\u307E\u3059\u3002"
-  - key: error403
-    value: "RootBone\u306EChild\u6570\u304C\u591A\u3059\u304E\u307E\u3059\u3002"
-  - key: error404
-    value: "RootBone\u4EE5\u4E0B\u306BSubItem\u304C\u542B\u307E\u308C\u3066\u3044\u307E\u3059\u3002"
-  - key: error410
-    value: "SpringBoneCollider\u306E\u6570\u304C\u591A\u3059\u304E\u307E\u3059\u3002"
-  - key: error401
-    value: "SphereCollider\u306E\u6570\u304C\u591A\u3059\u304E\u307E\u3059\u3002"
   - key: error100
-    value: "VCIObject\u304C\u30A2\u30BF\u30C3\u30C1\u3055\u308C\u305FGameObject\u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
+    value: "VCIObject \u304C\u30A2\u30BF\u30C3\u30C1\u3055\u308C\u305F GameObject
+      \u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
   - key: error101
-    value: "VCIObject\u304C\u30A2\u30BF\u30C3\u30C1\u3055\u308C\u305FGameObject\u30921\u3064\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
+    value: "VCIObject \u304C\u30A2\u30BF\u30C3\u30C1\u3055\u308C\u305F GameObject
+      \u30921\u3064\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
   - key: error102
-    value: "VCIObject\u304C\u30A2\u30BF\u30C3\u30C1\u3055\u308C\u305FGameObject\u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
+    value: "VCIObject \u304C\u30A2\u30BF\u30C3\u30C1\u3055\u308C\u305F GameObject
+      \u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
+  - key: error103
+    value: "VCIObject \u306B\u306F\u6700\u4F4E 1 \u3064\u306E\u5B50 GameObject \u304C\u5FC5\u8981\u3067\u3059\u3002"
   - key: error200
     value: "\u6700\u521D\u306E\u30B9\u30AF\u30EA\u30D7\u30C8\u540D\u306F \\\"main\\\"
       \u3067\u306A\u3051\u308C\u3070\u306A\u308A\u307E\u305B\u3093\u3002"
@@ -48,25 +35,62 @@ MonoBehaviour:
     value: "\u30B9\u30AF\u30EA\u30D7\u30C8\u540D\u306B\u4F7F\u7528\u3067\u304D\u306A\u3044\u6587\u5B57\u304C\u542B\u307E\u308C\u3066\u3044\u307E\u3059\u3002\\n{0}"
   - key: error204
     value: "\u30E1\u30BF\u30C7\u30FC\u30BF\u304C\u4E0D\u6B63\u3067\u3059\u3002"
-  - key: input
-    value: "{0}\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
-  - key: input_less_than
-    value: "{0}\u3092{1}\u6587\u5B57\u4EE5\u5185\u306B\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
-  - key: no_error
-    value: "\u30A8\u30E9\u30FC\u306F\u3042\u308A\u307E\u305B\u3093\u3002"
   - key: error205
-    value: "VCIObject\u304C\u8907\u6570\u542B\u307E\u308C\u3066\u3044\u307E\u3059\u3002"
-  - key: error405
-    value: "RootBone\u304C\u5165\u308C\u5B50\u306B\u306A\u3063\u3066\u3044\u307E\u3059\u3002"
+    value: "VCIObject \u304C\u8907\u6570\u542B\u307E\u308C\u3066\u3044\u307E\u3059\u3002"
   - key: error206
     value: "\u4F7F\u7528\u3067\u304D\u306A\u3044\u30B3\u30F3\u30DD\u30FC\u30CD\u30F3\u30C8\u304C\u542B\u307E\u308C\u3066\u3044\u307E\u3059\u3002\\n{0}"
+  - key: error207
+    value: "VCISubItem \u3092\u30CD\u30B9\u30C8\u3059\u308B\u3053\u3068\u306F\u3067\u304D\u307E\u305B\u3093\u3002VCISubItem
+      \u306F VCIObject \u306E\u5B50\u3067\u3042\u308B\u5FC5\u8981\u304C\u3042\u308A\u307E\u3059\u3002\\nGameObject
+      \u540D: {0}"
+  - key: error208
+    value: "VCISubItem \u306F VCIObject \u306B\u30A2\u30BF\u30C3\u30C1\u3067\u304D\u307E\u305B\u3093\u3002VCISubItem
+      \u306F VCIObject \u306E\u5B50\u3067\u3042\u308B\u5FC5\u8981\u304C\u3042\u308A\u307E\u3059\u3002\\nGameObject
+      \u540D: {0}"
+  - key: error209
+    value: "AudioSource \u306F VCIObject \u306B\u30A2\u30BF\u30C3\u30C1\u3067\u304D\u307E\u305B\u3093\u3002\\nGameObject
+      \u540D: {0}"
+  - key: error400
+    value: "SpringBone \u306E\u6570\u304C\u591A\u3059\u304E\u307E\u3059\u3002"
+  - key: error401
+    value: "RootBone \u304C\u672A\u8A2D\u5B9A\u3067\u3059\u3002"
+  - key: error402
+    value: "RootBone \u306E\u6570\u3092 {0} \u4EE5\u4E0B\u306B\u3057\u3066\u304F\u3060\u3055\u3044\u3002\\\u73FE\u5728:
+      {1}"
+  - key: error403
+    value: "RootBone \u306E Child \u6570\u3092 {0} \u4EE5\u4E0B\u306B\u3057\u3066\u304F\u3060\u3055\u3044\u3002\\n{1}:
+      {2}"
+  - key: error404
+    value: "RootBone \u4EE5\u4E0B\u306B SubItem \u304C\u542B\u307E\u308C\u3066\u3044\u307E\u3059\u3002"
+  - key: error405
+    value: "RootBone \u304C\u5165\u308C\u5B50\u306B\u306A\u3063\u3066\u3044\u307E\u3059\u3002"
+  - key: error410
+    value: "SpringBoneCollider \u306E\u6570\u304C\u591A\u3059\u304E\u307E\u3059\u3002"
+  - key: error411
+    value: "SphereCollider \u306E\u6570\u304C\u591A\u3059\u304E\u307E\u3059\u3002"
   - key: error501
-    value: "VCIPlayerSpawnPoint\u306ERotationX\u3068Z\u306F0\u3067\u306A\u3051\u308C\u3070\u306A\u308A\u307E\u305B\u3093\u3002"
+    value: "VCIPlayerSpawnPoint \u306E RotationX \u3068 Z \u306F 0 \u3067\u306A\u3051\u308C\u3070\u306A\u308A\u307E\u305B\u3093\u3002"
   - key: error502
-    value: "VCIPlayerSpawnPointRestriction\u306ELimitRectLeft\u3068LimitRectBackward\u306F0\u4EE5\u4E0B\u3001LimitRectRight\u3068LimitRectForward\u306F0\u4EE5\u4E0A\u3067\u306A\u3051\u308C\u3070\u306A\u308A\u307E\u305B\u3093\u3002"
+    value: "VCIPlayerSpawnPointRestriction \u306E LimitRectLeft \u3068 LimitRectBackward
+      \u306F 0 \u4EE5\u4E0B\u3001 LimitRectRight \u3068 LimitRectForward \u306F 0
+      \u4EE5\u4E0A\u3067\u306A\u3051\u308C\u3070\u306A\u308A\u307E\u305B\u3093\u3002"
   - key: error601
-    value: "VCILocationBounds\u306F\u6700\u59271\u3064\u307E\u3067\u3057\u304B\u8A2D\u5B9A\u3067\u304D\u307E\u305B\u3093\u3002"
+    value: "VCILocationBounds \u306F\u6700\u5927 1 \u3064\u307E\u3067\u3057\u304B\u8A2D\u5B9A\u3067\u304D\u307E\u305B\u3093\u3002"
   - key: error602
-    value: "VCILocationBounds\u306EBounds\u304C\u6307\u5B9A\u3067\u304D\u308B\u7BC4\u56F2\u3092\u8D85\u3048\u3066\u3044\u307E\u3059\u3002"
+    value: "VCILocationBounds \u306E Bounds \u304C\u6307\u5B9A\u3067\u304D\u308B\u7BC4\u56F2\u3092\u8D85\u3048\u3066\u3044\u307E\u3059\u3002"
   - key: error701
-    value: "VCI\u306Eroot\u3092Animation\u306E\u5BFE\u8C61\u306B\u3059\u308B\u3053\u3068\u306F\u3067\u304D\u307E\u305B\u3093\u3002"
+    value: "VCI \u306E root \u3092 Animation \u306E\u5BFE\u8C61\u306B\u3059\u308B\u3053\u3068\u306F\u3067\u304D\u307E\u305B\u3093\u3002"
+  - key: export_button
+    value: "VCI\u3092\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8"
+  - key: input
+    value: "{0} \u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
+  - key: input_less_than
+    value: "{0} \u3092 {1} \u6587\u5B57\u4EE5\u5185\u306B\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
+  - key: no_error
+    value: "\u30A8\u30E9\u30FC\u306F\u3042\u308A\u307E\u305B\u3093\u3002"
+  - key: validate_button
+    value: "\u691C\u8A3C"
+  - key: warning_no_gameobject
+    value: "VCIObject \u306B\u306F\u6700\u4F4E 1 \u3064\u306E\u5B50 GameObject \u304C\u5FC5\u8981\u3067\u3059\u3002"
+  - key: warning_subitem_not_under_vciobject
+    value: "VCISubItem \u306F VCIObject \u306E\u5B50\u3067\u3042\u308B\u5FC5\u8981\u304C\u3042\u308A\u307E\u3059\u3002"
