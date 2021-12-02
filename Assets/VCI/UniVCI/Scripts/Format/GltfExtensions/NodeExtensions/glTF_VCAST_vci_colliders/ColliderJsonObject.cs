@@ -1,5 +1,4 @@
 ﻿using System;
-using UniGLTF;
 using UnityEngine;
 
 namespace VCI
@@ -13,6 +12,7 @@ namespace VCI
         public const string BoxColliderName = "box";
         public const string SphereColliderName = "sphere";
         public const string CapsuleColliderName = "capsule";
+        public const string MeshColliderName = "mesh";
 
         public const string DefaultColliderLayerName = "default";
         public const string LocationColliderLayerName = "location";
@@ -26,8 +26,10 @@ namespace VCI
         [UniGLTF.JsonSchema(MinItems = 3, MaxItems = 3)]
         public float[] center;
 
-        [UniGLTF.JsonSchema(MinItems = 1, MaxItems = 3)]
+        [UniGLTF.JsonSchema(MinItems = 0, MaxItems = 3)]
         public float[] shape;
+
+        public ColliderMeshJsonObject mesh;
 
         public bool isTrigger;
         public PhysicMaterialJsonObject physicMaterial;

@@ -50,15 +50,13 @@ namespace VCI
             return System(path, "git.exe", "rev-parse HEAD").Trim();
         }
 
-        private static string GetPath(string folder)
+        private static string GetPackagePath(string folder)
         {
             //var date = DateTime.Today.ToString(DATE_FORMAT);
 
-            var path = string.Format("{0}/{1}.{2}.unitypackage",
-                folder,
-                VCIVersion.VCI_VERSION,
-                VCIVersion.PATCH_NUMBER
-            ).Replace("\\", "/");
+            var path =
+                $"{folder}/{VCIVersion.VCI_VERSION}.{VCIVersion.PATCH_NUMBER}.unitypackage"
+                    .Replace("\\", "/");
 
             return path;
         }
@@ -76,14 +74,19 @@ namespace VCI
             }
         }
 
-        private static IEnumerable<string> EnumerateFiles(string path, Func<string, bool> isExclude = null)
+        // path 以下に存在する、パッケージ含めるべきすべてのファイルを enumerate する
+        // - 以下のファイルは enumerate 対象から除外する
+        //   - .git ファイル
+        //   - isExclude の条件に引っ掛かったファイル
+        //   - .meta ファイル
+        private static IEnumerable<string> EnumeratePackageFiles(string path, Func<string, bool> isExclude = null)
         {
             path = path.Replace("\\", "/");
 
             if (Directory.Exists(path))
             {
                 foreach (var child in Directory.GetFileSystemEntries(path))
-                foreach (var x in EnumerateFiles(child, isExclude))
+                foreach (var x in EnumeratePackageFiles(child, isExclude))
                     yield return x;
             }
             else
@@ -132,38 +135,51 @@ namespace VCI
             return false;
         }
 
-        private static bool IsExclude(string path)
+        // path が ExportToPackageDirectories に含まれていないフォルダ以下のフォルダ/ファイルであった場合、trueを返す
+        private static bool IsExcludeFromPackage(string path)
         {
-            if (!IncluceFiles.Any(x => path.StartsWith(x))) return true;
+            if (!ExportToPackageDirectories.Any(path.StartsWith)) return true;
 
             return false;
         }
 
-        private static string[] IncluceFiles = new string[]
+        private static readonly string[] ExportToPackageDirectories = new string[]
         {
+            // VCI のメイン実装
             "Assets/VCI/UniVCI",
-            "Assets/VCI/Runtime",
 
+            // Effekseer
+            // - Assets/ScriptsExternalのみビルド対象から外す
             "Assets/Effekseer/Editor",
             "Assets/Effekseer/Materials",
             "Assets/Effekseer/Plugins",
             "Assets/Effekseer/Resources",
             "Assets/Effekseer/Scripts",
 
+            // NAudio
             "Assets/NAudio",
 
-            // Sample files
+            // 公式サンプルVCI
             "Assets/VCI-Official-Samples",
 
             // DigitalSignature files
             "Assets/VCI-DigitalSignature",
         };
 
-
-        private static string[] adfFiles = new string[]
+        // 明示的に指定して出力するasmdefファイル群
+        private static readonly string[] AdfFiles = new string[]
         {
-            "Assets/VCI/VCI.asmdef",
+            // Assets/Effekseerディレクトリ内のファイルはパッケージ出力対象になっていない
             "Assets/Effekseer/EffekseerAssemblyDefinition.asmdef",
+        };
+
+        // 明示的に指定して出力するpackage.jsonファイル群
+        // - unitypackageをインポートするだけでユーザー公開のUniVCIリポジトリをUPM Readyにするために必要
+        private static readonly string[] PackageJsonFiles = new string[]
+        {
+            "Assets/VCI/package.json",
+            "Assets/Effekseer/package.json"
+            // NAudioのpackage.jsonは、EnumeratePackageFilesの対象であるためここで指定する必要はない
         };
 
 #if VCI_DEVELOP
@@ -171,44 +187,45 @@ namespace VCI
 #endif
         public static void CreateUnityPackage()
         {
-            var folder = Path.Combine(Path.GetFullPath(Path.Combine(Application.dataPath, "..")), PACKAGE_DIR);
+            var packageExportDirectoryPath = Path.Combine(Path.GetFullPath(Path.Combine(Application.dataPath, "..")), PACKAGE_DIR);
 
-            if(!Directory.Exists(folder))
+            if (!Directory.Exists(packageExportDirectoryPath))
             {
-                Directory.CreateDirectory(folder);
+                Directory.CreateDirectory(packageExportDirectoryPath);
             }
 
-            CleanUpDirectory(folder);
+            CleanUpDirectory(packageExportDirectoryPath);
 
-            var path = GetPath(folder);
+            var defaultPackagePath = GetPackagePath(packageExportDirectoryPath);
             {
-                var filesA = EnumerateFiles("Assets/VCI", IsExclude).ToArray();
-                var filesB = EnumerateFiles("Assets/Effekseer", IsExclude).ToArray();
-                var filesC = EnumerateFiles("Assets/NAudio", IsExclude).ToArray();
-                var vciSampleFiles = EnumerateFiles("Assets/VCI-Official-Samples", IsExclude).ToArray();
-                var files = adfFiles.Concat(filesA.Concat(filesB.Concat(filesC.Concat(vciSampleFiles)))).ToArray();
+                var vciFiles = EnumeratePackageFiles("Assets/VCI", IsExcludeFromPackage).ToArray();
+                var effekseerFiles = EnumeratePackageFiles("Assets/Effekseer", IsExcludeFromPackage).ToArray();
+                var nAudioFiles = EnumeratePackageFiles("Assets/NAudio", IsExcludeFromPackage).ToArray();
+                var vciSampleFiles = EnumeratePackageFiles("Assets/VCI-Official-Samples", IsExcludeFromPackage).ToArray();
+                var additionalFiles = AdfFiles.Concat(PackageJsonFiles).ToArray();
+                var defaultPackageFiles = additionalFiles.Concat(vciFiles.Concat(effekseerFiles.Concat(nAudioFiles.Concat(vciSampleFiles)))).ToArray();
 
                 // Default Package
                 Debug.LogFormat("{0}",
-                    string.Join("", files.Select((x, i) => string.Format("[{0:##0}] {1}\n", i, x)).ToArray()));
-                AssetDatabase.ExportPackage(files
-                    , path,
+                    string.Join("", defaultPackageFiles.Select((x, i) => $"[{i:##0}] {x}\n").ToArray()));
+                AssetDatabase.ExportPackage(defaultPackageFiles
+                    , defaultPackagePath,
                     ExportPackageOptions.Default);
 
                 // DigitalSignature Package
                 {
-                    var digitalSignatureFiles = EnumerateFiles("Assets/VCI-DigitalSignature", IsExclude).ToArray();
-                    var fileName = Path.GetFileNameWithoutExtension(path);
-                    var ext = Path.GetExtension(path);
-                    var exportPath = Path.GetDirectoryName(path) + "\\" + fileName + "_digitalSignature" + ext;
-                    files = files.Concat(digitalSignatureFiles).ToArray();
-                    AssetDatabase.ExportPackage(files
-                        , exportPath,
+                    var digitalSignatureFiles = EnumeratePackageFiles("Assets/VCI-DigitalSignature", IsExcludeFromPackage).ToArray();
+                    var defaultPackageFileName = Path.GetFileNameWithoutExtension(defaultPackagePath);
+                    var packageExtension = Path.GetExtension(defaultPackagePath);
+                    var digitalSignaturePackagePath = Path.GetDirectoryName(defaultPackagePath) + "\\" + defaultPackageFileName + "_digitalSignature" + packageExtension;
+                    var digitalSignaturePackageFiles = defaultPackageFiles.Concat(digitalSignatureFiles).ToArray();
+                    AssetDatabase.ExportPackage(digitalSignaturePackageFiles
+                        , digitalSignaturePackagePath,
                         ExportPackageOptions.Default);
                 }
             }
 
-            Debug.LogFormat("exported: {0}", path);
+            Debug.LogFormat("exported: {0}", defaultPackagePath);
         }
     }
 }

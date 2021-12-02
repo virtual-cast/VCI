@@ -8,9 +8,9 @@ namespace VCI
     /// <summary>
     /// Collider を Export できる
     /// </summary>
-    public static class PhysicsColliderExporter
+    internal static class PhysicsColliderExporter
     {
-        public static glTF_VCAST_vci_colliders ExportColliders(Transform node, IVciColliderLayerProvider colliderLayerProvider)
+        public static glTF_VCAST_vci_colliders ExportColliders(Transform node, ExportingGltfData data, IVciColliderLayerProvider colliderLayerProvider, PhysicsColliderMeshExporter colliderMeshExporter)
         {
             // 各ノードに複数のコライダーがあり得る
             var colliders = node.GetComponents<Collider>();
@@ -23,7 +23,7 @@ namespace VCI
 
             foreach (var collider in colliders)
             {
-                var gltfCollider = ExportCollider(collider, colliderLayerProvider);
+                var gltfCollider = ExportCollider(collider, colliderLayerProvider, colliderMeshExporter);
                 if (gltfCollider == null)
                 {
                     Debug.LogWarningFormat("collider is not supported: {0}", collider.GetType().Name);
@@ -39,7 +39,7 @@ namespace VCI
             };
         }
 
-        private static ColliderJsonObject ExportCollider(Collider collider, IVciColliderLayerProvider colliderLayerProvider)
+        private static ColliderJsonObject ExportCollider(Collider collider, IVciColliderLayerProvider colliderLayerProvider, PhysicsColliderMeshExporter colliderMeshExporter)
         {
             switch (collider)
             {
@@ -49,6 +49,8 @@ namespace VCI
                     return ExportCapsuleCollider(capsuleCollider, colliderLayerProvider);
                 case SphereCollider sphereCollider:
                     return ExportSphereCollider(sphereCollider, colliderLayerProvider);
+                case MeshCollider meshCollider:
+                    return ExportMeshCollider(meshCollider, colliderLayerProvider, colliderMeshExporter);
                 default:
                     return null;
             }
@@ -63,6 +65,7 @@ namespace VCI
                 type = ColliderJsonObject.BoxColliderName,
                 center = collider.center.ReverseZ().ToArray(),
                 shape = collider.size.ToArray(),
+                mesh = null,
                 isTrigger = collider.isTrigger,
                 physicMaterial = ExportPhysicMaterial(collider.sharedMaterial),
                 layer = ExportLayer(collider.gameObject.layer, colliderLayerProvider),
@@ -83,6 +86,7 @@ namespace VCI
                     collider.height,
                     collider.direction // NOTE: 0 = X-Axis, 1 = Y-Axis, 2 = Z-Axis
                 },
+                mesh = null,
                 isTrigger = collider.isTrigger,
                 physicMaterial = ExportPhysicMaterial(collider.sharedMaterial),
                 layer = ExportLayer(collider.gameObject.layer, colliderLayerProvider),
@@ -101,9 +105,40 @@ namespace VCI
                 {
                     collider.radius
                 },
+                mesh = null,
                 isTrigger = collider.isTrigger,
                 physicMaterial = ExportPhysicMaterial(collider.sharedMaterial),
                 layer = ExportLayer(collider.gameObject.layer, colliderLayerProvider),
+            };
+        }
+
+        private static ColliderJsonObject ExportMeshCollider(MeshCollider collider, IVciColliderLayerProvider colliderLayerProvider, PhysicsColliderMeshExporter colliderMeshExporter)
+        {
+            if (collider == null || collider.sharedMesh == null) return null;
+
+            return new ColliderJsonObject
+            {
+                type = ColliderJsonObject.MeshColliderName,
+                center = Vector3.zero.ToArray(),
+                shape = Array.Empty<float>(),
+                mesh = ExportMeshColliderJsonObject(collider, colliderMeshExporter),
+                isTrigger = collider.isTrigger,
+                physicMaterial = ExportPhysicMaterial(collider.sharedMaterial),
+                layer = ExportLayer(collider.gameObject.layer, colliderLayerProvider)
+            };
+        }
+
+        private static ColliderMeshJsonObject ExportMeshColliderJsonObject(MeshCollider collider, PhysicsColliderMeshExporter colliderMeshExporter)
+        {
+            if (collider == null || collider.sharedMesh == null) return null;
+
+            var (positionAccessorIndex, indicesAccessorIndices) = colliderMeshExporter.Export(collider.sharedMesh);
+
+            return new ColliderMeshJsonObject
+            {
+                isConvex = collider.convex,
+                position = positionAccessorIndex,
+                indices = indicesAccessorIndices,
             };
         }
 

@@ -1,6 +1,6 @@
 ﻿namespace VCI
 {
-    internal enum VciMaterialMigrationTarget
+    public enum VciMaterialMigrationTarget
     {
         Pbr,
         Unlit,

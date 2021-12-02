@@ -6,16 +6,18 @@ using Effekseer;
 using TMPro;
 using UniGLTF;
 using UnityEngine;
+using VRMShaders;
 
 namespace VCI
 {
-    public sealed class RuntimeVciInstance : IDisposable
+    public sealed class RuntimeVciInstance : IDisposable, IResponsibilityForDestroyObjects
     {
         public RuntimeGltfInstance GltfModel { get; }
         public GameObject Root => GltfModel.Root;
         public IReadOnlyList<Transform> Nodes { get; }
         public IReadOnlyList<AnimationClip> AnimationClips { get; }
         public IReadOnlyList<AudioClip> AudioClips { get; }
+        public IReadOnlyList<PhysicMaterial> PhysicMaterials { get; }
         public VCIObject VCIObject { get; }
         public IReadOnlyList<Material> LoadedMaterials { get; }
         public IReadOnlyList<Collider> ColliderComponents { get; }
@@ -23,42 +25,74 @@ namespace VCI
         public IReadOnlyList<Effekseer.EffekseerEmitter> EffekseerEmitterComponents { get; }
         public IReadOnlyList<Renderer> RendererComponents { get; }
 
+        private readonly List<(SubAssetKey, UnityEngine.Object)> _runtimeVciResources;
         private readonly List<(string key, TextMeshPro text)> _texts;
 
         public RuntimeVciInstance(
             RuntimeGltfInstance gltfModel,
+            List<(SubAssetKey, UnityEngine.Object)> runtimeVciResources,
             IReadOnlyList<Transform> nodes,
             IReadOnlyList<Collider> colliders,
             IReadOnlyDictionary<Rigidbody, RigidbodySetting> rigidbodies,
             IReadOnlyList<TextMeshPro> texts,
             IReadOnlyList<EffekseerEmitter> effekseerEmitterComponents)
         {
+            // NOTE: GLTF Objects
             GltfModel = gltfModel;
             Nodes = nodes;
+            RendererComponents = Root.GetComponentsInChildren<Renderer>(includeInactive: true);
+
+            // NOTE: GLTF Resources
             AnimationClips = GltfModel.RuntimeResources
                 .Where(x => x.Item1.Type == typeof(AnimationClip))
                 .Select(x => x.Item2 as AnimationClip)
                 .ToList();
-            AudioClips = GltfModel.RuntimeResources
-                .Where(x => x.Item1.Type == typeof(AudioClip))
-                .Select(x => x.Item2 as AudioClip)
-                .ToList();
-            VCIObject = Root.GetComponent<VCIObject>();
             LoadedMaterials = GltfModel.RuntimeResources
                 .Where(x => x.Item1.Type == typeof(Material))
                 .Select(x => x.Item2 as Material)
                 .ToList();
+
+            // NOTE: VCI Objects
+            VCIObject = Root.GetComponent<VCIObject>();
             ColliderComponents = colliders;
             RigidbodySettings = rigidbodies;
             EffekseerEmitterComponents = effekseerEmitterComponents;
-            RendererComponents = Root.GetComponentsInChildren<Renderer>(includeInactive: true);
-
             _texts = texts.Select(x => (x.name.ToLower(CultureInfo.InvariantCulture), x)).ToList();
+
+            // NOTE: VCI Resources
+            _runtimeVciResources = runtimeVciResources;
+            AudioClips = _runtimeVciResources
+                .Where(x => x.Item1.Type == typeof(AudioClip))
+                .Select(x => x.Item2 as AudioClip)
+                .ToList();
+            PhysicMaterials = _runtimeVciResources
+                .Where(x => x.Item1.Type == typeof(PhysicMaterial))
+                .Select(x => x.Item2 as PhysicMaterial)
+                .ToList();
         }
 
         public void Dispose()
         {
-            GltfModel?.Dispose();
+            TransferOwnership((key, obj) => UnityObjectDestoyer.DestroyRuntimeOrEditor(obj));
+
+            if (GltfModel != null)
+            {
+                GltfModel.Dispose();
+            }
+        }
+
+        public void TransferOwnership(TakeResponsibilityForDestroyObjectFunc take)
+        {
+            foreach (var (key, obj) in _runtimeVciResources)
+            {
+                take(key, obj);
+            }
+            _runtimeVciResources.Clear();
+
+            if (GltfModel != null)
+            {
+                GltfModel.TransferOwnership(take);
+            }
         }
 
         public void ShowMeshes()

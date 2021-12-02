@@ -8,7 +8,7 @@ using ColorSpace = VRMShaders.ColorSpace;
 
 namespace VCI
 {
-    internal static class VciMaterialMigrator
+    public static class VciMaterialMigrator
     {
         public static bool Migrate(GltfData data, int i, MaterialDescriptor matDesc, VciMaterialMigrationTarget target, bool migrateSrgbColor, out MaterialDescriptor migratedMatDesc)
         {
