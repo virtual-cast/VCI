@@ -818,7 +818,7 @@ MonoBehaviour:
     contactInformation: 
     reference: 
     thumbnail: {fileID: 0}
-    version: 1.0
+    version: 1.1
     description: 
     exporterVersion: 0.33
     specVersion: 
@@ -854,8 +854,8 @@ MonoBehaviour:
       \u30DC\u30BF\u30F3\u3092\u89E6\u308B\u3068state\u3092\u5909\u66F4\u3059\u308B\r\nfunction
       onUse(name)\r\n    if name == button1Name then\r\n        vci.state.Set(myStateName,
       1)\r\n    elseif name == button2Name then\r\n        vci.state.Set(myStateName,
-      2)\r\n    end\r\nend\r\n\r\nfunction update()\r\n    syncTransform()\r\n\r\n   
-      -- state\u5024\u3092\u76E3\u8996\u3057\u3066\u66F4\u65B0\u304C\u3042\u308C\u3070\u8868\u793A\u3092\u66F4\u65B0\r\n   
+      2)\r\n    end\r\nend\r\n\r\nfunction update()\r\n    syncTransform()\r\nend\r\n\r\nfunction
+      updateAll()\r\n    -- state\u5024\u3092\u76E3\u8996\u3057\u3066\u66F4\u65B0\u304C\u3042\u308C\u3070\u8868\u793A\u3092\u66F4\u65B0\r\n   
       local upstreamMyState = vci.state.Get(myStateName)\r\n    if upstreamMyState
       ~= localMyState then\r\n        showState(upstreamMyState)\r\n        localMyState
       = upstreamMyState\r\n    end\r\nend\r\n\r\n-- \u30B5\u30FC\u30D0\u30FC\u4E0A\u306Estate\u5024\u3067\u8868\u793A\u3092\u521D\u671F\u5316\r\n--

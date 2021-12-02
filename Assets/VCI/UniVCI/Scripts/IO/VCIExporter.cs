@@ -111,6 +111,9 @@ namespace VCI
                 AddExtensionValue(_gltf, usedExtensions, glTF_VCAST_vci_audios.ExtensionName, f.GetStore().Bytes);
             }
 
+            // 出力キャッシュ
+            var colliderMeshExporter = new PhysicsColliderMeshExporter(_data, VciExportSettings.InverseAxis.Create());
+
             // ノード (Transform) ごとに定義される拡張
             for (var i = 0; i < exporter.Nodes.Count; i++)
             {
@@ -118,7 +121,7 @@ namespace VCI
                 var gltfNode = _gltf.nodes[i];
 
                 // Colliders
-                var collidersExtension = PhysicsColliderExporter.ExportColliders(node, _colliderLayerProvider);
+                var collidersExtension = PhysicsColliderExporter.ExportColliders(node, _data, _colliderLayerProvider, colliderMeshExporter);
                 if (collidersExtension != null)
                 {
                     var f = new UniJSON.JsonFormatter();

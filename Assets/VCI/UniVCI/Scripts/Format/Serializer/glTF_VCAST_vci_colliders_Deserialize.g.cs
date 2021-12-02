@@ -64,6 +64,11 @@ public static ColliderJsonObject glTF_VCAST_vci_colliders_Deserializevci_collide
             continue;
         }
 
+        if(key=="mesh"){
+            value.mesh = glTF_VCAST_vci_colliders_Deserializevci_colliders__mesh(kv.Value);
+            continue;
+        }
+
         if(key=="isTrigger"){
             value.isTrigger = kv.Value.GetBoolean();
             continue;
@@ -99,6 +104,33 @@ public static Single[] glTF_VCAST_vci_colliders_Deserializevci_colliders__shape(
     }
 	return value;
 } 
+
+public static ColliderMeshJsonObject glTF_VCAST_vci_colliders_Deserializevci_colliders__mesh(JsonNode parsed)
+{
+    var value = new ColliderMeshJsonObject();
+
+    foreach(var kv in parsed.ObjectItems())
+    {
+        var key = kv.Key.GetString();
+
+        if(key=="isConvex"){
+            value.isConvex = kv.Value.GetBoolean();
+            continue;
+        }
+
+        if(key=="position"){
+            value.position = kv.Value.GetInt32();
+            continue;
+        }
+
+        if(key=="indices"){
+            value.indices = kv.Value.GetInt32();
+            continue;
+        }
+
+    }
+    return value;
+}
 
 public static PhysicMaterialJsonObject glTF_VCAST_vci_colliders_Deserializevci_colliders__physicMaterial(JsonNode parsed)
 {

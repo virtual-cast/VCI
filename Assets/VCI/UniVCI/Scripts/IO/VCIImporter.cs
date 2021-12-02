@@ -13,7 +13,9 @@ namespace VCI
     public class VCIImporter : ImporterContext
     {
         public RuntimeVciInstance RuntimeVciInstance { get; private set; }
-        public AudioClipFactory AudioClipFactory { get; }
+
+        private AudioClipFactory AudioClipFactory { get; }
+        private PhysicMaterialFactory PhysicMaterialFactory { get; }
 
         private readonly VciData _data;
         private readonly bool _isLocation;
@@ -41,6 +43,9 @@ namespace VCI
             AudioClipFactory = new AudioClipFactory(ExternalObjectMap
                 .Where(x => x.Value is AudioClip)
                 .ToDictionary(x => x.Key, x => (AudioClip)x.Value));
+            PhysicMaterialFactory = new PhysicMaterialFactory(ExternalObjectMap
+                .Where(x => x.Value is PhysicMaterial)
+                .ToDictionary(x => x.Key, x => (PhysicMaterial)x.Value));
 
             // VCI Specification
             InvertAxis = Axes.Z;
@@ -67,6 +72,7 @@ namespace VCI
             base.TransferOwnership(take);
 
             AudioClipFactory.TransferOwnership(take);
+            PhysicMaterialFactory.TransferOwnership(take);
         }
 
         private const string MATERIAL_EXTENSION_NAME = "VCAST_vci_material_unity";
@@ -168,7 +174,7 @@ namespace VCI
             Dictionary<Rigidbody, RigidbodySetting> rigidbodySettings;
             using (measureTime("Physics"))
             {
-                colliders = await PhysicsColliderImporter.LoadAsync(_data, Nodes, _vciColliderLayerProvider, awaitCaller);
+                colliders = await PhysicsColliderImporter.LoadAsync(_data, Nodes, _vciColliderLayerProvider, InvertAxis.Create(), PhysicMaterialFactory, awaitCaller);
                 rigidbodySettings = await PhysicsRigidbodyImporter.LoadAsync(_data, Nodes, awaitCaller);
                 await PhysicsJointImporter.LoadAsync(_data, Nodes, awaitCaller);
             }
@@ -202,8 +208,13 @@ namespace VCI
                 await LightmapImporter.LoadAsync(_data, Nodes, Root, TextureFactory, _isLocation, awaitCaller);
             }
 
+            // NOTE: VCI ロード時に生成したリソースを移譲する.
+            var runtimeVciResources = new List<(SubAssetKey, UnityEngine.Object)>();
+            TransferOwnership((key, obj) => runtimeVciResources.Add((key, obj)));
+
             return new RuntimeVciInstance(
                 runtimeGltfInstance,
+                runtimeVciResources,
                 Nodes,
                 colliders,
                 rigidbodySettings,

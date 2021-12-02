@@ -27,11 +27,10 @@ local teleButtonAnchorTransform = vci.assets.GetTransform("ButtonTeleAnchor")
 local isTeleButtonUsed = false
 
 local fovStateName = "FOV"
+local initialFov = 60
 local minFov = 10
 local maxFov = 170
 local fovStep = 2
-
-local nearClipStateName = "NEAR_CLIP"
 
 local takePhotoMessageName = "message_take_photo"
 
@@ -40,13 +39,6 @@ local photoMaterialName = "Photo"
 
 local isInitialized = false
 local photographyCamera = nil
-
--- アイテム内同期変数を初期化
--- * 自身がこのVCIの所有権を持っているときのみ実行します。
-if vci.assets.IsMine then
-    vci.state.Set(fovStateName, 60)
-    vci.state.Set(nearClipStateName, 0.01)
-end
 
 -- 写真撮影時のコールバック
 -- * ExportPhotographyCamera.SetOnTakePhotoCallbackにこの関数を渡すことで、 
@@ -65,52 +57,46 @@ function onTakePhotoMessageReceived(sender, name, messnilge)
     photographyCamera.TakePhotograph()
 end
 
-local initCameraCoroutine = coroutine.create(
-    function()
-        -- アイテム内同期変数の初期化を待つ
-        while true do
-            local isFovInitialized = vci.state.Get(fovStateName) ~= nil
-            local isNearClipInitialized = vci.state.Get(nearClipStateName) ~= nil
-            if isFovInitialized and isNearClipInitialized then
-                print("state initialized.")
-                break
-            end
-            print("waiting for state init...")
-            coroutine.yield()
-        end
+-- 写真撮影用カメラ生成
+-- * 写真撮影用カメラが生成され、"LensAnchor"のTransformに追従するようになります。
+local lensTransform = vci.assets.GetTransform(cameraLensAnchorName)
+photographyCamera = vci.cameraSystem.CreatePhotographyCamera(lensTransform)
 
-        -- 写真撮影用カメラ生成
-        -- * 写真撮影用カメラが生成され、"LensAnchor"のTransformに追従するようになります。
-        local lensTransform = vci.assets.GetTransform(cameraLensAnchorName)
-        photographyCamera = vci.cameraSystem.CreatePhotographyCamera(lensTransform)
+-- プレビュー描画
+-- * GetCameraPreviewTextureIdでカメラのプレビューのテクスチャを示すIDを取得します。
+-- * このテクスチャIDをvci.assets.material.SetTextureに渡すことでプレビューを表示します。
+local previewTextureId = photographyCamera.GetCameraPreviewTextureId()
+vci.assets.material.SetTexture(previewMaterialName, previewTextureId)
 
-        -- プレビュー描画
-        -- * GetCameraPreviewTextureIdでカメラのプレビューのテクスチャを示すIDを取得します。
-        -- * このテクスチャIDをvci.assets.material.SetTextureに渡すことでプレビューを表示します。
-        local previewTextureId = photographyCamera.GetCameraPreviewTextureId()
-        vci.assets.material.SetTexture(previewMaterialName, previewTextureId)
+-- 写真撮影時のコールバックをセット
+-- * ExportPhotographyCamera.TakePhotograph実行時に、ここで渡した関数が実行されます。
+photographyCamera.SetOnTakePhotoCallback(onTakePhotoCallback)
 
-        -- 写真撮影時のコールバックをセット
-        -- * ExportPhotographyCamera.TakePhotograph実行時に、ここで渡した関数が実行されます。
-        photographyCamera.SetOnTakePhotoCallback(onTakePhotoCallback)
-
-        -- カメラのNear Clip Planeと垂直FOVの初期値をセット
-        initialFov = vci.state.Get(fovStateName)
-        photographyCamera.SetVerticalFieldOfView(initialFov)
-        initialNearClip = vci.state.Get(nearClipStateName)
-        photographyCamera.SetNearClipPlane(initialNearClip)
-
-        -- 写真撮影のメッセージを受け取る
-        -- * リモート側から送信された、"message_take_photo"という名前のメッセージを受信したときに、
-        --   ここで渡した関数が実行されます。
-        vci.message.On(takePhotoMessageName, onTakePhotoMessageReceived)
-
-        -- カメラの初期化完了
-        isInitialized = true
+-- アイテム内同期変数を初期化
+-- * 自身がこのVCIの所有権を持っているときのみ実行します。
+if vci.assets.IsMine then
+    local isFovInitialized = vci.state.Get(fovStateName) ~= nil
+-- カメラの fov が初期化されていない場合、初期化処理を実行する
+    if not isFovInitialized then
+        print("initialize fov...")
+        vci.state.Set(fovStateName, initialFov)
     end
-)
+end
 
-vci.StartCoroutine(initCameraCoroutine)
+
+-- カメラのNear Clip Planeと垂直FOVの初期値をセット
+initialFov = vci.state.Get(fovStateName)
+photographyCamera.SetVerticalFieldOfView(initialFov)
+-- 必要ならば、near clip plane を任意の値にセットする
+-- photographyCamera.SetNearClipPlane(initialNearClip)
+
+-- 写真撮影のメッセージを受け取る
+-- * リモート側から送信された、"message_take_photo"という名前のメッセージを受信したときに、
+--   ここで渡した関数が実行されます。
+vci.message.On(takePhotoMessageName, onTakePhotoMessageReceived)
+
+-- カメラの初期化完了
+isInitialized = true
 
 function updateAll()
     -- ズームアウトのボタンをカメラ本体に追従させる

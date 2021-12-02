@@ -1,13 +1,10 @@
 {
   "name": "com.virtualcast.univci",
-  "version": "0.33.0",
+  "version": "0.33.1",
   "displayName": "VCI",
   "description": "VCI Exporter",
   "unity": "2019.4",
-  "keywords": [
-    "vci",
-    "vr"
-  ],
+  "keywords": ["vci","vr"],
   "author": {
     "name": "VirtualCast, Inc."
   },

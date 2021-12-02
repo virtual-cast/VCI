@@ -55,9 +55,14 @@ public static void glTF_VCAST_vci_colliders_Serializevci_colliders_ITEM(JsonForm
         glTF_VCAST_vci_colliders_Serializevci_colliders__center(f, value.center);
     }
 
-    if(value.shape!=null&&value.shape.Length>=1){
+    if(value.shape!=null&&value.shape.Length>=0){
         f.Key("shape");
         glTF_VCAST_vci_colliders_Serializevci_colliders__shape(f, value.shape);
+    }
+
+    if(value.mesh!=null){
+        f.Key("mesh");
+        glTF_VCAST_vci_colliders_Serializevci_colliders__mesh(f, value.mesh);
     }
 
     if(true){
@@ -95,6 +100,29 @@ public static void glTF_VCAST_vci_colliders_Serializevci_colliders__shape(JsonFo
 
     }
     f.EndList();
+}
+
+public static void glTF_VCAST_vci_colliders_Serializevci_colliders__mesh(JsonFormatter f, ColliderMeshJsonObject value)
+{
+    f.BeginMap();
+
+
+    if(true){
+        f.Key("isConvex");
+        f.Value(value.isConvex);
+    }
+
+    if(value.position>=0){
+        f.Key("position");
+        f.Value(value.position);
+    }
+
+    if(value.indices>=0){
+        f.Key("indices");
+        f.Value(value.indices);
+    }
+
+    f.EndMap();
 }
 
 public static void glTF_VCAST_vci_colliders_Serializevci_colliders__physicMaterial(JsonFormatter f, PhysicMaterialJsonObject value)

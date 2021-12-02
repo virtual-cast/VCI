@@ -7,9 +7,9 @@ namespace VCI
 
         public const int MAJOR = 0;
         public const int MINOR = 33;
-        public const int PATCH = 0;
+        public const int PATCH = 1;
 
         public const string VERSION = "0.33";
-        public const string PATCH_NUMBER = "0";
+        public const string PATCH_NUMBER = "1";
     }
 }

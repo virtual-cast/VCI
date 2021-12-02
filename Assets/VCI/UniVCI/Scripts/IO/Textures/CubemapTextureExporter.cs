@@ -114,14 +114,13 @@ namespace VCI
             if (exporterShader == null) return -1;
 
             var exporterMaterial = new Material(exporterShader);
-            var srgbRt = RenderTexture.GetTemporary(width, width, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
+            var srgbRt = new RenderTexture(width, width, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
 
             exporterMaterial.SetInt(ShaderPropertyFaceIndex, GetFaceIndex(face));
             exporterMaterial.SetInt(ShaderPropertyMipValue, mipmap);
             Graphics.Blit(src, srgbRt, exporterMaterial);
             var idx = _exporter.RegisterExportingAsSRgb(srgbRt, needsAlpha: true);
 
-            RenderTexture.ReleaseTemporary(srgbRt);
             UnityEngine.Object.DestroyImmediate(exporterMaterial);
 
             return idx;

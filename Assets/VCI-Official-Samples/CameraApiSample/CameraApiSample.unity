@@ -424,7 +424,7 @@ MonoBehaviour:
     contactInformation: 
     reference: 
     thumbnail: {fileID: 0}
-    version: 1.0
+    version: 1.1
     description: 
     exporterVersion: 0.33
     specVersion: 
@@ -456,14 +456,11 @@ MonoBehaviour:
       false\r\n\r\nlocal teleButtonName = \"ButtonTele\"\r\nlocal teleButtonTransform
       = vci.assets.GetTransform(teleButtonName)\r\nlocal teleButtonAnchorTransform
       = vci.assets.GetTransform(\"ButtonTeleAnchor\")\r\nlocal isTeleButtonUsed =
-      false\r\n\r\nlocal fovStateName = \"FOV\"\r\nlocal minFov = 10\r\nlocal maxFov
-      = 170\r\nlocal fovStep = 2\r\n\r\nlocal nearClipStateName = \"NEAR_CLIP\"\r\n\r\nlocal
-      takePhotoMessageName = \"message_take_photo\"\r\n\r\nlocal previewMaterialName
-      = \"Display\"\r\nlocal photoMaterialName = \"Photo\"\r\n\r\nlocal isInitialized
-      = false\r\nlocal photographyCamera = nil\r\n\r\n-- \u30A2\u30A4\u30C6\u30E0\u5185\u540C\u671F\u5909\u6570\u3092\u521D\u671F\u5316\r\n--
-      * \u81EA\u8EAB\u304C\u3053\u306EVCI\u306E\u6240\u6709\u6A29\u3092\u6301\u3063\u3066\u3044\u308B\u3068\u304D\u306E\u307F\u5B9F\u884C\u3057\u307E\u3059\u3002\r\nif
-      vci.assets.IsMine then\r\n    vci.state.Set(fovStateName, 60)\r\n    vci.state.Set(nearClipStateName,
-      0.01)\r\nend\r\n\r\n-- \u5199\u771F\u64AE\u5F71\u6642\u306E\u30B3\u30FC\u30EB\u30D0\u30C3\u30AF\r\n--
+      false\r\n\r\nlocal fovStateName = \"FOV\"\r\nlocal initialFov = 60\r\nlocal
+      minFov = 10\r\nlocal maxFov = 170\r\nlocal fovStep = 2\r\n\r\nlocal takePhotoMessageName
+      = \"message_take_photo\"\r\n\r\nlocal previewMaterialName = \"Display\"\r\nlocal
+      photoMaterialName = \"Photo\"\r\n\r\nlocal isInitialized = false\r\nlocal photographyCamera
+      = nil\r\n\r\n-- \u5199\u771F\u64AE\u5F71\u6642\u306E\u30B3\u30FC\u30EB\u30D0\u30C3\u30AF\r\n--
       * ExportPhotographyCamera.SetOnTakePhotoCallback\u306B\u3053\u306E\u95A2\u6570\u3092\u6E21\u3059\u3053\u3068\u3067\u3001
       \r\n--   ExportPhotographyCamera.TakePhotograph\u5B9F\u884C\u6642\u306B\u3053\u306E\u95A2\u6570\u304C\u547C\u3070\u308C\u307E\u3059\u3002\r\n--
       * \u5F15\u6570\u306EphotoMetadata\u306E\u4E2D\u306B\u3001\u64AE\u5F71\u3057\u305F\u30C6\u30AF\u30B9\u30C1\u30E3\u3092\u793A\u3059ID\u304C\u5165\u3063\u3066\u3044\u307E\u3059\u3002\r\n--
@@ -473,34 +470,29 @@ MonoBehaviour:
       vci.assets.material.SetTexture(photoMaterialName, photoTextureId)\r\nend\r\n\r\n--
       \u5199\u771F\u64AE\u5F71\u306E message \u53D7\u3051\u53D6\u308A\u6642\u306B\u5B9F\u884C\u3055\u308C\u308B\u95A2\u6570\r\n--
       * \u30EA\u30E2\u30FC\u30C8\u5074\u3067\u3053\u306EVCI\u304CUse\u3055\u308C\u305F\u3068\u304D\u306B\u5B9F\u884C\u3055\u308C\u307E\u3059\r\nfunction
-      onTakePhotoMessageReceived(sender, name, messnilge)\r\n    photographyCamera.TakePhotograph()\r\nend\r\n\r\nlocal
-      initCameraCoroutine = coroutine.create(\r\n    function()\r\n        -- \u30A2\u30A4\u30C6\u30E0\u5185\u540C\u671F\u5909\u6570\u306E\u521D\u671F\u5316\u3092\u5F85\u3064\r\n       
-      while true do\r\n            local isFovInitialized = vci.state.Get(fovStateName)
-      ~= nil\r\n            local isNearClipInitialized = vci.state.Get(nearClipStateName)
-      ~= nil\r\n            if isFovInitialized and isNearClipInitialized then\r\n               
-      print(\"state initialized.\")\r\n                break\r\n            end\r\n           
-      print(\"waiting for state init...\")\r\n            coroutine.yield()\r\n       
-      end\r\n\r\n        -- \u5199\u771F\u64AE\u5F71\u7528\u30AB\u30E1\u30E9\u751F\u6210\r\n       
-      -- * \u5199\u771F\u64AE\u5F71\u7528\u30AB\u30E1\u30E9\u304C\u751F\u6210\u3055\u308C\u3001\"LensAnchor\"\u306ETransform\u306B\u8FFD\u5F93\u3059\u308B\u3088\u3046\u306B\u306A\u308A\u307E\u3059\u3002\r\n       
-      local lensTransform = vci.assets.GetTransform(cameraLensAnchorName)\r\n       
-      photographyCamera = vci.cameraSystem.CreatePhotographyCamera(lensTransform)\r\n\r\n       
-      -- \u30D7\u30EC\u30D3\u30E5\u30FC\u63CF\u753B\r\n        -- * GetCameraPreviewTextureId\u3067\u30AB\u30E1\u30E9\u306E\u30D7\u30EC\u30D3\u30E5\u30FC\u306E\u30C6\u30AF\u30B9\u30C1\u30E3\u3092\u793A\u3059ID\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002\r\n       
-      -- * \u3053\u306E\u30C6\u30AF\u30B9\u30C1\u30E3ID\u3092vci.assets.material.SetTexture\u306B\u6E21\u3059\u3053\u3068\u3067\u30D7\u30EC\u30D3\u30E5\u30FC\u3092\u8868\u793A\u3057\u307E\u3059\u3002\r\n       
-      local previewTextureId = photographyCamera.GetCameraPreviewTextureId()\r\n       
-      vci.assets.material.SetTexture(previewMaterialName, previewTextureId)\r\n\r\n       
-      -- \u5199\u771F\u64AE\u5F71\u6642\u306E\u30B3\u30FC\u30EB\u30D0\u30C3\u30AF\u3092\u30BB\u30C3\u30C8\r\n       
-      -- * ExportPhotographyCamera.TakePhotograph\u5B9F\u884C\u6642\u306B\u3001\u3053\u3053\u3067\u6E21\u3057\u305F\u95A2\u6570\u304C\u5B9F\u884C\u3055\u308C\u307E\u3059\u3002\r\n       
-      photographyCamera.SetOnTakePhotoCallback(onTakePhotoCallback)\r\n\r\n       
-      -- \u30AB\u30E1\u30E9\u306ENear Clip Plane\u3068\u5782\u76F4FOV\u306E\u521D\u671F\u5024\u3092\u30BB\u30C3\u30C8\r\n       
-      initialFov = vci.state.Get(fovStateName)\r\n        photographyCamera.SetVerticalFieldOfView(initialFov)\r\n       
-      initialNearClip = vci.state.Get(nearClipStateName)\r\n        photographyCamera.SetNearClipPlane(initialNearClip)\r\n\r\n       
-      -- \u5199\u771F\u64AE\u5F71\u306E\u30E1\u30C3\u30BB\u30FC\u30B8\u3092\u53D7\u3051\u53D6\u308B\r\n       
-      -- * \u30EA\u30E2\u30FC\u30C8\u5074\u304B\u3089\u9001\u4FE1\u3055\u308C\u305F\u3001\"message_take_photo\"\u3068\u3044\u3046\u540D\u524D\u306E\u30E1\u30C3\u30BB\u30FC\u30B8\u3092\u53D7\u4FE1\u3057\u305F\u3068\u304D\u306B\u3001\r\n       
-      --   \u3053\u3053\u3067\u6E21\u3057\u305F\u95A2\u6570\u304C\u5B9F\u884C\u3055\u308C\u307E\u3059\u3002\r\n       
-      vci.message.On(takePhotoMessageName, onTakePhotoMessageReceived)\r\n\r\n       
-      -- \u30AB\u30E1\u30E9\u306E\u521D\u671F\u5316\u5B8C\u4E86\r\n        isInitialized
-      = true\r\n    end\r\n)\r\n\r\nvci.StartCoroutine(initCameraCoroutine)\r\n\r\nfunction
-      updateAll()\r\n    -- \u30BA\u30FC\u30E0\u30A2\u30A6\u30C8\u306E\u30DC\u30BF\u30F3\u3092\u30AB\u30E1\u30E9\u672C\u4F53\u306B\u8FFD\u5F93\u3055\u305B\u308B\r\n   
+      onTakePhotoMessageReceived(sender, name, messnilge)\r\n    photographyCamera.TakePhotograph()\r\nend\r\n\r\n--
+      \u5199\u771F\u64AE\u5F71\u7528\u30AB\u30E1\u30E9\u751F\u6210\r\n-- * \u5199\u771F\u64AE\u5F71\u7528\u30AB\u30E1\u30E9\u304C\u751F\u6210\u3055\u308C\u3001\"LensAnchor\"\u306ETransform\u306B\u8FFD\u5F93\u3059\u308B\u3088\u3046\u306B\u306A\u308A\u307E\u3059\u3002\r\nlocal
+      lensTransform = vci.assets.GetTransform(cameraLensAnchorName)\r\nphotographyCamera
+      = vci.cameraSystem.CreatePhotographyCamera(lensTransform)\r\n\r\n-- \u30D7\u30EC\u30D3\u30E5\u30FC\u63CF\u753B\r\n--
+      * GetCameraPreviewTextureId\u3067\u30AB\u30E1\u30E9\u306E\u30D7\u30EC\u30D3\u30E5\u30FC\u306E\u30C6\u30AF\u30B9\u30C1\u30E3\u3092\u793A\u3059ID\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002\r\n--
+      * \u3053\u306E\u30C6\u30AF\u30B9\u30C1\u30E3ID\u3092vci.assets.material.SetTexture\u306B\u6E21\u3059\u3053\u3068\u3067\u30D7\u30EC\u30D3\u30E5\u30FC\u3092\u8868\u793A\u3057\u307E\u3059\u3002\r\nlocal
+      previewTextureId = photographyCamera.GetCameraPreviewTextureId()\r\nvci.assets.material.SetTexture(previewMaterialName,
+      previewTextureId)\r\n\r\n-- \u5199\u771F\u64AE\u5F71\u6642\u306E\u30B3\u30FC\u30EB\u30D0\u30C3\u30AF\u3092\u30BB\u30C3\u30C8\r\n--
+      * ExportPhotographyCamera.TakePhotograph\u5B9F\u884C\u6642\u306B\u3001\u3053\u3053\u3067\u6E21\u3057\u305F\u95A2\u6570\u304C\u5B9F\u884C\u3055\u308C\u307E\u3059\u3002\r\nphotographyCamera.SetOnTakePhotoCallback(onTakePhotoCallback)\r\n\r\n--
+      \u30A2\u30A4\u30C6\u30E0\u5185\u540C\u671F\u5909\u6570\u3092\u521D\u671F\u5316\r\n--
+      * \u81EA\u8EAB\u304C\u3053\u306EVCI\u306E\u6240\u6709\u6A29\u3092\u6301\u3063\u3066\u3044\u308B\u3068\u304D\u306E\u307F\u5B9F\u884C\u3057\u307E\u3059\u3002\r\nif
+      vci.assets.IsMine then\r\n    local isFovInitialized = vci.state.Get(fovStateName)
+      ~= nil\r\n-- \u30AB\u30E1\u30E9\u306E fov \u304C\u521D\u671F\u5316\u3055\u308C\u3066\u3044\u306A\u3044\u5834\u5408\u3001\u521D\u671F\u5316\u51E6\u7406\u3092\u5B9F\u884C\u3059\u308B\r\n   
+      if not isFovInitialized then\r\n        print(\"initialize fov...\")\r\n       
+      vci.state.Set(fovStateName, initialFov)\r\n    end\r\nend\r\nl\r\n\r\n-- \u30AB\u30E1\u30E9\u306ENear
+      Clip Plane\u3068\u5782\u76F4FOV\u306E\u521D\u671F\u5024\u3092\u30BB\u30C3\u30C8\r\ninitialFov
+      = vci.state.Get(fovStateName)\r\nphotographyCamera.SetVerticalFieldOfView(initialFov)\r\n--
+      \u5FC5\u8981\u306A\u3089\u3070\u3001near clip plane \u3092\u4EFB\u610F\u306E\u5024\u306B\u30BB\u30C3\u30C8\u3059\u308B\r\n--
+      photographyCamera.SetNearClipPlane(initialNearClip)\r\n\r\n-- \u5199\u771F\u64AE\u5F71\u306E\u30E1\u30C3\u30BB\u30FC\u30B8\u3092\u53D7\u3051\u53D6\u308B\r\n--
+      * \u30EA\u30E2\u30FC\u30C8\u5074\u304B\u3089\u9001\u4FE1\u3055\u308C\u305F\u3001\"message_take_photo\"\u3068\u3044\u3046\u540D\u524D\u306E\u30E1\u30C3\u30BB\u30FC\u30B8\u3092\u53D7\u4FE1\u3057\u305F\u3068\u304D\u306B\u3001\r\n--  
+      \u3053\u3053\u3067\u6E21\u3057\u305F\u95A2\u6570\u304C\u5B9F\u884C\u3055\u308C\u307E\u3059\u3002\r\nvci.message.On(takePhotoMessageName,
+      onTakePhotoMessageReceived)\r\n\r\n-- \u30AB\u30E1\u30E9\u306E\u521D\u671F\u5316\u5B8C\u4E86\r\nisInitialized
+      = true\r\n\r\nfunction updateAll()\r\n    -- \u30BA\u30FC\u30E0\u30A2\u30A6\u30C8\u306E\u30DC\u30BF\u30F3\u3092\u30AB\u30E1\u30E9\u672C\u4F53\u306B\u8FFD\u5F93\u3055\u305B\u308B\r\n   
       -- * \u8FFD\u5F93\u51E6\u7406\u306F\u3001\u30BA\u30FC\u30E0\u30A2\u30A6\u30C8\u30DC\u30BF\u30F3\u306E\u6240\u6709\u6A29\u3092\u6301\u3063\u3066\u3044\u308B\u30E6\u30FC\u30B6\u30FC\u306E\u74B0\u5883\u4E0A\u3067\u306E\u307F\u884C\u308F\u308C\u307E\u3059\u3002\r\n   
       if wideButtonTransform.IsMine then\r\n        wideButtonAnchorPos = wideButtonAnchorTransform.GetPosition()\r\n       
       wideButtonTransform.SetPosition(wideButtonAnchorPos)\r\n        wideButtonAnchorRot

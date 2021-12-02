@@ -55,7 +55,9 @@ end
 
 function update()
     syncTransform()
+end
 
+function updateAll()
     -- state値を監視して更新があれば表示を更新
     local upstreamMyState = vci.state.Get(myStateName)
     if upstreamMyState ~= localMyState then
