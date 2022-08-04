@@ -1,5 +1,4 @@
-#pragma warning disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -11,33 +10,21 @@ using UnityEditor;
 namespace Effekseer.Internal
 {
 	[Serializable]
-	public class EffekseerSoundResource : IDisposable
+	public class EffekseerSoundResource
 	{
 		[SerializeField]
 		public string path;
 		[SerializeField]
 		public AudioClip clip;
-		
-		private GCHandle gch;
 
-		public EffekseerSoundResource() {
-			this.gch = GCHandle.Alloc(this);
-		}
-
-		public void Dispose() {
-			this.gch.Free();
-		}
-		
-		public IntPtr ToIntPtr() {
-			return GCHandle.ToIntPtr(this.gch);
-		}
-
-		public static EffekseerSoundResource FromIntPtr(IntPtr ptr) {
+		public static EffekseerSoundResource FromIntPtr(IntPtr ptr)
+		{
 			return GCHandle.FromIntPtr(ptr).Target as EffekseerSoundResource;
 		}
 
 #if UNITY_EDITOR
-		public static EffekseerSoundResource LoadAsset(string dirPath, string resPath) {
+		public static EffekseerSoundResource LoadAsset(string dirPath, string resPath)
+		{
 			AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(EffekseerEffectAsset.NormalizeAssetPath(dirPath + "/" + resPath));
 
 			EffekseerSoundResource res = new EffekseerSoundResource();
@@ -45,10 +32,12 @@ namespace Effekseer.Internal
 			res.clip = clip;
 			return res;
 		}
-		public static bool InspectorField(EffekseerSoundResource res) {
+		public static bool InspectorField(EffekseerSoundResource res)
+		{
 			EditorGUILayout.LabelField(res.path);
 			var result = EditorGUILayout.ObjectField(res.clip, typeof(AudioClip), false) as AudioClip;
-			if (result != res.clip) {
+			if (result != res.clip)
+			{
 				res.clip = result;
 				return true;
 			}
@@ -56,16 +45,18 @@ namespace Effekseer.Internal
 		}
 #endif
 	}
-	
+
 	[Serializable]
 	public class EffekseerSoundPlayer : IDisposable
 	{
 		// Singleton instance
 		public static EffekseerSoundPlayer Instance { get; private set; }
 		public static bool IsValid { get { return Instance != null; } }
-		
+
 		// Pooled instances
 		private List<EffekseerSoundInstance> childInstances = new List<EffekseerSoundInstance>();
+
+		List<Action> events = new List<Action>();
 
 		public EffekseerSoundPlayer()
 		{
@@ -85,10 +76,12 @@ namespace Effekseer.Internal
 
 		internal void Init(GameObject rootObj)
 		{
-			if (Application.isPlaying) {
+			if (Application.isPlaying)
+			{
 				var settings = EffekseerSettings.Instance;
 				// サウンドインスタンスを作る
-				for (int i = 0; i < settings.soundInstances; i++) {
+				for (int i = 0; i < settings.soundInstances; i++)
+				{
 					GameObject go = new GameObject();
 					go.name = "SoundInstance #" + i;
 					go.transform.parent = rootObj.transform;
@@ -102,92 +95,152 @@ namespace Effekseer.Internal
 			Instance = this;
 			Plugin.EffekseerSetSoundPlayerEvent(
 				SoundPlayerPlay,
-				SoundPlayerStopTag, 
-				SoundPlayerPauseTag, 
-				SoundPlayerCheckPlayingTag, 
+				SoundPlayerStopTag,
+				SoundPlayerPauseTag,
+				SoundPlayerCheckPlayingTag,
 				SoundPlayerStopAll);
+		}
+
+		internal void Update()
+		{
+			lock (Instance)
+			{
+				foreach (var e in events)
+				{
+					e.Invoke();
+				}
+				events.Clear();
+			}
 		}
 
 		internal void OnDisable()
 		{
-			Plugin.EffekseerSetSoundPlayerEvent(null,null, null, null, null);
+			lock (Instance)
+			{
+				foreach (var e in events)
+				{
+					e.Invoke();
+				}
+				events.Clear();
+				Plugin.EffekseerSetSoundPlayerEvent(null, null, null, null, null);
+			}
+
 			Instance = null;
 		}
-		
+
 		[AOT.MonoPInvokeCallback(typeof(Plugin.EffekseerSoundPlayerPlay))]
-		private static void SoundPlayerPlay(IntPtr tag, 
-				IntPtr data, float volume, float pan, float pitch, 
-				bool mode3D, float x, float y, float z, float distance) {
-			Instance.PlaySound(tag, data, volume, pan, pitch, mode3D, x, y, z, distance);
+		private static void SoundPlayerPlay(IntPtr tag,
+				IntPtr data, float volume, float pan, float pitch,
+				bool mode3D, float x, float y, float z, float distance)
+		{
+
+			lock (Instance)
+			{
+				Instance.events.Add(() => { Instance.PlaySound(tag, data, volume, pan, pitch, mode3D, x, y, z, distance); });
+			}
 		}
 		[AOT.MonoPInvokeCallback(typeof(Plugin.EffekseerSoundPlayerStopTag))]
-		private static void SoundPlayerStopTag(IntPtr tag) {
-			Instance.StopSound(tag);
+		private static void SoundPlayerStopTag(IntPtr tag)
+		{
+			lock (Instance)
+			{
+				Instance.events.Add(() => { Instance.StopSound(tag); });
+			}
 		}
 		[AOT.MonoPInvokeCallback(typeof(Plugin.EffekseerSoundPlayerPauseTag))]
-		private static void SoundPlayerPauseTag(IntPtr tag, bool pause) {
-			Instance.PauseSound(tag, pause);
+		private static void SoundPlayerPauseTag(IntPtr tag, bool pause)
+		{
+			lock (Instance)
+			{
+				Instance.events.Add(() => { Instance.PauseSound(tag, pause); });
+			}
 		}
 		[AOT.MonoPInvokeCallback(typeof(Plugin.EffekseerSoundPlayerCheckPlayingTag))]
-		private static bool SoundPlayerCheckPlayingTag(IntPtr tag) {
-			return Instance.CheckSound(tag);
+		private static bool SoundPlayerCheckPlayingTag(IntPtr tag)
+		{
+			lock (Instance)
+			{
+				return Instance.CheckSound(tag);
+			}
 		}
 		[AOT.MonoPInvokeCallback(typeof(Plugin.EffekseerSoundPlayerStopAll))]
-		private static void SoundPlayerStopAll() {
-			Instance.StopAllSounds();
+		private static void SoundPlayerStopAll()
+		{
+			lock (Instance)
+			{
+				Instance.events.Add(() => { Instance.StopAllSounds(); });
+			}
 		}
 
-		private void PlaySound(IntPtr tag, 
-			IntPtr data, float volume, float pan, float pitch, 
+		private void PlaySound(IntPtr tag,
+			IntPtr data, float volume, float pan, float pitch,
 			bool mode3D, float x, float y, float z, float distance)
 		{
-			if (data == IntPtr.Zero) {
+			if (data == IntPtr.Zero)
+			{
 				return;
 			}
-			var resource = EffekseerSoundResource.FromIntPtr(data);
-			if (resource == null) {
+			var resource = EffekseerSoundResource.FromIntPtr(EffekseerSystem.GetCachedSound(data));
+			if (resource == null)
+			{
 				return;
 			}
 
 			EffekseerSoundInstance optimalInstance = null;
-			foreach (var instance in childInstances) {
-				if (!instance.CheckPlaying()) {
+			foreach (var instance in childInstances)
+			{
+				if (!instance.CheckPlaying())
+				{
 					optimalInstance = instance;
 					break;
-				} else if (optimalInstance == null || instance.lastPlayTime < optimalInstance.lastPlayTime) {
+				}
+				else if (optimalInstance == null || instance.lastPlayTime < optimalInstance.lastPlayTime)
+				{
 					optimalInstance = instance;
 				}
 			}
-			if (optimalInstance != null) {
+			if (optimalInstance != null)
+			{
 				optimalInstance.Stop();
 				optimalInstance.Play(tag.ToString(), resource, volume, pan, pitch, mode3D, x, y, z, distance);
 			}
 		}
-		private void StopSound(IntPtr tag) {
-			foreach (var sound in childInstances) {
-				if (sound.audioTag == tag.ToString()) {
+		private void StopSound(IntPtr tag)
+		{
+			foreach (var sound in childInstances)
+			{
+				if (sound.audioTag == tag.ToString())
+				{
 					sound.Stop();
 				}
 			}
 		}
-		private void PauseSound(IntPtr tag, bool paused) {
-			foreach (var sound in childInstances) {
-				if (sound.audioTag == tag.ToString()) {
+		private void PauseSound(IntPtr tag, bool paused)
+		{
+			foreach (var sound in childInstances)
+			{
+				if (sound.audioTag == tag.ToString())
+				{
 					sound.Pause(paused);
 				}
 			}
 		}
-		private bool CheckSound(IntPtr tag) {
+		private bool CheckSound(IntPtr tag)
+		{
 			bool playing = false;
-			foreach (var sound in childInstances) {
-				if (sound.audioTag == tag.ToString()) {
+			foreach (var sound in childInstances)
+			{
+				if (sound.audioTag == tag.ToString())
+				{
 					playing |= sound.CheckPlaying();
 				}
 			}
 			return playing;
 		}
-		private void StopAllSounds() {
-			foreach (var sound in childInstances) {
+		private void StopAllSounds()
+		{
+			foreach (var sound in childInstances)
+			{
 				sound.Stop();
 			}
 		}
@@ -195,44 +248,57 @@ namespace Effekseer.Internal
 
 	public class EffekseerSoundInstance : MonoBehaviour
 	{
-		private AudioSource _audio;
+		new private AudioSource audio;
 		public string audioTag;
 		public float lastPlayTime;
 
-		void Awake() {
-			_audio = gameObject.AddComponent<AudioSource>();
-			_audio.playOnAwake = false;
+		/// <summary>
+		/// make thread safe
+		/// </summary>
+		bool isPlaying;
+
+		void Awake()
+		{
+			audio = gameObject.AddComponent<AudioSource>();
+			audio.playOnAwake = false;
 		}
-		void Update() {
-			if (_audio.clip && !_audio.isPlaying) {
-				_audio.clip = null;
+		void Update()
+		{
+			isPlaying = audio.isPlaying;
+
+			if (audio.clip && !audio.isPlaying)
+			{
+				audio.clip = null;
 			}
 		}
-		public void Play(string tag, EffekseerSoundResource resource, 
-			float volume, float pan, float pitch, 
+		public void Play(string tag, EffekseerSoundResource resource,
+			float volume, float pan, float pitch,
 			bool mode3D, float x, float y, float z, float distance)
 		{
 			this.audioTag = tag;
 			this.lastPlayTime = Time.time;
 			transform.position = new Vector3(x, y, z);
-			_audio.spatialBlend = (mode3D) ? 1.0f : 0.0f;
-			_audio.volume = volume;
-			_audio.pitch = Mathf.Pow(2.0f, pitch);
-			_audio.panStereo = pan;
-			_audio.minDistance = distance;
-			_audio.maxDistance = distance * 2;
-			_audio.clip = resource.clip;
-			_audio.Play();
+			audio.spatialBlend = (mode3D) ? 1.0f : 0.0f;
+			audio.volume = volume;
+			audio.pitch = Mathf.Pow(2.0f, pitch);
+			audio.panStereo = pan;
+			audio.minDistance = distance;
+			audio.maxDistance = distance * 2;
+			audio.clip = resource.clip;
+			audio.Play();
 		}
-		public void Stop() {
-			_audio.Stop();
+		public void Stop()
+		{
+			audio.Stop();
 		}
-		public void Pause(bool paused) {
-			if (paused) _audio.Pause();
-			else _audio.UnPause();
+		public void Pause(bool paused)
+		{
+			if (paused) audio.Pause();
+			else audio.UnPause();
 		}
-		public bool CheckPlaying() {
-			return _audio.isPlaying;
+		public bool CheckPlaying()
+		{
+			return isPlaying;
 		}
 	}
 }

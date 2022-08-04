@@ -6,7 +6,7 @@ using VRMShaders;
 
 namespace VCI
 {
-    public class MaterialTests
+    public sealed class MaterialTests
     {
         [Test]
         public void VciMaterialUnity()
@@ -62,7 +62,7 @@ namespace VCI
             //
             // importer
             //
-            var data = new VciBinaryParser(bytes).Parse();
+            using (var data = new VciBinaryParser(bytes).Parse())
             using (var importer = new VCIImporter(data))
             {
                 importer.Load();

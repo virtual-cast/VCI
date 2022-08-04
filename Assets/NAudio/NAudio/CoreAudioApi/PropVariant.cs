@@ -25,6 +25,10 @@ using System.IO;
 using System.Runtime.InteropServices;
 using NAudio.Utils;
 
+// NOTE: 以下の warning を無効にする
+// * 'VarEnum' is obsolete: 'Marshalling VARIANTs may be unavailable in future releases.
+#pragma warning disable 618
+
 namespace NAudio.CoreAudioApi.Interfaces
 {
     /// <summary>
@@ -126,7 +130,7 @@ namespace NAudio.CoreAudioApi.Interfaces
         /// <summary>
         /// Pointer value.
         /// </summary>
-        [FieldOffset(8)] public IntPtr pointerValue; //LPWSTR 
+        [FieldOffset(8)] public IntPtr pointerValue; //LPWSTR
         //IUnknown* punkVal;
         /*IDispatch* pdispVal;
         IStream* pStream;

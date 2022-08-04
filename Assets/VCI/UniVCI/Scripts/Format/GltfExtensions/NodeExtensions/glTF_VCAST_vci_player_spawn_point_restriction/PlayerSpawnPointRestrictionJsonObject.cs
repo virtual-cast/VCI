@@ -4,7 +4,7 @@ namespace VCI
 {
     [Serializable]
     [UniGLTF.JsonSchema(Title = "vci.player_restriction.spawn_point.restriction")]
-    public class PlayerSpawnPointRestrictionJsonObject
+    public sealed class PlayerSpawnPointRestrictionJsonObject
     {
         public const string NoLimitRangeTypeString = "NoLimit";
         public const string CircleRangeTypeString = "Circle";

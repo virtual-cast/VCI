@@ -24,10 +24,10 @@ namespace VCI
             var audioDir = prefabFilePath.GetAssetFolder(".Audios");
             audioDir.EnsureFolder();
 
-            foreach (var (name, mimeType, binary) in audios)
+            foreach (var (name, mimeType, binarySlice) in audios)
             {
-                var audioBuffer = new byte[binary.Count];
-                Buffer.BlockCopy(binary.Array, binary.Offset, audioBuffer, 0, audioBuffer.Length);
+                // NOTE: Copy
+                var audioBuffer = binarySlice.ToArray();
 
                 var ext = DeserializeExtensionFromMimeTypeString(mimeType);
                 if (!string.IsNullOrEmpty(ext))

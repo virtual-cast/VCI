@@ -3,10 +3,11 @@ using NUnit.Framework;
 using UniGLTF;
 //using VCIJSON;
 using UniJSON;
+using Unity.Collections;
 
 namespace VCI
 {
-    public class VciGenSerializerTests
+    public sealed class VciGenSerializerTests
     {
         [Test]
         public void VciMeta()

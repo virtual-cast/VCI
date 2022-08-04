@@ -50,7 +50,6 @@ namespace VCI
                 var audioClipPaths = EditorAudioImporter.ExtractAssetFiles(_data, _prefabPath);
                 ExtractEffekseerAsEditorAssets();
                 ExtractScriptAsEditorAssets();
-                ExtractColliderMeshAsEditorAssets();
 
                 // NOTE: GLTF の Texture アセット を Extract する.
                 var dirName = $"{_prefabPath.FileNameWithoutExtension}.Textures";
@@ -79,11 +78,6 @@ namespace VCI
         private void ExtractScriptAsEditorAssets()
         {
             new EditorScriptImporter(_data, _importer, _prefabPath).ExtractAssetFiles();
-        }
-
-        private void ExtractColliderMeshAsEditorAssets()
-        {
-            new EditorPhysicsColliderImporter(_data, _importer, _prefabPath).ExtractAssetFiles();
         }
     }
 }

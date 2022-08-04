@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using UniGLTF;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace VCI
 {
@@ -10,14 +8,19 @@ namespace VCI
     {
         private readonly GltfData _data;
         private readonly IAxisInverter _axisInverter;
-        private readonly Dictionary<PhysicsColliderMeshIdentifier, Mesh> _cache = new Dictionary<PhysicsColliderMeshIdentifier, Mesh>();
+        private readonly ColliderMeshFactory _factory;
 
-        public PhysicsColliderMeshImporter(GltfData data, IAxisInverter axisInverter)
+        public PhysicsColliderMeshImporter(GltfData data, IAxisInverter axisInverter, ColliderMeshFactory factory)
         {
             _data = data;
             _axisInverter = axisInverter;
+            _factory = factory;
         }
 
+        /// <summary>
+        /// VCI ファイルのパラメタを glTF から Unity に変換して、Factory に渡す.
+        /// 実際の生成は Factory が行う.
+        /// </summary>
         public Mesh Load(ColliderMeshJsonObject jsonMesh)
         {
             var positionAccessorIndex = jsonMesh.position;
@@ -28,10 +31,10 @@ namespace VCI
                 return null;
             }
 
-            var id = new PhysicsColliderMeshIdentifier(positionAccessorIndex, indicesAccessorIndex);
-            if (_cache.ContainsKey(id))
+            var id = new ColliderMeshIdentifier(positionAccessorIndex, indicesAccessorIndex);
+            if (_factory.TryGetLoadedColliderMesh(id, out var loadedMesh))
             {
-                return _cache[id];
+                return loadedMesh;
             }
 
             // NOTE: VCI の仕様により Z 軸反転する.
@@ -41,28 +44,61 @@ namespace VCI
                 positions[idx] = _axisInverter.InvertVector3(positions[idx]);
             }
 
-            // NOTE: GltfData.GetIndices は内部で glTF -> Unity 変換を行うため、ここでは無変換.
-            var indices = _data.GetIndices(indicesAccessorIndex);
+            var indicesAccessor = _data.GetIndicesFromAccessorIndex(indicesAccessorIndex);
+            var indices = GenerateUnityIndicesArray(indicesAccessor);
 
-            var mesh = new Mesh();
-            mesh.name = GenerateUniqueMeshName(id);
-            if (positions.Length > UInt16.MaxValue)
-            {
-                mesh.indexFormat = IndexFormat.UInt32;
-            }
-            mesh.vertices = positions;
-            mesh.triangles = indices;
-            mesh.RecalculateBounds();
-            mesh.RecalculateNormals();
-
-            _cache.Add(id, mesh);
-
-            return mesh;
+            return _factory.LoadColliderMesh(id, positions, indices);
         }
 
-        internal static string GenerateUniqueMeshName(PhysicsColliderMeshIdentifier id)
+        /// <summary>
+        /// MeshContext.cs からロジックをコピー.
+        /// glTF -> Unity の仕様上、面を反転させながらコピーする.
+        /// </summary>
+        private static int[] GenerateUnityIndicesArray(BufferAccessor src)
         {
-            return $"__COLLIDER__{id.PositionAccessorIndex:D}_{id.IndicesAccessorIndex:D}";
+            var array = new int[src.Count];
+            switch (src.ComponentType)
+            {
+                case AccessorValueType.UNSIGNED_BYTE:
+                    {
+                        var indices = src.Bytes;
+                        for (var i = 0; i < src.Count - 2; i += 3)
+                        {
+                            array[i + 0] = indices[i + 2];
+                            array[i + 1] = indices[i + 1];
+                            array[i + 2] = indices[i + 0];
+                        }
+                    }
+                    break;
+
+                case AccessorValueType.UNSIGNED_SHORT:
+                    {
+                        var indices = src.Bytes.Reinterpret<ushort>(1);
+                        for (var i = 0; i < src.Count - 2; i += 3)
+                        {
+                            array[i + 0] = indices[i + 2];
+                            array[i + 1] = indices[i + 1];
+                            array[i + 2] = indices[i + 0];
+                        }
+                    }
+                    break;
+
+                case AccessorValueType.UNSIGNED_INT:
+                    {
+                        // NOTE: 値が型の範囲外になる可能性があるが、Unity の仕様上仕方ないのでそのままロードする.
+                        var indices = src.Bytes.Reinterpret<int>(1);
+                        for (var i = 0; i < src.Count - 2; i += 3)
+                        {
+                            array[i + 0] = indices[i + 2];
+                            array[i + 1] = indices[i + 1];
+                            array[i + 2] = indices[i + 0];
+                        }
+                    }
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+            return array;
         }
     }
 }

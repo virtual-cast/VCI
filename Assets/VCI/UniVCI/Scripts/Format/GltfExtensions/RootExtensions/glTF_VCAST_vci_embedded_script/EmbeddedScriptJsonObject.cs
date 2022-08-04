@@ -3,7 +3,7 @@
 namespace VCI
 {
     [Serializable]
-    public class EmbeddedScriptJsonObject
+    public sealed class EmbeddedScriptJsonObject
     {
         public const string LuaMimeTypeString = "application/x-lua";
 

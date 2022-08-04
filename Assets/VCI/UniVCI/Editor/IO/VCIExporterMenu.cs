@@ -27,7 +27,8 @@ namespace VCI
             }
             catch (VCIValidatorException e)
             {
-                VCIValidationErrorDialog.ShowErrorDialog(e);
+                VCIValidationError.ShowErrorDialog(e);
+                VCIValidationError.SelectObject(e);
                 GUIUtility.ExitGUI();
                 return;
             }

@@ -21,7 +21,8 @@ namespace VCI
             IReadOnlyList<Transform> unityNodes,
             IVciColliderLayerProvider vciColliderLayer,
             IAxisInverter axisInverter,
-            PhysicMaterialFactory factory,
+            PhysicMaterialFactory physicMaterialFactory,
+            ColliderMeshFactory colliderMeshFactory,
             IAwaitCaller awaitCaller)
         {
             if (vciColliderLayer == null)
@@ -30,13 +31,14 @@ namespace VCI
             }
 
             var colliderComponents = new List<Collider>();
-            var meshImporter = new PhysicsColliderMeshImporter(vciData.GltfData, axisInverter);
+            var meshImporter = new PhysicsColliderMeshImporter(vciData.GltfData, axisInverter, colliderMeshFactory);
 
             // Colliders
             var colliderCount = 0;
             foreach (var (nodeIdx, colliderExtension) in vciData.CollidersNodes)
             {
-                if (colliderExtension.colliders.Count == 0)
+                if (colliderExtension.colliders == null ||
+                    colliderExtension.colliders.Count == 0)
                 {
                     continue;
                 }
@@ -45,7 +47,7 @@ namespace VCI
 
                 foreach (var jsonCollider in colliderExtension.colliders)
                 {
-                    var collider = LoadColliderComponent(go, jsonCollider, meshImporter, factory);
+                    var collider = LoadColliderComponent(go, jsonCollider, meshImporter, physicMaterialFactory);
                     if (collider == null)
                     {
                         continue;

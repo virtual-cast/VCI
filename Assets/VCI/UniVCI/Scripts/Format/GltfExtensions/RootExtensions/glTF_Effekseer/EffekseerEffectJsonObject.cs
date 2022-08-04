@@ -7,7 +7,7 @@ namespace VCI
     /// effect body
     /// </summary>
     [Serializable]
-    public class EffekseerEffectJsonObject
+    public sealed class EffekseerEffectJsonObject
     {
         public int nodeIndex;
 

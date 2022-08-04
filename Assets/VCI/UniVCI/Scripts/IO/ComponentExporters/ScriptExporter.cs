@@ -2,7 +2,6 @@
 using System.Linq;
 using UniGLTF;
 using UniJSON;
-using UnityEngine;
 
 namespace VCI
 {
@@ -36,25 +35,8 @@ namespace VCI
 
         private static string ExportScriptText(VciScript script)
         {
-            if (Application.isPlaying)
-            {
-                // Runtime
-                return script.source;
-            }
-            else
-            {
-                // Editor
-#if UNITY_EDITOR
-                if (script.textAsset)
-                {
-                    return script.textAsset.text;
-                }
-                else
-#endif
-                {
-                    return script.source;
-                }
-            }
+            script.source = VciScriptHelper.GetSourceTextForExport(script);
+            return script.source;
         }
 
         private static string ExportScriptMimeType(VciScriptMimeType type)

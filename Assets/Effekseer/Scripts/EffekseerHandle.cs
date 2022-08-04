@@ -1,8 +1,13 @@
-#pragma warning disable
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Effekseer
 {
+	public enum EffekseerTimeScale
+	{
+		Scale,
+		Unscale,
+	}
+
 	/// <summary xml:lang="ja">
 	/// A instance handle of played effect
 	/// </summary>
@@ -13,20 +18,36 @@ namespace Effekseer
 	{
 		internal int m_handle;
 
+		EffekseerTimeScale timeScale;
+
 		public EffekseerHandle(int handle = -1)
 		{
 			m_handle = handle;
 			layer_ = 0;
+			timeScale = EffekseerTimeScale.Scale;
+			ApplyTimeScale();
 		}
 
 		/// <summary>
-		/// Don't touch it!!
+		/// Update a single effect (almost for Editor)
 		/// </summary>
 		public void UpdateHandle(float deltaFrame)
 		{
+			Plugin.EffekseerSetTimeScaleByGroup(1, 1);
+			Plugin.EffekseerSetTimeScaleByGroup(2, 1);
+
 			Plugin.EffekseerUpdateHandle(m_handle, deltaFrame);
 		}
-		
+
+		/// <summary>
+		/// Update to move the specified frame (almost for Editor)
+		/// </summary>
+		/// <param name="frame"></param>
+		public void UpdateHandleToMoveToFrame(float frame)
+		{
+			Plugin.EffekseerUpdateHandleToMoveToFrame(m_handle, frame);
+		}
+
 		/// <summary xml:lang="en">
 		/// Stops the played effect.
 		/// All nodes will be destroyed.
@@ -39,7 +60,7 @@ namespace Effekseer
 		{
 			Plugin.EffekseerStopEffect(m_handle);
 		}
-	
+
 		/// <summary xml:lang="en">
 		/// Stops the root node of the played effect.
 		/// The root node will be destroyed. Then children also will be destroyed by their lifetime.
@@ -52,7 +73,7 @@ namespace Effekseer
 		{
 			Plugin.EffekseerStopRoot(m_handle);
 		}
-	
+
 		/// <summary xml:lang="en">
 		/// Sets the effect location
 		/// </summary>
@@ -64,7 +85,7 @@ namespace Effekseer
 		{
 			Plugin.EffekseerSetLocation(m_handle, location.x, location.y, location.z);
 		}
-	
+
 		/// <summary xml:lang="en">
 		/// Sets the effect rotation
 		/// </summary>
@@ -77,9 +98,17 @@ namespace Effekseer
 			Vector3 axis;
 			float angle;
 			rotation.ToAngleAxis(out angle, out axis);
-			Plugin.EffekseerSetRotation(m_handle, axis.x, axis.y, axis.z, angle * Mathf.Deg2Rad);
+
+			if (float.IsNaN(axis.x) || float.IsInfinity(axis.x))
+			{
+				Plugin.EffekseerSetRotation(m_handle, 0.0f, -1.0f, 0.0f, 360.0f * Mathf.Deg2Rad);
+			}
+			else
+			{
+				Plugin.EffekseerSetRotation(m_handle, axis.x, axis.y, axis.z, angle * Mathf.Deg2Rad);
+			}
 		}
-	
+
 		/// <summary xml:lang="en">
 		/// Sets the effect scale
 		/// </summary>
@@ -103,7 +132,7 @@ namespace Effekseer
 		{
 			Plugin.EffekseerSetAllColor(m_handle, (byte)(color.r * 255), (byte)(color.g * 255), (byte)(color.b * 255), (byte)(color.a * 255));
 		}
-	
+
 		/// <summary xml:lang="en">
 		/// Sets the effect target location
 		/// </summary>
@@ -173,14 +202,16 @@ namespace Effekseer
 		/// </summary>
 		public bool paused
 		{
-			set {
+			set
+			{
 				Plugin.EffekseerSetPaused(m_handle, value);
 			}
-			get {
+			get
+			{
 				return Plugin.EffekseerGetPaused(m_handle);
 			}
 		}
-	
+
 		/// <summary xml:lang="en">
 		/// Showing the effect
 		/// <para>true:  It will be rendering.</para>
@@ -193,10 +224,12 @@ namespace Effekseer
 		/// </summary>
 		public bool shown
 		{
-			set {
+			set
+			{
 				Plugin.EffekseerSetShown(m_handle, value);
 			}
-			get {
+			get
+			{
 				return Plugin.EffekseerGetShown(m_handle);
 			}
 		}
@@ -218,7 +251,7 @@ namespace Effekseer
 				return Plugin.EffekseerGetSpeed(m_handle);
 			}
 		}
-	
+
 		/// <summary xml:lang="ja">
 		/// Whether the effect instance is enabled<br/>
 		/// <para>true:  enabled</para>
@@ -231,11 +264,12 @@ namespace Effekseer
 		/// </summary>
 		public bool enabled
 		{
-			get {
+			get
+			{
 				return m_handle >= 0;
 			}
 		}
-	
+
 		/// <summary xml:lang="en">
 		/// Existing state
 		/// <para>true:  It's existed.</para>
@@ -248,7 +282,8 @@ namespace Effekseer
 		/// </summary>
 		public bool exists
 		{
-			get {
+			get
+			{
 				return Plugin.EffekseerExists(m_handle);
 			}
 		}
@@ -264,6 +299,35 @@ namespace Effekseer
 			get
 			{
 				return Plugin.EffekseerGetInstanceCount(m_handle);
+			}
+		}
+
+		public EffekseerTimeScale TimeScale
+		{
+			get
+			{
+				return timeScale;
+			}
+			set
+			{
+				if (timeScale == value)
+					return;
+
+				timeScale = value;
+
+				ApplyTimeScale();
+			}
+		}
+
+		void ApplyTimeScale()
+		{
+			if (timeScale == EffekseerTimeScale.Scale)
+			{
+				Plugin.EffekseerSetGroupMask(m_handle, 1);
+			}
+			else if (timeScale == EffekseerTimeScale.Unscale)
+			{
+				Plugin.EffekseerSetGroupMask(m_handle, 2);
 			}
 		}
 	}

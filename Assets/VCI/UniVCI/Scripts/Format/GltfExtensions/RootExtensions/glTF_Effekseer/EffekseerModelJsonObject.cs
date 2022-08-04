@@ -3,7 +3,7 @@
 namespace VCI
 {
     [Serializable]
-    public class EffekseerModelJsonObject
+    public sealed class EffekseerModelJsonObject
     {
         [UniGLTF.JsonSchema(Required = true, Minimum = 0)]
         public int bufferView = -1;

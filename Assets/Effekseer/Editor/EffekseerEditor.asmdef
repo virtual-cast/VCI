@@ -1,15 +1,14 @@
 {
     "name": "EffekseerEditor",
     "references": [
-        "GUID:6cd0664e68c0e6544bb81fede698d559"
+        "Effekseer"
     ],
+    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
     "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": false,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+    "autoReferenced": true,
+    "defineConstraints": []
 }

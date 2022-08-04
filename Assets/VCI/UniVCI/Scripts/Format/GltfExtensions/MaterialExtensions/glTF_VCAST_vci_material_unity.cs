@@ -7,7 +7,7 @@ namespace VCI
     /// Extension root
     /// </summary>
     [Serializable]
-    public class glTF_VCAST_vci_material_unity
+    public sealed class glTF_VCAST_vci_material_unity
     {
         public static string ExtensionName => "VCAST_vci_material_unity";
 

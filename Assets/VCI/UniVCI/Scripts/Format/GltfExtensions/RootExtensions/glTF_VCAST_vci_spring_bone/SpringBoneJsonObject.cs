@@ -7,7 +7,7 @@ namespace VCI
 {
     [Serializable]
     [UniGLTF.JsonSchema(Title = "vci.spring_bone.spring_bone")]
-    public class SpringBoneJsonObject
+    public sealed class SpringBoneJsonObject
     {
         [UniGLTF.JsonSchema(Description = "The resilience of the swaying object (the power of returning to the initial pose).")]
         public float stiffiness;

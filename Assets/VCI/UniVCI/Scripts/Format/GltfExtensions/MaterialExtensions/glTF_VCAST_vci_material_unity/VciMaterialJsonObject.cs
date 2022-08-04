@@ -5,7 +5,7 @@ namespace VCI
 {
     [Serializable]
     [UniGLTF.JsonSchema(Title = "vci.material")]
-    public class VciMaterialJsonObject
+    public sealed class VciMaterialJsonObject
     {
         public string name;
         public string shader;

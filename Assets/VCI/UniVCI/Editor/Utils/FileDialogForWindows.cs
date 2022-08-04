@@ -11,7 +11,7 @@ namespace VCI
     {
         #region GetOpenFileName
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public class OpenFileName
+        public sealed class OpenFileName
         {
             public int structSize = 0;
             public IntPtr dlgOwner = IntPtr.Zero;

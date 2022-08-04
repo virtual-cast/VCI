@@ -4,7 +4,7 @@ namespace VCI
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(VCIObject))]
-    public class VCILocationBounds : MonoBehaviour
+    public sealed class VCILocationBounds : MonoBehaviour
     {
         public Bounds Bounds;
 

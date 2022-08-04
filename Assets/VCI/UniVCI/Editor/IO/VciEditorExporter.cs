@@ -7,15 +7,15 @@ namespace VCI
 {
     public static class VciEditorExporter
     {
-        public static byte[] Export(GameObject root, IVciColliderLayerProvider collisionLayerProvider = null)
+        public static byte[] Export(GameObject root, ITextureSerializer textureDeserializer = null, IVciColliderLayerProvider collisionLayerProvider = null)
         {
             VciExportingTextureSettingFixer.Fix(root);
 
             var exportingGltfData = new ExportingGltfData();
-            using (var exporter = new VCIExporter(exportingGltfData, collisionLayerProvider))
+            using (var exporter = new VCIExporter(exportingGltfData, new EditorAnimationNodeExporter(), collisionLayerProvider))
             {
                 exporter.Prepare(root);
-                exporter.Export(new EditorTextureSerializer());
+                exporter.Export(textureDeserializer ?? new EditorTextureSerializer());
                 return exportingGltfData.ToGlbBytes();
             }
         }

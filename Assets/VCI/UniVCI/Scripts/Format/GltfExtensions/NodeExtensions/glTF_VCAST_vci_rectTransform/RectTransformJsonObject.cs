@@ -6,7 +6,7 @@ namespace VCI
 {
     [Serializable]
     [UniGLTF.JsonSchema(Title = "vci.rect_transform")]
-    public class RectTransformJsonObject
+    public sealed class RectTransformJsonObject
     {
         [UniGLTF.JsonSchema(MinItems = 2, MaxItems = 2)]
         public float[] anchorMin;

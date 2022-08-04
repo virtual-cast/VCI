@@ -5,7 +5,7 @@ namespace VCI
     /// <summary>
     /// VCI が提供する、デフォルトのレイヤー名設定.
     /// </summary>
-    public class VciDefaultLayerSettings : IVciColliderLayerProvider, IVciDefaultLayerProvider
+    public sealed class VciDefaultLayerSettings : IVciColliderLayerProvider, IVciDefaultLayerProvider
     {
         public const string DefaultLayerName = "Default";
         public const string LocationLayerName = "Location";

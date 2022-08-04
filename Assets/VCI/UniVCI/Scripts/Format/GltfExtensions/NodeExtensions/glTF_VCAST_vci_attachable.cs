@@ -8,7 +8,7 @@ namespace VCI
     /// Extension root
     /// </summary>
     [Serializable]
-    public class glTF_VCAST_vci_attachable
+    public sealed class glTF_VCAST_vci_attachable
     {
         public List<string> attachableHumanBodyBones = new List<string>();
         public float attachableDistance;

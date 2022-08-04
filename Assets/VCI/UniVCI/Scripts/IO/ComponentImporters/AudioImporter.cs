@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
+using Unity.Collections;
 using UnityEngine;
 using VRMShaders;
 
@@ -13,14 +15,15 @@ namespace VCI
             IReadOnlyList<Transform> unityNodes,
             GameObject unityRoot,
             AudioClipFactory audioClipFactory,
-            IAwaitCaller awaitCaller)
+            IAwaitCaller awaitCaller,
+            CancellationToken ct = default)
         {
             // Load
             var audios = Deserialize(data);
             var clips = new Dictionary<SubAssetKey, AudioClip>();
             foreach (var (name, mimeType, binary) in audios)
             {
-                var clip = await audioClipFactory.LoadAudioClipAsync(name, mimeType, binary, awaitCaller);
+                var clip = await audioClipFactory.LoadAudioClipAsync(name, mimeType, binary, awaitCaller, ct);
                 clips.Add(new SubAssetKey(typeof(AudioClip), name), clip);
             }
 
@@ -28,9 +31,9 @@ namespace VCI
             SetupComponents(data, unityNodes, unityRoot, data.VciMigrationFlags, clips);
         }
 
-        public static List<(string name, string mimeType, ArraySegment<byte> binary)> Deserialize(VciData data)
+        public static List<(string name, string mimeType, NativeSlice<byte> binary)> Deserialize(VciData data)
         {
-            var audios = new List<(string name, string mimeType, ArraySegment<byte> binary)>();
+            var audios = new List<(string name, string mimeType, NativeSlice<byte> binary)>();
 
             if (data.Audios == null)
             {

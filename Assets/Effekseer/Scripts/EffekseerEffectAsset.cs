@@ -1,5 +1,4 @@
-#pragma warning disable
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
@@ -18,9 +17,10 @@ namespace Effekseer.Internal
 		public string path;
 		[SerializeField]
 		public Texture2D texture;
-			
+
 #if UNITY_EDITOR
-		public static EffekseerTextureResource LoadAsset(string dirPath, string resPath) {
+		public static EffekseerTextureResource LoadAsset(string dirPath, string resPath)
+		{
 			Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(EffekseerEffectAsset.NormalizeAssetPath(dirPath + "/" + resPath));
 
 			var res = new EffekseerTextureResource();
@@ -28,10 +28,12 @@ namespace Effekseer.Internal
 			res.texture = texture;
 			return res;
 		}
-		public static bool InspectorField(EffekseerTextureResource res) {
+		public static bool InspectorField(EffekseerTextureResource res)
+		{
 			EditorGUILayout.LabelField(res.path);
 			var result = EditorGUILayout.ObjectField(res.texture, typeof(Texture2D), false) as Texture2D;
-			if (result != res.texture) {
+			if (result != res.texture)
+			{
 				res.texture = result;
 				return true;
 			}
@@ -54,6 +56,7 @@ namespace Effekseer
 		public List<string> SoundPathList = new List<string>();
 		public List<string> ModelPathList = new List<string>();
 		public List<string> MaterialPathList = new List<string>();
+		public List<string> CurvePathList = new List<string>();
 	}
 
 
@@ -63,13 +66,15 @@ namespace Effekseer
 		public byte[] efkBytes;
 
 		[SerializeField]
-		public EffekseerTextureResource[] textureResources;		
+		public EffekseerTextureResource[] textureResources;
 		[SerializeField]
 		public EffekseerSoundResource[] soundResources;
 		[SerializeField]
 		public EffekseerModelResource[] modelResources;
 		[SerializeField]
 		public EffekseerMaterialResource[] materialResources;
+		[SerializeField]
+		public EffekseerCurveResource[] curveResources;
 
 		[SerializeField]
 		public float Scale = 1.0f;
@@ -101,7 +106,7 @@ namespace Effekseer
 
 		void OnEnable()
 		{
-			if(efkBytes != null && efkBytes.Length > 0)
+			if (efkBytes != null && efkBytes.Length > 0)
 			{
 				LoadEffect();
 			}
@@ -156,7 +161,8 @@ namespace Effekseer
 		void OnDisable()
 		{
 			enabledAssets.Remove(dictionaryKey);
-			if (EffekseerSystem.IsValid) {
+			if (EffekseerSystem.IsValid)
+			{
 				EffekseerSystem.Instance.ReleaseEffect(this);
 			}
 
@@ -168,13 +174,13 @@ namespace Effekseer
 			int index = Array.FindIndex(textureResources, (r) => (path == r.path));
 			return (index >= 0) ? textureResources[index] : null;
 		}
-		
+
 		public EffekseerSoundResource FindSound(string path)
 		{
 			int index = Array.FindIndex(soundResources, (r) => (path == r.path));
 			return (index >= 0) ? soundResources[index] : null;
 		}
-		
+
 		public EffekseerModelResource FindModel(string path)
 		{
 			int index = Array.FindIndex(modelResources, (r) => (path == r.path));
@@ -185,6 +191,12 @@ namespace Effekseer
 		{
 			int index = Array.FindIndex(materialResources, (r) => (path == r.path));
 			return (index >= 0) ? materialResources[index] : null;
+		}
+
+		public EffekseerCurveResource FindCurve(string path)
+		{
+			int index = Array.FindIndex(curveResources, (r) => (path == r.path));
+			return (index >= 0) ? curveResources[index] : null;
 		}
 
 		public static bool ReadResourcePath(byte[] data, ref EffekseerResourcePath resourcePath)
@@ -203,6 +215,7 @@ namespace Effekseer
 			resourcePath.TexturePathList = new List<string>();
 			resourcePath.SoundPathList = new List<string>();
 			resourcePath.ModelPathList = new List<string>();
+			resourcePath.CurvePathList = new List<string>();
 
 			// Get color texture paths
 			{
@@ -265,6 +278,16 @@ namespace Effekseer
 				}
 			}
 
+			if (resourcePath.Version >= 1607)
+			{
+				int curveCount = BitConverter.ToInt32(data, filepos);
+				filepos += 4;
+				for (int i = 0; i < curveCount; i++)
+				{
+					resourcePath.CurvePathList.Add(ReadString(data, ref filepos));
+				}
+			}
+
 			return true;
 		}
 
@@ -296,7 +319,7 @@ namespace Effekseer
 
 			string assetPath = Path.ChangeExtension(path, ".asset");
 			var asset = AssetDatabase.LoadAssetAtPath<EffekseerEffectAsset>(assetPath);
-			if(asset != null)
+			if (asset != null)
 			{
 				defaultScale = asset.Scale;
 			}
@@ -304,16 +327,17 @@ namespace Effekseer
 			string assetDir = assetPath.Substring(0, assetPath.LastIndexOf('/'));
 
 			bool isNewAsset = false;
-			if(asset == null)
+			if (asset == null)
 			{
 				isNewAsset = true;
 				asset = CreateInstance<EffekseerEffectAsset>();
 			}
 
 			asset.efkBytes = data;
-			
+
 			asset.textureResources = new EffekseerTextureResource[resourcePath.TexturePathList.Count];
-			for (int i = 0; i < resourcePath.TexturePathList.Count; i++) {
+			for (int i = 0; i < resourcePath.TexturePathList.Count; i++)
+			{
 				asset.textureResources[i] = EffekseerTextureResource.LoadAsset(assetDir, resourcePath.TexturePathList[i]);
 
 				if (asset.textureResources[i].texture == null)
@@ -321,9 +345,10 @@ namespace Effekseer
 					Debug.LogWarning(string.Format("Failed to load {0}", resourcePath.TexturePathList[i]));
 				}
 			}
-			
+
 			asset.soundResources = new EffekseerSoundResource[resourcePath.SoundPathList.Count];
-			for (int i = 0; i < resourcePath.SoundPathList.Count; i++) {
+			for (int i = 0; i < resourcePath.SoundPathList.Count; i++)
+			{
 				asset.soundResources[i] = EffekseerSoundResource.LoadAsset(assetDir, resourcePath.SoundPathList[i]);
 
 				if (asset.soundResources[i].clip == null)
@@ -331,9 +356,10 @@ namespace Effekseer
 					Debug.LogWarning(string.Format("Failed to load {0}", resourcePath.SoundPathList[i]));
 				}
 			}
-			
+
 			asset.modelResources = new EffekseerModelResource[resourcePath.ModelPathList.Count];
-			for (int i = 0; i < resourcePath.ModelPathList.Count; i++) {
+			for (int i = 0; i < resourcePath.ModelPathList.Count; i++)
+			{
 				asset.modelResources[i] = EffekseerModelResource.LoadAsset(assetDir, resourcePath.ModelPathList[i]);
 
 				if (asset.modelResources[i].asset == null)
@@ -353,9 +379,20 @@ namespace Effekseer
 				}
 			}
 
+			asset.curveResources = new EffekseerCurveResource[resourcePath.CurvePathList.Count];
+			for (int i = 0; i < resourcePath.CurvePathList.Count; i++)
+			{
+				asset.curveResources[i] = EffekseerCurveResource.LoadAsset(assetDir, resourcePath.CurvePathList[i]);
+
+				if (asset.curveResources[i].asset == null)
+				{
+					Debug.LogWarning(string.Format("Failed to load {0}", resourcePath.CurvePathList[i]));
+				}
+			}
+
 			asset.Scale = defaultScale;
 
-			if(isNewAsset)
+			if (isNewAsset)
 			{
 				AssetDatabase.CreateAsset(asset, assetPath);
 			}
@@ -368,13 +405,13 @@ namespace Effekseer
 		}
 
 		/// <summary>
-		/// 与えられたパス文字列を正規化し、カレントディレクトリ "." と親ディレクトリ ".." を解決する。
-		/// パス区切り文字は "/" に置き換えられる。連続するパス区切り文字は 1 文字に置き換えられる。
-		/// 末尾のパス区切り文字は保持される。
-		/// null か空文字列が指定された場合は、"." を返す。
+		/// Normalize the given path string to the current directory "." and the parent directory "..." The path separator is replaced by "/".
+		/// The path separator is replaced by "/". Consecutive path separators are replaced with a single character.
+		/// The trailing path separator is preserved.
+		/// If null or an empty string is specified, "." is returned.
 		/// </summary>
-		/// <param name="path">パス文字列</param>
-		/// <returns>正規化した文字列</returns>
+		/// <param name="path">path string</param>
+		/// <returns>normalized string</returns>.
 		public static string NormalizeAssetPath(string path)
 		{
 			if (string.IsNullOrEmpty(path))

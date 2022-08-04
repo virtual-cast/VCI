@@ -10,12 +10,13 @@ using VRMShaders;
 
 namespace VCI
 {
-    public class VCIImporter : ImporterContext
+    public sealed class VCIImporter : ImporterContext
     {
         public RuntimeVciInstance RuntimeVciInstance { get; private set; }
 
         private AudioClipFactory AudioClipFactory { get; }
         private PhysicMaterialFactory PhysicMaterialFactory { get; }
+        private ColliderMeshFactory ColliderMeshFactory { get; }
 
         private readonly VciData _data;
         private readonly bool _isLocation;
@@ -23,6 +24,7 @@ namespace VCI
         private readonly IFontProvider _fontProvider;
         private readonly IVciDefaultLayerProvider _vciDefaultLayerProvider;
         private readonly IVciColliderLayerProvider _vciColliderLayerProvider;
+        private readonly ISpringBoneImporter _springBoneImporter;
 
         public VCIImporter(
             VciData data,
@@ -32,7 +34,9 @@ namespace VCI
             bool isLocation = false,
             IVciDefaultLayerProvider vciDefaultLayerProvider = null,
             IVciColliderLayerProvider vciColliderLayerProvider = null,
-            IFontProvider fontProvider = null
+            IFontProvider fontProvider = null,
+            IMp3FileDecoder mp3FileDecoder = null,
+            ISpringBoneImporter springBoneImporter = null
         ) : base(data.GltfData, externalObjectMap, textureDeserializer)
         {
             _data = data;
@@ -40,12 +44,18 @@ namespace VCI
             _vciDefaultLayerProvider = vciDefaultLayerProvider ?? new VciDefaultLayerSettings();
             _vciColliderLayerProvider = vciColliderLayerProvider ?? new VciDefaultLayerSettings();
             _fontProvider = fontProvider;
+            var mp3DecodeStrategy = new Mp3DecodeStrategyAdapter(new NAudioMp3DecoderImpl(), mp3FileDecoder);
+            _springBoneImporter = springBoneImporter ?? new SpringBoneImporter();
             AudioClipFactory = new AudioClipFactory(ExternalObjectMap
                 .Where(x => x.Value is AudioClip)
-                .ToDictionary(x => x.Key, x => (AudioClip)x.Value));
+                .ToDictionary(x => x.Key, x => (AudioClip)x.Value),
+                mp3DecodeStrategy);
             PhysicMaterialFactory = new PhysicMaterialFactory(ExternalObjectMap
                 .Where(x => x.Value is PhysicMaterial)
                 .ToDictionary(x => x.Key, x => (PhysicMaterial)x.Value));
+            ColliderMeshFactory = new ColliderMeshFactory(ExternalObjectMap
+                .Where(x => x.Value is Mesh)
+                .ToDictionary(x => x.Key, x => (Mesh)x.Value));
 
             // VCI Specification
             InvertAxis = Axes.Z;
@@ -73,6 +83,7 @@ namespace VCI
 
             AudioClipFactory.TransferOwnership(take);
             PhysicMaterialFactory.TransferOwnership(take);
+            ColliderMeshFactory.TransferOwnership(take);
         }
 
         private const string MATERIAL_EXTENSION_NAME = "VCAST_vci_material_unity";
@@ -130,6 +141,8 @@ namespace VCI
             // Audio
             using (measureTime("Audio"))
             {
+                // NOTE: LoadAsyncはCancellationTokenに対応しているが、そもそもVCIロードがキャンセル未対応
+                // そのため、現時点ではCancellationTokenを渡さない
                 await AudioImporter.LoadAsync(_data, Nodes, Root, AudioClipFactory, awaitCaller);
             }
 
@@ -174,7 +187,14 @@ namespace VCI
             Dictionary<Rigidbody, RigidbodySetting> rigidbodySettings;
             using (measureTime("Physics"))
             {
-                colliders = await PhysicsColliderImporter.LoadAsync(_data, Nodes, _vciColliderLayerProvider, InvertAxis.Create(), PhysicMaterialFactory, awaitCaller);
+                colliders = await PhysicsColliderImporter.LoadAsync(
+                    _data,
+                    Nodes,
+                    _vciColliderLayerProvider,
+                    InvertAxis.Create(),
+                    PhysicMaterialFactory,
+                    ColliderMeshFactory,
+                    awaitCaller);
                 rigidbodySettings = await PhysicsRigidbodyImporter.LoadAsync(_data, Nodes, awaitCaller);
                 await PhysicsJointImporter.LoadAsync(_data, Nodes, awaitCaller);
             }
@@ -188,7 +208,7 @@ namespace VCI
             // SpringBone
             using (measureTime("SpringBone"))
             {
-                SpringBoneImporter.Load(_data, Nodes, Root);
+                _springBoneImporter.Load(_data, Nodes, Root);
             }
 
             // PlayerSpawnPoint

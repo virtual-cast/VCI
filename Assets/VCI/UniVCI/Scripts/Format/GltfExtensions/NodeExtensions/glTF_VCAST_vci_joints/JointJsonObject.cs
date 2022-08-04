@@ -9,7 +9,7 @@ namespace VCI
     /// Rigidbody info
     /// </summary>
     [Serializable]
-    public class JointJsonObject
+    public sealed class JointJsonObject
     {
         public const string FixedJointTypeString = "fixed";
         public const string HingeJointTypeString = "hinge";

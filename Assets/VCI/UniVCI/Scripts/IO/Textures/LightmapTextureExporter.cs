@@ -38,7 +38,7 @@ namespace VCI
     public sealed class LightmapTextureExporter
     {
         private readonly ITextureExporter _exporter;
-        private readonly glTF _gltf;
+        private readonly ITextureSerializer _serializer;
         private readonly Shader _exportAsDLdrShader;
         private readonly Shader _exportAsRgbmShader;
         private readonly Dictionary<int, int> _colorTextureMapping = new Dictionary<int, int>();
@@ -58,9 +58,10 @@ namespace VCI
         /// </summary>
         public IEnumerable<int> RegisteredColorTextureIndexArray => _colorTextureMapping.Values;
 
-        public LightmapTextureExporter(ITextureExporter exporter)
+        public LightmapTextureExporter(ITextureExporter exporter, ITextureSerializer serializer)
         {
             _exporter = exporter;
+            _serializer = serializer;
             _exportAsDLdrShader = Shader.Find("Hidden/UniVCI/LightmapConversion/ExportAsDLdr");
             _exportAsRgbmShader = Shader.Find("Hidden/UniVCI/LightmapConversion/ExportAsRgbm");
         }
@@ -95,6 +96,9 @@ namespace VCI
 
             var exporterMaterial = new Material(exporterShader);
             var srgbRt = new RenderTexture(src.width, src.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
+
+            // NOTE: 変換前に圧縮を切る.
+            _serializer.ModifyTextureAssetBeforeExporting(src);
 
             Graphics.Blit(src, srgbRt, exporterMaterial);
             var idx = _exporter.RegisterExportingAsSRgb(srgbRt, needsAlpha: true);

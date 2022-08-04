@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace VCI
 {
-    public static class SpringBoneImporter
+    public class SpringBoneImporter : ISpringBoneImporter
     {
-        public static void Load(VciData vciData, IReadOnlyList<Transform> unityNodes, GameObject unityRoot)
+        public void Load(VciData vciData, IReadOnlyList<Transform> unityNodes, GameObject unityRoot)
         {
             var springBones = vciData?.SpringBone?.springBones;
             if (springBones == null) return;

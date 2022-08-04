@@ -73,7 +73,7 @@ namespace VCI
         {
             if (meta.thumbnail > -1)
             {
-                texture = GltfTextureImporter.CreateSRGB(data, meta.thumbnail, Vector2.zero, Vector2.one);
+                texture = GltfTextureImporter.CreateSrgb(data, meta.thumbnail, Vector2.zero, Vector2.one);
                 return true;
             }
 

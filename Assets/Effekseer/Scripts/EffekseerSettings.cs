@@ -1,6 +1,6 @@
-#pragma warning disable
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -26,6 +26,23 @@ namespace Effekseer
 		[SerializeField]
 		public bool drawInSceneView = true;
 
+		/// <summary xml:lang="en">
+		/// Whether effects are rendered as a post processing in PostProcessingStack
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// ポストプロセッシングスタックのポストプロセスとしてエフェクトを描画するかどうか?
+		/// </summary>
+		[SerializeField]
+		public bool renderAsPostProcessingStack = false;
+
+		/// <summary xml:lang="en">
+		/// Whether to maintain gamma color in linear space.
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// リニアスペースでガンマカラーを維持するかどうか
+		/// </summary>
+		public bool MaintainGammaColorInLinearSpace = true;
+
 		/// <summary>
 		/// 
 		/// </summary>
@@ -39,7 +56,7 @@ namespace Effekseer
 		/// エフェクトインスタンスの最大数
 		/// </summary>
 		[SerializeField]
-		public int effectInstances	= 8192;
+		public int effectInstances = 8192;
 
 		/// <summary xml:lang="en">
 		/// Maximum number of quads that can be drawn.
@@ -48,7 +65,7 @@ namespace Effekseer
 		/// 描画できる四角形の最大数
 		/// </summary>
 		[SerializeField]
-		public int maxSquares		= 8192;
+		public int maxSquares = 8192;
 
 		/// <summary xml:lang="en">
 		/// The coordinate system of effects.
@@ -64,13 +81,22 @@ namespace Effekseer
 		public bool isRightEffekseerHandledCoordinateSystem = false;
 
 		/// <summary xml:lang="en">
+		/// The number of thread to update effects
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// エフェクトの更新に使用するスレッド数
+		/// </summary>
+		[SerializeField]
+		public int threadCount = 2;
+
+		/// <summary xml:lang="en">
 		/// Maximum number of sound instances.
 		/// </summary>
 		/// <summary xml:lang="ja">
 		/// サウンドインスタンスの最大数
 		/// </summary>
 		[SerializeField]
-		public int soundInstances	= 16;
+		public int soundInstances = 16;
 
 		/// <summary xml:lang="en">
 		/// Enables distortion effect.
@@ -94,6 +120,29 @@ namespace Effekseer
 		[SerializeField]
 		public bool enableDistortionMobile = false;
 
+
+		/// <summary xml:lang="en">
+		/// Enables depth.
+		/// When It has set false, rendering will be faster.
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// 深度を有効にします。
+		/// falseにすると描画処理が軽くなります。
+		/// </summary>
+		[SerializeField]
+		public bool enableDepth = true;
+
+		/// <summary xml:lang="en">
+		/// Enables depth on mobile environment (iOS,Android,WebGL,Switch).
+		/// When It has set false, rendering will be faster.
+		/// </summary>
+		/// <summary xml:lang="ja">
+		/// モバイル環境(iOS,Android,WebGL,Switch)で深度を有効にします。
+		/// falseにすると描画処理が軽くなります。
+		/// </summary>
+		[SerializeField]
+		public bool enableDepthMobile = false;
+
 		/*
 		/// <summary xml:lang="en">
 		/// The scale of buffer for distortion.
@@ -106,34 +155,6 @@ namespace Effekseer
 		[SerializeField]
 		public float distortionBufferScale = 1.0f;
 		*/
-
-		[SerializeField]
-		public Shader standardShader = null;
-
-		[SerializeField]
-		public Shader standardDistortionShader = null;
-
-		[SerializeField]
-		public Shader standardModelShader = null;
-
-		[SerializeField]
-		public Shader standardModelDistortionShader = null;
-
-		[SerializeField]
-		public Shader standardLightingShader = null;
-
-		[SerializeField]
-		public Shader texture2DArrayBlitMaterial = null;
-
-		[SerializeField]
-		public Shader texture2DBlitMaterial = null;
-
-		/// <summary>
-		/// A shader to avoid a unity bug
-		/// </summary>
-		[SerializeField]
-		public Shader fakeMaterial = null;
-
 
 		#region Network
 		/// <summary xml:lang="en">
@@ -156,77 +177,96 @@ namespace Effekseer
 		#endregion
 
 		private static EffekseerSettings instance;
-		public static EffekseerSettings Instance {
-			get {
-				if (instance != null) {
+		public static EffekseerSettings Instance
+		{
+			get
+			{
+				if (instance != null)
+				{
 					return instance;
 				}
-				instance = Resources.Load<EffekseerSettings>("EffekseerSettings");
-				if (instance == null) {
-					instance = new EffekseerSettings();
+
+				instance = LoadAsset();
+
+				if (instance == null)
+				{
+					Debug.LogWarning("Effekseer Settings is not found. Please Create Effekseer Settings with Create->Effekseer->Effekseer Settings.");
+					instance = CreateInstance<EffekseerSettings>();
 				}
+
 				return instance;
 			}
+		}
+
+		static EffekseerSettings LoadAsset()
+		{
+#if UNITY_EDITOR
+			var asset = PlayerSettings.GetPreloadedAssets().OfType<EffekseerSettings>().FirstOrDefault();
+
+			if (asset != null)
+			{
+				return asset;
+			}
+#endif
+			return Resources.Load<EffekseerSettings>("EffekseerSettings");
+		}
+
+		void OnEnable()
+		{
+			instance = this;
 		}
 
 #if UNITY_EDITOR
 #if UNITY_2018_3_OR_NEWER
 #else
 		[MenuItem("Edit/Project Settings/Effekseer")]
-#endif 
+#endif
 		public static void EditOrCreateAsset()
 		{
-			var asset = AssignAssets();
+			var asset = LoadAsset();
+
+			if (asset == null)
+			{
+				asset = CreateAssetInternal();
+			}
+
+			instance = asset;
+
+			if (asset == null)
+			{
+				return;
+			}
+
 			EditorGUIUtility.PingObject(asset);
 			Selection.activeObject = asset;
 		}
 
-		public static EffekseerSettings AssignAssets()
+		[UnityEditor.MenuItem("Assets/Create/Effekseer/Effekseer Settings")]
+		public static void CreateAsset()
 		{
-			const string assetDir = "Assets/Effekseer";
-			const string materialDir = assetDir + "/Materials";
-			const string resourcesDir = assetDir + "/Resources";
-			const string assetPath = resourcesDir + "/EffekseerSettings.asset";
+			CreateAssetInternal();
+		}
 
-			if (!AssetDatabase.IsValidFolder(resourcesDir))
+		static EffekseerSettings CreateAssetInternal()
+		{
+			var path = EditorUtility.SaveFilePanelInProject(
+				"Save EffekseerSettings",
+				"EffekseerSettings",
+				"asset",
+				string.Empty);
+
+			if (string.IsNullOrEmpty(path))
 			{
-				AssetDatabase.CreateFolder(assetDir, "Resources");
+				return null;
 			}
-			var asset = AssetDatabase.LoadAssetAtPath<EffekseerSettings>(assetPath);
 
-			if (asset == null)
-			{
-				asset = CreateInstance<EffekseerSettings>();
-				asset.standardShader = AssetDatabase.LoadAssetAtPath<Shader>(materialDir + "/StandardShader.shader");
-				asset.standardDistortionShader = AssetDatabase.LoadAssetAtPath<Shader>(materialDir + "/StandardDistortionShader.shader");
-				asset.standardModelShader = AssetDatabase.LoadAssetAtPath<Shader>(materialDir + "/StandardModelShader.shader");
-				asset.standardModelDistortionShader = AssetDatabase.LoadAssetAtPath<Shader>(materialDir + "/StandardModelDistortionShader.shader");
-				asset.standardLightingShader = AssetDatabase.LoadAssetAtPath<Shader>(materialDir + "/StandardLightingShader.shader");
-				asset.texture2DArrayBlitMaterial = AssetDatabase.LoadAssetAtPath<Shader>(materialDir + "/Texture2DArrayBlitShader.shader");
-				asset.texture2DBlitMaterial = AssetDatabase.LoadAssetAtPath<Shader>(materialDir + "/Texture2DBlitShader.shader");
-				asset.fakeMaterial = AssetDatabase.LoadAssetAtPath<Shader>(materialDir + "/FakeShader.shader");
-				AssetDatabase.CreateAsset(asset, assetPath);
-				AssetDatabase.Refresh();
-			}
-			else
-			{
-				bool dirtied = false;
-				if (asset.fakeMaterial == null)
-				{
-					asset.fakeMaterial = AssetDatabase.LoadAssetAtPath<Shader>(materialDir + "/FakeShader.shader");
+			var asset = CreateInstance<EffekseerSettings>();
+			AssetDatabase.CreateAsset(asset, path);
 
-					if(asset.fakeMaterial != null)
-					{
-						dirtied = true;
-					}
-				}
-
-				if (dirtied)
-				{
-					EditorUtility.SetDirty(asset);
-					AssetDatabase.Refresh();
-				}
-			}
+			var preloadedAssets = PlayerSettings.GetPreloadedAssets().ToList();
+			preloadedAssets.RemoveAll(x => x is EffekseerSettings);
+			preloadedAssets.Add(asset);
+			PlayerSettings.SetPreloadedAssets(preloadedAssets.ToArray());
 
 			return asset;
 		}

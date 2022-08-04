@@ -4,7 +4,7 @@ namespace VCI
 {
     [RequireComponent(typeof(VCIPlayerSpawnPoint))]
     [DisallowMultipleComponent]
-    public class VCIPlayerSpawnPointRestriction : MonoBehaviour
+    public sealed class VCIPlayerSpawnPointRestriction : MonoBehaviour
     {
         public RangeOfMovement RangeOfMovementRestriction;
 
