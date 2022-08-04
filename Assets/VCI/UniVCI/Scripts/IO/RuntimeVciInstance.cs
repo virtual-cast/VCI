@@ -95,6 +95,17 @@ namespace VCI
             }
         }
 
+        public void ShowMeshesAndSetUpdateWhenOffscreen()
+        {
+            ShowMeshes();
+            if (Root == null) return;
+            var skinnedMeshRenderers = Root.GetComponentsInChildren<SkinnedMeshRenderer>();
+            foreach (var renderer in skinnedMeshRenderers)
+            {
+                renderer.updateWhenOffscreen = true;
+            }
+        }
+
         public void ShowMeshes()
         {
             // Lua スプリプトの呼び出し順の問題があるため

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Unity.Collections;
 using UnityEngine;
 using VRMShaders;
 
@@ -12,12 +14,14 @@ namespace VCI
         private readonly IReadOnlyDictionary<SubAssetKey, AudioClip> _externalClips;
         private readonly Dictionary<SubAssetKey, AudioClip> _runtimeGeneratedClips = new Dictionary<SubAssetKey, AudioClip>();
         private readonly List<SubAssetKey> _loadedClipKeys = new List<SubAssetKey>();
+        private readonly RuntimeAudioFileToClipConverter _audioFileToClipConverter;
 
         public IReadOnlyList<SubAssetKey> LoadedClipKeys => _loadedClipKeys;
 
-        public AudioClipFactory(IReadOnlyDictionary<SubAssetKey, AudioClip> externalClips)
+        public AudioClipFactory(IReadOnlyDictionary<SubAssetKey, AudioClip> externalClips, IMp3FileDecoder mp3FileDecoder)
         {
             _externalClips = externalClips;
+            _audioFileToClipConverter = new RuntimeAudioFileToClipConverter(mp3FileDecoder);
         }
 
         public void Dispose()
@@ -41,14 +45,14 @@ namespace VCI
             return default;
         }
 
-        public async Task<AudioClip> LoadAudioClipAsync(string name, string mimeType, ArraySegment<byte> binary, IAwaitCaller awaitCaller)
+        public async Task<AudioClip> LoadAudioClipAsync(string name, string mimeType, NativeSlice<byte> binary, IAwaitCaller awaitCaller, CancellationToken ct = default)
         {
             var key = new SubAssetKey(typeof(AudioClip), name);
 
             var clip = GetLoadedAudioClip(key);
             if (clip == null)
             {
-                clip = await RuntimeAudioClipDeserializer.ImportAsync(name, mimeType, binary, awaitCaller);
+                clip = await _audioFileToClipConverter.ConvertAsync(name, mimeType, binary, awaitCaller, ct);
 
                 _runtimeGeneratedClips.Add(key, clip);
             }

@@ -1,5 +1,4 @@
-#pragma warning disable
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using UnityEngine;
 
@@ -43,14 +42,14 @@ namespace Effekseer.Editor
 					{
 						var asset = AssetDatabase.LoadAssetAtPath<EffekseerMaterialAsset>(assetPath);
 
-						if(asset !=null)
+						if (asset != null)
 						{
 							asset.AttachShader(assetPath);
 						}
 					}
 				}
 			}
-		
+
 			foreach (string assetPath in importedAssets)
 			{
 				if (Path.GetExtension(assetPath) == ".efk")
@@ -61,13 +60,17 @@ namespace Effekseer.Editor
 				{
 					EffekseerModelAsset.CreateAsset(assetPath);
 				}
+				if (Path.GetExtension(assetPath) == ".efkcurve")
+				{
+					EffekseerCurveAsset.CreateAsset(assetPath);
+				}
 				if (Path.GetExtension(assetPath) == ".efkmat")
 				{
 					EffekseerMaterialAsset.ImportingAsset importingAsset = new EffekseerMaterialAsset.ImportingAsset();
 					importingAsset.Data = System.IO.File.ReadAllBytes(assetPath);
 					importingAsset.UserTextureSlotMax = EffekseerTool.Constant.UserTextureSlotCount;
 					var info = new EffekseerTool.Utl.MaterialInformation();
-					info.Load( System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), assetPath));
+					info.Load(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), assetPath));
 
 					importingAsset.CustomData1Count = info.CustomData1Count;
 					importingAsset.CustomData2Count = info.CustomData2Count;
@@ -88,6 +91,7 @@ namespace Effekseer.Editor
 						var tp = new EffekseerMaterialAsset.TextureProperty();
 						tp.Name = t.Name;
 						tp.UniformName = t.UniformName;
+						tp.Type = (EffekseerMaterialAsset.TextureType)EffekseerTool.Utl.TextureType.Color;
 						importingAsset.Textures.Add(tp);
 					}
 

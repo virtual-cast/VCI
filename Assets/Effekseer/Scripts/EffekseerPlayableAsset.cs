@@ -1,5 +1,4 @@
-#pragma warning disable
-using System;
+﻿using System;
 using UnityEngine;
 
 #if UNITY_2017_1_OR_NEWER
@@ -15,7 +14,7 @@ namespace Effekseer
 		public EffekseerEffectAsset effectAsset;
 		public ExposedReference<GameObject> emitterObject;
 		public ExposedReference<GameObject> targetObject;
-	
+
 		// Factory method that generates a playable based on this asset
 		public override Playable CreatePlayable(PlayableGraph graph, GameObject go)
 		{

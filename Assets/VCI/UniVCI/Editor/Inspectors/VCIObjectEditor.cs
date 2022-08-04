@@ -110,6 +110,10 @@ namespace VCI
                     {
                         EditorGUILayout.HelpBox("Contains characters that can not be used as scriptName. " + script.name, MessageType.Warning);
                     }
+                    if (VciScriptHelper.HasInvalidFilePath(script))
+                    {
+                        EditorGUILayout.HelpBox("File not found. " + script.filePath + script.name, MessageType.Error);
+                    }
                 }
             }
 
@@ -128,9 +132,10 @@ namespace VCI
                     VCIValidator.ValidateVCIRequirements(rootGameObject);
                     EditorUtility.DisplayDialog("Result", VCIConfig.GetText("no_error"), "OK");
                 }
-                catch(VCIValidatorException e)
+                catch (VCIValidatorException e)
                 {
-                    VCIValidationErrorDialog.ShowErrorDialog(e);
+                    VCIValidationError.ShowErrorDialog(e);
+                    VCIValidationError.SelectObject(e);
                     GUIUtility.ExitGUI();
                 }
             }

@@ -57,14 +57,15 @@ namespace VCI
                 },
             };
 
-            var vciData = ExportAndParseVciObject(vci);
+            using (var vciData = ExportAndParseVciObject(vci))
+            {
+                Assert.AreEqual(1, vciData.Script.scripts.Count);
+                Assert.AreEqual("main", vciData.Script.scripts[0].name);
+                Assert.AreEqual("application/x-lua", vciData.Script.scripts[0].mimeType);
+                Assert.AreEqual("moonSharp", vciData.Script.scripts[0].targetEngine);
 
-            Assert.AreEqual(1, vciData.Script.scripts.Count);
-            Assert.AreEqual("main", vciData.Script.scripts[0].name);
-            Assert.AreEqual("application/x-lua", vciData.Script.scripts[0].mimeType);
-            Assert.AreEqual("moonSharp", vciData.Script.scripts[0].targetEngine);
-
-            UnityEngine.Object.DestroyImmediate(vci.gameObject);
+                UnityEngine.Object.DestroyImmediate(vci.gameObject);
+            }
         }
     }
 }

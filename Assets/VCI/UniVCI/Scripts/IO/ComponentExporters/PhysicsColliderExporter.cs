@@ -33,6 +33,11 @@ namespace VCI
                 gltfColliders.Add(gltfCollider);
             }
 
+            if (gltfColliders.Count == 0)
+            {
+                return null;
+            }
+
             return new glTF_VCAST_vci_colliders
             {
                 colliders = gltfColliders,

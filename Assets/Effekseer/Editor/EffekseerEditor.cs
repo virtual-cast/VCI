@@ -1,5 +1,4 @@
-#pragma warning disable
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -22,33 +21,45 @@ namespace Effekseer.Editor
 
 		public void InitEditor()
 		{
-			if (initialized) {
+			if (initialized)
+			{
 				return;
 			}
 			initialized = true;
 			inEditor = !Application.isPlaying;
 		}
 
+		/// <summary>
+		/// Initialize Effekseer on Editor
+		/// </summary>
 		public void InitSystem()
 		{
-			if (!inEditor) {
+			if (!inEditor)
+			{
 				return;
 			}
-			if (system == null) {
+			if (system == null)
+			{
 				system = new EffekseerSystem();
 			}
-			if (!system.enabled) {
+			if (!system.enabled)
+			{
 				system.InitPlugin();
 				system.OnEnable();
 			}
 		}
 
+		/// <summary>
+		/// Terminate Effekseer on Editor
+		/// </summary>
 		public void TermSystem()
 		{
-			if (!inEditor) {
+			if (!inEditor)
+			{
 				return;
 			}
-			if (system != null && system.enabled) {
+			if (system != null && system.enabled)
+			{
 				system.OnDisable();
 				system.TermPlugin();
 			}
@@ -58,7 +69,7 @@ namespace Effekseer.Editor
 		{
 			EditorApplication.playModeStateChanged += OnPlaymodeStateChanged;
 		}
-		
+
 		void OnDisable()
 		{
 			EditorApplication.playModeStateChanged -= OnPlaymodeStateChanged;
@@ -66,14 +77,15 @@ namespace Effekseer.Editor
 
 		public void OnPlaymodeStateChanged(PlayModeStateChange playState)
 		{
-			switch (playState) {
-			case PlayModeStateChange.EnteredEditMode:
-				inEditor = true;
-				break;
-			case PlayModeStateChange.ExitingEditMode:
-				TermSystem();
-				inEditor = false;
-				break;
+			switch (playState)
+			{
+				case PlayModeStateChange.EnteredEditMode:
+					inEditor = true;
+					break;
+				case PlayModeStateChange.ExitingEditMode:
+					TermSystem();
+					inEditor = false;
+					break;
 			}
 		}
 	}

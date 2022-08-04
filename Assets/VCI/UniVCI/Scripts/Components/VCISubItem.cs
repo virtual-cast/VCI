@@ -4,7 +4,7 @@ using UnityEngine;
 namespace VCI
 {
     [DisallowMultipleComponent]
-    public class VCISubItem : MonoBehaviour
+    public sealed class VCISubItem : MonoBehaviour
     {
         public string ExportWarning
         {
@@ -15,6 +15,14 @@ namespace VCI
                 if (transform.parent.parent != null) return "VCISubItem's parent should be root";
 
                 return null;
+            }
+        }
+
+        private void Reset()
+        {
+            if (GetComponent<Rigidbody>() == null)
+            {
+                gameObject.AddComponent<Rigidbody>();
             }
         }
 
@@ -40,12 +48,6 @@ namespace VCI
         }
 
         #endregion
-
-        private void Reset()
-        {
-            var rb = GetComponent<Rigidbody>();
-            if (rb == null) rb = gameObject.AddComponent<Rigidbody>();
-        }
 
         #region RigidBody Collision
 

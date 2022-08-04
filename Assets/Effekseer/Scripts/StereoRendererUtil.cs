@@ -1,5 +1,4 @@
-#pragma warning disable
-namespace Effekseer.Internal
+﻿namespace Effekseer.Internal
 {
 	public static class StereoRendererUtil
 	{

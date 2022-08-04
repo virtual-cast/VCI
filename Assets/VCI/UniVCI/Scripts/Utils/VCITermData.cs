@@ -6,7 +6,7 @@ using UnityEngine;
 namespace VCI
 {
     [CreateAssetMenu]
-    public class VCITermData: ScriptableObject
+    public sealed class VCITermData: ScriptableObject
     {
         [SerializeField] private List<KeyValue> _texts;
 

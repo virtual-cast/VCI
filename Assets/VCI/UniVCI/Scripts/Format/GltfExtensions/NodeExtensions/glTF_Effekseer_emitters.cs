@@ -8,7 +8,7 @@ namespace VCI
     /// Effekseer の Emitter の集合を表す.
     /// </summary>
     [Serializable]
-    public class glTF_Effekseer_emitters
+    public sealed class glTF_Effekseer_emitters
     {
         public static string ExtensionName => "Effekseer_emitters";
 

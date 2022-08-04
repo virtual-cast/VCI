@@ -34,7 +34,8 @@ MonoBehaviour:
   - key: error205
     value: Contains multiple VCIObjects.
   - key: error206
-    value: Contains invalid component.\n{0}
+    value: 'Contains invalid component..\nThe GameObject name: {0}\nThe Component:
+      {1}'
   - key: error207
     value: 'You cannot nest VCISubItems. A VCISubItem must be a child of the VCIObject.\nThe
       GameObject name: {0}'
@@ -73,6 +74,10 @@ MonoBehaviour:
     value: Bounds of the VCILocationBounds is beyond the valid range.
   - key: error701
     value: VCI root cannot be animated.
+  - key: error702
+    value: The interpolation method of rotations in AnimationClips needs to be "Quaternion".
+  - key: error801
+    value: EffekseerMaterial is not supoprted.
   - key: export_button
     value: Export VCI
   - key: input

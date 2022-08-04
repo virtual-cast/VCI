@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UniGLTF;
 
 namespace VCI
 {
-    public sealed class VciData
+    public sealed class VciData : IDisposable
     {
         public GltfData GltfData { get; }
         public VciMigrationFlags VciMigrationFlags { get; }
@@ -77,6 +78,11 @@ namespace VCI
             TextNodes = textNodes;
             RectTransformNodes = rectTransformNodes;
             EffekseerEmittersNodes = effekseerEmittersNodes;
+        }
+
+        public void Dispose()
+        {
+            GltfData?.Dispose();
         }
     }
 }

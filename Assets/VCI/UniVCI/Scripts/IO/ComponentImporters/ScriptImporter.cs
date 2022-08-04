@@ -36,8 +36,9 @@ namespace VCI
                 var source = "";
                 try
                 {
-                    var bytes = data.GltfData.GetBytesFromBufferView(x.source);
-                    source = Utf8String.Encoding.GetString(bytes.Array, bytes.Offset, bytes.Count);
+                    // NOTE: Copy
+                    var bytes = data.GltfData.GetBytesFromBufferView(x.source).ToArray();
+                    source = Utf8String.Encoding.GetString(bytes);
                 }
                 catch (Exception)
                 {

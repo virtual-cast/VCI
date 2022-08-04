@@ -33,6 +33,7 @@ namespace VCI
         private static readonly int ShaderPropertyMipValue = Shader.PropertyToID("_MipLevel");
 
         private readonly ITextureExporter _exporter;
+        private readonly ITextureSerializer _serializer;
         private readonly Shader _exportAsDLdrShader;
         private readonly Shader _exportAsRgbmShader;
         private readonly Dictionary<CubemapFaceId, int> _cubemapFaceMapping = new Dictionary<CubemapFaceId, int>();
@@ -42,9 +43,10 @@ namespace VCI
         /// </summary>
         public CubemapCompressionType CompressionType => CubemapCompressionType.Rgbm;
 
-        public CubemapTextureExporter(ITextureExporter exporter)
+        public CubemapTextureExporter(ITextureExporter exporter, ITextureSerializer serializer)
         {
             _exporter = exporter;
+            _serializer = serializer;
             _exportAsDLdrShader = Shader.Find("Hidden/UniVCI/CubemapConversion/ExportAsDLdr");
             _exportAsRgbmShader = Shader.Find("Hidden/UniVCI/CubemapConversion/ExportAsRgbm");
         }
@@ -115,6 +117,9 @@ namespace VCI
 
             var exporterMaterial = new Material(exporterShader);
             var srgbRt = new RenderTexture(width, width, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
+
+            // NOTE: 変換前に圧縮を切る.
+            _serializer.ModifyTextureAssetBeforeExporting(src);
 
             exporterMaterial.SetInt(ShaderPropertyFaceIndex, GetFaceIndex(face));
             exporterMaterial.SetInt(ShaderPropertyMipValue, mipmap);

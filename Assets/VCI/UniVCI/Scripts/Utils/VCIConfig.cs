@@ -5,7 +5,7 @@ using UnityEngine;
 namespace VCI
 {
     [CreateAssetMenu]
-    public class VCIConfig : ScriptableObject
+    public sealed class VCIConfig : ScriptableObject
     {
         private static VCIConfig _config;
 

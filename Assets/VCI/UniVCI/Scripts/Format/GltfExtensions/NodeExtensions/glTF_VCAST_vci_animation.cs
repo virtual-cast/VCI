@@ -7,7 +7,7 @@ namespace VCI
     /// Extension root
     /// </summary>
     [Serializable]
-    public class glTF_VCAST_vci_animation
+    public sealed class glTF_VCAST_vci_animation
     {
         public static string ExtensionName => "VCAST_vci_animation";
 

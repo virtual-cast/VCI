@@ -1,5 +1,4 @@
-#pragma warning disable
-using System;
+﻿using System;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -27,7 +26,7 @@ namespace Effekseer.Editor
 		{
 			var asset = target as EffekseerMaterialAsset;
 
-			if(asset.materialBuffers == null)
+			if (asset.materialBuffers == null)
 			{
 				EditorGUILayout.LabelField("MaterialBuffer : None");
 			}
@@ -56,60 +55,69 @@ namespace Effekseer.Editor
 		bool soundVisible = true;
 		bool modelVisible = true;
 		bool materialVisible = true;
-
+		bool curveVisible = true;
 		public override void OnInspectorGUI()
 		{
 			var asset = target as EffekseerEffectAsset;
 
-			if(asset == null)
+			if (asset == null)
 			{
 				return;
 			}
 
 			EditorGUILayout.LabelField("Data Size", asset.efkBytes.Length.ToString() + " bytes");
 
-            var scale = EditorGUILayout.FloatField("Scale", asset.Scale);
-            scale = Math.Max(0, scale);
-            if(asset.Scale != scale)
-            {
-                asset.Scale = scale;
-                EditorUtility.SetDirty(asset);
-            }
+			var scale = EditorGUILayout.FloatField("Scale", asset.Scale);
+			scale = Math.Max(0, scale);
+			if (asset.Scale != scale)
+			{
+				asset.Scale = scale;
+				EditorUtility.SetDirty(asset);
+			}
 
 			textureVisible = EditorGUILayout.Foldout(textureVisible, "Texture Resources: " + asset.textureResources.Length);
-			if (textureVisible) {
+			if (textureVisible)
+			{
 				EditorGUI.indentLevel++;
-				foreach (var res in asset.textureResources) {
-					if (EffekseerTextureResource.InspectorField(res)) {
-						EditorUtility.SetDirty(asset);
-					}
-				}
-				EditorGUI.indentLevel--;
-			}
-			
-			soundVisible = EditorGUILayout.Foldout(soundVisible, "Sound Resources: " + asset.soundResources.Length);
-			if (soundVisible) {
-				EditorGUI.indentLevel++;
-				foreach (var res in asset.soundResources) {
-					if (EffekseerSoundResource.InspectorField(res)) {
-						EditorUtility.SetDirty(asset);
-					}
-				}
-				EditorGUI.indentLevel--;
-			}
-			
-			modelVisible = EditorGUILayout.Foldout(modelVisible, "Model Resources: " + asset.modelResources.Length);
-			if (modelVisible) {
-				EditorGUI.indentLevel++;
-				foreach (var res in asset.modelResources) {
-					if (EffekseerModelResource.InspectorField(res)) {
+				foreach (var res in asset.textureResources)
+				{
+					if (EffekseerTextureResource.InspectorField(res))
+					{
 						EditorUtility.SetDirty(asset);
 					}
 				}
 				EditorGUI.indentLevel--;
 			}
 
-			if(asset.materialResources != null)
+			soundVisible = EditorGUILayout.Foldout(soundVisible, "Sound Resources: " + asset.soundResources.Length);
+			if (soundVisible)
+			{
+				EditorGUI.indentLevel++;
+				foreach (var res in asset.soundResources)
+				{
+					if (EffekseerSoundResource.InspectorField(res))
+					{
+						EditorUtility.SetDirty(asset);
+					}
+				}
+				EditorGUI.indentLevel--;
+			}
+
+			modelVisible = EditorGUILayout.Foldout(modelVisible, "Model Resources: " + asset.modelResources.Length);
+			if (modelVisible)
+			{
+				EditorGUI.indentLevel++;
+				foreach (var res in asset.modelResources)
+				{
+					if (EffekseerModelResource.InspectorField(res))
+					{
+						EditorUtility.SetDirty(asset);
+					}
+				}
+				EditorGUI.indentLevel--;
+			}
+
+			if (asset.materialResources != null)
 			{
 				materialVisible = EditorGUILayout.Foldout(materialVisible, "Material Resources: " + asset.materialResources.Length);
 				if (materialVisible)
@@ -118,6 +126,23 @@ namespace Effekseer.Editor
 					foreach (var res in asset.materialResources)
 					{
 						if (EffekseerMaterialResource.InspectorField(res))
+						{
+							EditorUtility.SetDirty(asset);
+						}
+					}
+					EditorGUI.indentLevel--;
+				}
+			}
+
+			if (asset.curveResources != null)
+			{
+				curveVisible = EditorGUILayout.Foldout(curveVisible, "Curve Resources: " + asset.curveResources.Length);
+				if (curveVisible)
+				{
+					EditorGUI.indentLevel++;
+					foreach (var res in asset.curveResources)
+					{
+						if (EffekseerCurveResource.InspectorField(res))
 						{
 							EditorUtility.SetDirty(asset);
 						}

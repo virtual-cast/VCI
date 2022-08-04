@@ -12,11 +12,18 @@ namespace VCI
 
         public VciScriptTargetEngine targetEngine;
 
-#if UNITY_EDITOR
+        /// <summary>
+        /// Editor-only. <c>VciScriptHelper</c> を経由して参照される.
+        /// </summary>
         public TextAsset textAsset;
-#endif
 
-        [SerializeField, TextArea]
+        /// <summary>
+        /// Editor-only. <c>VciScriptHelper</c> を経由して参照される.
+        /// </summary>
+        [FilePath("lua")]
+        public string filePath;
+
+        [TextArea]
         public string source;
     }
 }

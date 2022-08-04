@@ -47,9 +47,8 @@ namespace VCI
                     var effectIndex = emitter.effectIndex;
 
                     var effect = vciData.Effekseer.effects[effectIndex];
-                    var bodySegment = gltfData.GetBytesFromBufferView(effect.body.bufferView);
-                    var body = new byte[bodySegment.Count];
-                    Buffer.BlockCopy(bodySegment.Array, bodySegment.Offset, body, 0, body.Count());
+                    // NOTE: Copy
+                    var body = gltfData.GetBytesFromBufferView(effect.body.bufferView).ToArray();
 
                     var resourcePath = new Effekseer.EffekseerResourcePath();
                     if (!Effekseer.EffekseerEffectAsset.ReadResourcePath(body, ref resourcePath))
@@ -65,14 +64,14 @@ namespace VCI
                         {
                             var image = effect.images[t];
                             var path = resourcePath.TexturePathList[t];
-                            var buffer = gltfData.GetBytesFromBufferView(image.bufferView);
+                            // NOTE: Copy
+                            var buffer = gltfData.GetBytesFromBufferView(image.bufferView).ToArray();
 
                             if (image.mimeType == EffekseerImageJsonObject.PngMimeTypeString)
                             {
-                                var copyBuffer = new byte[buffer.Count];
-                                Buffer.BlockCopy(buffer.Array, buffer.Offset, copyBuffer, 0,
-                                    copyBuffer.Count());
-                                var texture = await textureFactory.TextureDeserializer.LoadTextureAsync(copyBuffer, false, ColorSpace.sRGB, awaitCaller);
+                                var samplerParams = new SamplerParam(TextureWrapMode.Repeat, TextureWrapMode.Repeat, FilterMode.Bilinear, false);
+                                var textureInfo = new DeserializingTextureInfo(buffer, image.mimeType, ColorSpace.sRGB, samplerParams);
+                                var texture = await textureFactory.TextureDeserializer.LoadTextureAsync(textureInfo, awaitCaller);
                                 effekseerTextures.Add(new Effekseer.Internal.EffekseerTextureResource()
                                 {
                                     path = path,
@@ -96,14 +95,14 @@ namespace VCI
                             var model = effect.models[t];
                             var path = resourcePath.ModelPathList[t];
                             path = Path.ChangeExtension(path, "asset");
-                            var modelSegment = gltfData.GetBytesFromBufferView(model.bufferView);
-                            byte[] modelBuffer = new byte[modelSegment.Count];
-                            Buffer.BlockCopy(modelSegment.Array, modelSegment.Offset, modelBuffer, 0, modelBuffer.Count());
-
-                            effekseerModels.Add(new Effekseer.Internal.EffekseerModelResource()
+                            // NOTE: Copy
+                            var modelBuffer = gltfData.GetBytesFromBufferView(model.bufferView).ToArray();
+                            var modelAsset = ScriptableObject.CreateInstance<Effekseer.EffekseerModelAsset>();
+                            modelAsset.bytes = modelBuffer;
+                            effekseerModels.Add(new Effekseer.Internal.EffekseerModelResource
                             {
                                 path = path,
-                                asset = new Effekseer.EffekseerModelAsset() {bytes = modelBuffer}
+                                asset = modelAsset,
                             });
                         }
                     }

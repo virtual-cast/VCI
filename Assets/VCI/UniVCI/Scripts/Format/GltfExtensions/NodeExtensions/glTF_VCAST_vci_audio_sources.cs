@@ -8,7 +8,7 @@ namespace VCI
     /// extension root
     /// </summary>
     [Serializable]
-    public class glTF_VCAST_vci_audio_sources
+    public sealed class glTF_VCAST_vci_audio_sources
     {
         public static string ExtensionName => "VCAST_vci_audio_sources";
         [JsonSchema(Required = true, MinItems = 1)]

@@ -1,18 +1,79 @@
-#pragma warning disable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
-using System.Runtime.InteropServices;
+using UnityEngine.XR;
 
 namespace Effekseer.Internal
 {
+	class RendererUtils
+	{
+		public static void SetupDepthBuffer(ref DepthRenderTexture depthRenderTexure, bool enabled, Camera camera, RenderTargetProperty renderTargetProperty)
+		{
+			if (depthRenderTexure != null)
+			{
+				depthRenderTexure.Release();
+				depthRenderTexure = null;
+			}
+
+			if (enabled)
+			{
+				var targetSize = BackgroundRenderTexture.GetRequiredSize(camera, renderTargetProperty);
+
+				depthRenderTexure = new DepthRenderTexture(targetSize.x, targetSize.y, renderTargetProperty);
+
+				// HACK for some smart phone
+				if (depthRenderTexure == null || !depthRenderTexure.Create())
+				{
+					depthRenderTexure = null;
+				}
+			}
+		}
+
+		public static void SetupBackgroundBuffer(ref BackgroundRenderTexture renderTexture, bool enableDistortion, Camera camera, RenderTargetProperty renderTargetProperty)
+		{
+			if (renderTexture != null)
+			{
+				renderTexture.Release();
+				renderTexture = null;
+			}
+
+			if (enableDistortion)
+			{
+				var targetSize = BackgroundRenderTexture.GetRequiredSize(camera, renderTargetProperty);
+
+#if UNITY_IOS || UNITY_ANDROID
+					RenderTextureFormat format = RenderTextureFormat.ARGB32;
+#else
+				RenderTextureFormat format = (camera.allowHDR) ? RenderTextureFormat.ARGBHalf : RenderTextureFormat.ARGB32;
+#endif
+				renderTexture = new BackgroundRenderTexture(targetSize.x, targetSize.y, 0, format, renderTargetProperty);
+
+				// HACK for ZenPhone
+				if (renderTexture == null || !renderTexture.Create())
+				{
+					renderTexture = null;
+				}
+			}
+		}
+
+	}
+
+	public enum RenderFeature
+	{
+		HDRP,
+		URP,
+		PostProcess,
+	}
+
 	public class RenderTargetProperty
 	{
+		public RenderFeature renderFeature = RenderFeature.PostProcess;
+
 		/// <summary>
 		/// Ring buffer (it should be better implement)
 		/// </summary>
-		const int MaterialRingCount = 6;
+		const int MaterialRingCount = 12;
 
 		public int? colorBufferID = null;
 		public RenderTargetIdentifier colorTargetIdentifier;
@@ -21,6 +82,8 @@ namespace Effekseer.Internal
 		public Rect Viewport;
 		public bool isRequiredToChangeViewport = false;
 		public RenderTexture colorTargetRenderTexture = null;
+		public RenderTexture depthTargetRenderTexture = null;
+		public bool canGrabDepth = false;
 
 		public bool isRequiredToCopyBackground = false;
 
@@ -29,15 +92,80 @@ namespace Effekseer.Internal
 		List<Material> blitMaterials = new List<Material>();
 		List<Material> blitArrayMaterials = new List<Material>();
 
+		Material grabDepthMat;
+
 		public RenderTargetProperty()
 		{
 		}
 
-		internal void ApplyToCommandBuffer(CommandBuffer cb, BackgroundRenderTexture backgroundRenderTexture)
+		internal void ApplyToCommandBuffer(CommandBuffer cb, DepthRenderTexture depthRenderTexture, IEffekseerBlitter blitter)
 		{
-			if(isRequiredToChangeViewport)
+			if (depthRenderTexture != null)
 			{
-				if(colorTargetRenderTexture.dimension == TextureDimension.Tex2DArray)
+#if UNITY_EDITOR
+				if (grabDepthMat == null)
+				{
+					EffekseerDependentAssets.AssignAssets();
+				}
+#endif
+
+				if (grabDepthMat == null && EffekseerDependentAssets.Instance.grabDepthShader != null)
+				{
+					grabDepthMat = new Material(EffekseerDependentAssets.Instance.grabDepthShader);
+					grabDepthMat.EnableKeyword("_AS_COLOR_");
+				}
+
+				if (renderFeature == RenderFeature.PostProcess)
+				{
+					blitter.Blit(cb, BuiltinRenderTextureType.None, depthRenderTexture.renderTexture, grabDepthMat);
+				}
+				else if (renderFeature == RenderFeature.URP)
+				{
+					if (canGrabDepth)
+					{
+						blitter.Blit(cb, BuiltinRenderTextureType.None,depthRenderTexture.renderTexture, grabDepthMat);
+					}
+					else
+					{
+						cb.SetRenderTarget(depthRenderTexture.renderTexture);
+						cb.ClearRenderTarget(true, true, new Color(0, 0, 0));
+					}
+				}
+				else if (renderFeature == RenderFeature.HDRP)
+				{
+					var m = AllocateBlitArrayMaterial();
+					m.SetTexture("_BackgroundTex", depthTargetRenderTexture);
+					m.SetVector("textureArea", new Vector4(
+						Viewport.width / depthTargetRenderTexture.width,
+						Viewport.height / depthTargetRenderTexture.height,
+						Viewport.x / depthTargetRenderTexture.width,
+						Viewport.y / depthTargetRenderTexture.height));
+					cb.SetRenderTarget(depthRenderTexture.renderTexture);
+					cb.ClearRenderTarget(true, true, new Color(0, 0, 0));
+					cb.Blit(null, depthRenderTexture.renderTexture, m);
+				}
+				else
+				{
+					throw new Exception();
+				}
+
+				// restore
+				if (depthTargetIdentifier.HasValue)
+				{
+					cb.SetRenderTarget(colorTargetIdentifier, depthTargetIdentifier.Value);
+				}
+				else
+				{
+					cb.SetRenderTarget(colorTargetIdentifier);
+				}
+			}
+		}
+
+		internal void ApplyToCommandBuffer(CommandBuffer cb, BackgroundRenderTexture backgroundRenderTexture, IEffekseerBlitter blitter)
+		{
+			if (isRequiredToChangeViewport)
+			{
+				if (colorTargetRenderTexture.dimension == TextureDimension.Tex2DArray)
 				{
 					var m = AllocateBlitArrayMaterial();
 					m.SetTexture("_BackgroundTex", colorTargetRenderTexture);
@@ -48,7 +176,7 @@ namespace Effekseer.Internal
 						Viewport.y / colorTargetRenderTexture.height));
 					cb.SetRenderTarget(backgroundRenderTexture.renderTexture);
 					cb.ClearRenderTarget(true, true, new Color(0, 0, 0));
-					cb.Blit(colorTargetIdentifier, backgroundRenderTexture.renderTexture, m);
+					blitter.Blit(cb, colorTargetIdentifier, backgroundRenderTexture.renderTexture, m);
 				}
 				else
 				{
@@ -61,48 +189,36 @@ namespace Effekseer.Internal
 						Viewport.y / colorTargetRenderTexture.height));
 					cb.SetRenderTarget(backgroundRenderTexture.renderTexture);
 					cb.ClearRenderTarget(true, true, new Color(0, 0, 0));
-					cb.Blit(colorTargetIdentifier, backgroundRenderTexture.renderTexture, m);
+					blitter.Blit(cb, colorTargetIdentifier, backgroundRenderTexture.renderTexture, m);
 				}
 			}
-			else if(isRequiredToCopyBackground)
+			else if (isRequiredToCopyBackground)
 			{
-				cb.Blit(colorTargetIdentifier, backgroundRenderTexture.renderTexture);
-
-				if (depthTargetIdentifier.HasValue)
-				{
-					cb.SetRenderTarget(colorTargetIdentifier, depthTargetIdentifier.Value);
-				}
-				else
-				{
-					cb.SetRenderTarget(colorTargetIdentifier);
-				}
-				//cb.CopyTexture(colorTargetIdentifier, new RenderTargetIdentifier(backgroundRenderTexture.renderTexture));
+				blitter.Blit(cb, colorTargetIdentifier, backgroundRenderTexture.renderTexture);
 			}
 			else
 			{
-				cb.Blit(colorTargetIdentifier, backgroundRenderTexture.renderTexture);
+				blitter.Blit(cb, colorTargetIdentifier, backgroundRenderTexture.renderTexture);
 			}
-			
-			if(!isRequiredToCopyBackground)
+
+			// restore
+			if (depthTargetIdentifier.HasValue)
 			{
-				if (depthTargetIdentifier.HasValue)
-				{
-					cb.SetRenderTarget(colorTargetIdentifier, depthTargetIdentifier.Value);
-				}
-				else
-				{
-					cb.SetRenderTarget(colorTargetIdentifier);
-				}
+				cb.SetRenderTarget(colorTargetIdentifier, depthTargetIdentifier.Value);
+			}
+			else
+			{
+				cb.SetRenderTarget(colorTargetIdentifier);
 			}
 		}
 
 		Material AllocateBlitArrayMaterial()
 		{
-			if(blitArrayMaterials.Count == 0)
+			if (blitArrayMaterials.Count == 0)
 			{
-				for(int i = 0; i < MaterialRingCount; i++)
+				for (int i = 0; i < MaterialRingCount; i++)
 				{
-					blitArrayMaterials.Add(new Material(Effekseer.EffekseerSettings.Instance.texture2DArrayBlitMaterial));
+					blitArrayMaterials.Add(new Material(EffekseerDependentAssets.Instance.texture2DArrayBlitMaterial));
 				}
 			}
 
@@ -117,7 +233,7 @@ namespace Effekseer.Internal
 			{
 				for (int i = 0; i < MaterialRingCount; i++)
 				{
-					blitMaterials.Add(new Material(Effekseer.EffekseerSettings.Instance.texture2DBlitMaterial));
+					blitMaterials.Add(new Material(EffekseerDependentAssets.Instance.texture2DBlitMaterial));
 				}
 			}
 
@@ -131,13 +247,16 @@ namespace Effekseer.Internal
 	{
 		int layer { get; set; }
 
+#if UNITY_EDITOR
+		bool disableCullingMask { get; set; }
+#endif
 		void SetVisible(bool visible);
 
 		void CleanUp();
 
 		CommandBuffer GetCameraCommandBuffer(Camera camera);
-		
-		void Render(Camera camera, RenderTargetProperty renderTargetProperty, CommandBuffer targetCommandBuffer);
+
+		void Render(Camera camera, RenderTargetProperty renderTargetProperty, CommandBuffer targetCommandBuffer, IEffekseerBlitter blitter);
 
 		void OnPostRender(Camera camera);
 	}
@@ -173,6 +292,18 @@ namespace Effekseer.Internal
 #endif
 			}
 		}
+
+		internal static bool IsDepthEnabled
+		{
+			get
+			{
+#if UNITY_IOS || UNITY_ANDROID || UNITY_WEBGL || UNITY_SWITCH
+				return EffekseerSettings.Instance.enableDepthMobile;
+#else
+				return EffekseerSettings.Instance.enableDepth;
+#endif
+			}
+		}
 	}
 
 	internal class BackgroundRenderTexture
@@ -191,7 +322,7 @@ namespace Effekseer.Internal
 				return new Vector2Int(width, height);
 			}
 
-			if(camera != null)
+			if (camera != null)
 			{
 				var width = EffekseerRendererUtils.ScaledClamp(camera.scaledPixelWidth, EffekseerRendererUtils.DistortionBufferScale);
 				var height = EffekseerRendererUtils.ScaledClamp(camera.scaledPixelHeight, EffekseerRendererUtils.DistortionBufferScale);
@@ -216,10 +347,24 @@ namespace Effekseer.Internal
 			}
 			else
 			{
-				renderTexture = new RenderTexture(width, height, 0, format);
+				if (XRSettings.enabled)
+				{
+					renderTexture = new RenderTexture(XRSettings.eyeTextureDesc);
+				}
+				else
+				{
+					if(QualitySettings.activeColorSpace == ColorSpace.Linear)
+					{
+						renderTexture = new RenderTexture(width, height, 0, format, RenderTextureReadWrite.Linear);
+					}
+					else
+					{
+						renderTexture = new RenderTexture(width, height, 0, format);
+					}
+				}
 			}
 
-			if(renderTexture != null)
+			if (renderTexture != null)
 			{
 				renderTexture.name = "EffekseerBackground";
 			}
@@ -263,6 +408,71 @@ namespace Effekseer.Internal
 				renderTexture.Release();
 				renderTexture = null;
 				ptr = IntPtr.Zero;
+			}
+		}
+	}
+
+	internal class DepthRenderTexture
+	{
+		internal RenderTexture renderTexture;
+		public IntPtr ptr = IntPtr.Zero;
+
+		public DepthRenderTexture(int width, int height, RenderTargetProperty renderTargetProperty)
+		{
+			if (renderTargetProperty != null)
+			{
+				width = renderTargetProperty.colorTargetDescriptor.width;
+				height = renderTargetProperty.colorTargetDescriptor.height;
+			}
+
+			RenderTextureDescriptor desc = new RenderTextureDescriptor(width, height, RenderTextureFormat.RHalf);
+
+			renderTexture = new RenderTexture(desc);
+
+			if (renderTexture != null)
+			{
+				renderTexture.name = "EffekseerDepth";
+			}
+		}
+
+		public bool Create()
+		{
+			// HACK for ZenPhone
+			if (this.renderTexture == null || !this.renderTexture.Create())
+			{
+				this.renderTexture = null;
+				return false;
+			}
+
+			this.ptr = this.renderTexture.GetNativeTexturePtr();
+			return true;
+		}
+
+		public void Release()
+		{
+			if (renderTexture != null)
+			{
+				renderTexture.Release();
+				renderTexture = null;
+				ptr = IntPtr.Zero;
+			}
+		}
+
+		public int width
+		{
+			get
+			{
+				if (renderTexture != null) return renderTexture.width;
+				return 0;
+			}
+		}
+
+		public int height
+		{
+			get
+			{
+				if (renderTexture != null) return renderTexture.height;
+				return 0;
 			}
 		}
 	}

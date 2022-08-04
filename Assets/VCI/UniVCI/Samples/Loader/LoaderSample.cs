@@ -9,7 +9,7 @@ using UnityEditor;
 
 namespace VCI.Samples
 {
-    public class LoaderSample : MonoBehaviour
+    public sealed class LoaderSample : MonoBehaviour
     {
         [SerializeField]
         private Button _openButton;
@@ -55,7 +55,7 @@ namespace VCI.Samples
                 _instance?.Dispose();
                 _instance = null;
 
-                var data = await Task.Run(() => new VciFileParser(path).Parse());
+                using (var data = await Task.Run(() => new VciFileParser(path).Parse()))
                 using (var loader = new VCIImporter(data))
                 {
                     await loader.LoadAsync();

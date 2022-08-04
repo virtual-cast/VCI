@@ -32,8 +32,6 @@ namespace VCI
             }
 
             // 現在のところはこの組み合わせしかサポートしない
-            if (locationLighting.skyboxCubemap.GetSkyboxCompressionModeAsEnum() != CubemapCompressionType.Rgbm) return;
-            if (locationLighting.GetLightmapCompressionModeAsEnum() != LightmapCompressionType.Rgbm) return;
             if (locationLighting.GetLightmapDirectionalModeAsEnum() != LightmapDirectionalType.NonDirectional) return;
 
             await awaitCaller.NextFrame();

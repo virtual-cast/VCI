@@ -6,7 +6,7 @@ namespace VCI
     /// sound item
     /// </summary>
     [Serializable]
-    public class AudioJsonObject
+    public sealed class AudioJsonObject
     {
         public const string WavMimeType = "audio/wav";
         public const string Mp3MimeType = "audio/mp3";

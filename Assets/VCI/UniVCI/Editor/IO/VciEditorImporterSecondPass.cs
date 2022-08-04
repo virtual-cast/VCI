@@ -59,7 +59,6 @@ namespace VCI
             // NOTE: Editor 用の特殊な Import 処理が必要なコンポーネントの処理を呼び出す.
             SetupScriptsAfterEditorDelayCall();
             SetupEffekseerAfterEditorDelayCall();
-            SetupColliderMeshAfterEditorDelayCall();
             vciInstance.ShowMeshes();
             // NOTE: ロード中に物理演算が働かないように Disabled されているため、Enable する.
             vciInstance.EnablePhysicalBehaviour(true);
@@ -111,11 +110,6 @@ namespace VCI
             new EditorScriptImporter(_data, _importer, _prefabPath).SetupAfterEditorDelayCall();
         }
 
-        private void SetupColliderMeshAfterEditorDelayCall()
-        {
-            new EditorPhysicsColliderImporter(_data, _importer, _prefabPath).SetupAfterEditorDelayCall();
-        }
-
         /// <summary>
         /// 与えられた prefab の SubAsset を、通常の Asset として保存する.
         /// </summary>
@@ -146,7 +140,7 @@ namespace VCI
                         var materialPath = materialDir.Child(o.name.EscapeFilePath() + ".asset");
                         return materialPath;
                     }
-                // NOTE: GLTF assets
+                // NOTE: GLTF & VCI assets
                 case Mesh _:
                     {
                         var meshDir = prefabPath.GetAssetFolder(".Meshes");

@@ -45,7 +45,7 @@ namespace VCI
         {
             var mipLength = gltfCubemapTexture.mipmapCount; // original を含めない mipmap だけの個数
 
-            var (key, param) = GltfTextureImporter.CreateSRGB(_data, gltfCubemapTexture.texture.cubemapPositiveX.index, Vector2.zero, Vector2.one);
+            var (key, param) = GltfTextureImporter.CreateSrgb(_data, gltfCubemapTexture.texture.cubemapPositiveX.index, Vector2.zero, Vector2.one);
             var positiveX = await _textureFactory.GetTextureAsync(param, awaitCaller);
             var width = positiveX.width;
 
@@ -72,7 +72,7 @@ namespace VCI
             }
             else
             {
-                UnityEngine.Object.DestroyImmediate(cubemap);
+                UnityObjectDestoyer.DestroyRuntimeOrEditor(cubemap);
                 return null;
             }
         }
@@ -80,22 +80,22 @@ namespace VCI
         private async Task<bool> UpdateCubemapFace(CubemapFaceTextureSetJsonObject src, Cubemap dst, int mipmap, IAwaitCaller awaitCaller)
         {
             var positiveX = await _textureFactory.GetTextureAsync(
-                GltfTextureImporter.CreateSRGB(_data, src.cubemapPositiveX.index, Vector2.zero, Vector2.one).Item2,
+                GltfTextureImporter.CreateSrgb(_data, src.cubemapPositiveX.index, Vector2.zero, Vector2.one).Item2,
                 awaitCaller);
             var negativeX = await _textureFactory.GetTextureAsync(
-                GltfTextureImporter.CreateSRGB(_data, src.cubemapNegativeX.index, Vector2.zero, Vector2.one).Item2,
+                GltfTextureImporter.CreateSrgb(_data, src.cubemapNegativeX.index, Vector2.zero, Vector2.one).Item2,
                 awaitCaller);
             var positiveY = await _textureFactory.GetTextureAsync(
-                GltfTextureImporter.CreateSRGB(_data, src.cubemapPositiveY.index, Vector2.zero, Vector2.one).Item2,
+                GltfTextureImporter.CreateSrgb(_data, src.cubemapPositiveY.index, Vector2.zero, Vector2.one).Item2,
                 awaitCaller);
             var negativeY = await _textureFactory.GetTextureAsync(
-                GltfTextureImporter.CreateSRGB(_data, src.cubemapNegativeY.index, Vector2.zero, Vector2.one).Item2,
+                GltfTextureImporter.CreateSrgb(_data, src.cubemapNegativeY.index, Vector2.zero, Vector2.one).Item2,
                 awaitCaller);
             var positiveZ = await _textureFactory.GetTextureAsync(
-                GltfTextureImporter.CreateSRGB(_data, src.cubemapPositiveZ.index, Vector2.zero, Vector2.one).Item2,
+                GltfTextureImporter.CreateSrgb(_data, src.cubemapPositiveZ.index, Vector2.zero, Vector2.one).Item2,
                 awaitCaller);
             var negativeZ = await _textureFactory.GetTextureAsync(
-                GltfTextureImporter.CreateSRGB(_data, src.cubemapNegativeZ.index, Vector2.zero, Vector2.one).Item2,
+                GltfTextureImporter.CreateSrgb(_data, src.cubemapNegativeZ.index, Vector2.zero, Vector2.one).Item2,
                 awaitCaller);
 
             if (!await RenderCubemapFaceTextureAsync(positiveX, dst, GltfCubemapFace.PositiveX.ConvertToUnityCubemapFace(), mipmap, awaitCaller)) return false;
@@ -110,10 +110,6 @@ namespace VCI
 
         private async Task<bool> RenderCubemapFaceTextureAsync(Texture src, Cubemap dst, CubemapFace srcFace, int mipmap, IAwaitCaller awaitCaller)
         {
-            var shader = GetImporterShader();
-            if (shader == null) return false;
-            var importerMaterial = new Material(shader);
-
             if (!Mathf.IsPowerOfTwo(dst.width)) return false;
             if (!Mathf.IsPowerOfTwo(dst.height)) return false;
 
@@ -123,9 +119,19 @@ namespace VCI
             var height = Math.Max(2, originalHeight >> mipmap);
 
             var rt = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.DefaultHDR, RenderTextureReadWrite.Linear);
-            // Decode into Linear RenderTexture
-            Graphics.Blit(src, rt, importerMaterial);
-            UnityEngine.Object.DestroyImmediate(importerMaterial);
+
+            var shader = GetImporterShader();
+            if (shader == null)
+            {
+                Graphics.Blit(src, rt);
+            }
+            else
+            {
+                // Decode into Linear RenderTexture
+                var importerMaterial = new Material(shader);
+                Graphics.Blit(src, rt, importerMaterial);
+                UnityObjectDestoyer.DestroyRuntimeOrEditor(importerMaterial);
+            }
 
             await awaitCaller.NextFrame();
 
@@ -168,7 +174,7 @@ namespace VCI
             });
 
             dst.SetPixels(convertedArray, srcFace, mipmap);
-            UnityEngine.Object.Destroy(tex);
+            UnityObjectDestoyer.DestroyRuntimeOrEditor(tex);
 
             await awaitCaller.NextFrame();
 

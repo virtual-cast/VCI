@@ -4,7 +4,7 @@ using UniGLTF;
 namespace VCI
 {
     [Serializable]
-    public class AudioSourceJsonObject
+    public sealed class AudioSourceJsonObject
     {
         [JsonSchema(Required = true)]
         public int audio;

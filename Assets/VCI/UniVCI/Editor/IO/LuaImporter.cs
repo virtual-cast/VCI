@@ -9,7 +9,7 @@ using UnityEngine;
 namespace VCI
 {
     [ScriptedImporter(1, "lua")]
-    public class LuaImporter : ScriptedImporter
+    public sealed class LuaImporter : ScriptedImporter
     {
         public override void OnImportAsset(AssetImportContext ctx)
         {

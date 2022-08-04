@@ -7,7 +7,7 @@ using UniJSON;
 
 namespace VCI
 {
-    public class FormatTests
+    public sealed class FormatTests
     {
         private T RootExtensionSerializeAndDeserialize<T>(T src, string extensionName, Action<JsonFormatter, T> serializer, Func<JsonNode, T> deserializer) where T: class
         {

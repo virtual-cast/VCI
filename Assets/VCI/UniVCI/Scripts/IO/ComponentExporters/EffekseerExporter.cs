@@ -25,7 +25,7 @@ namespace VCI
             for (var i = 0; i < nodes.Count; i++)
             {
                 var node = nodes[i];
-                var gltfNode = exportingData.GLTF.nodes[i];
+                var gltfNode = exportingData.Gltf.nodes[i];
 
                 var emitters = node.GetComponents<Effekseer.EffekseerEmitter>()
                     .Where(emitter => emitter.effectAsset != null)
@@ -92,7 +92,8 @@ namespace VCI
                         continue;
                     }
 
-                    FixTextureImporterSettings(texture.texture);
+                    // NOTE: 変換前に圧縮設定を切る.
+                    textureSerializer.ModifyTextureAssetBeforeExporting(texture.texture);
 
                     var (textureBytes, textureMime) = textureSerializer.ExportBytesWithMime(texture.texture, ColorSpace.sRGB);
                     var image = new EffekseerImageJsonObject()
@@ -127,26 +128,6 @@ namespace VCI
             {
                 return effekseerExtension.effects.FindIndex(x => x.effectName == emitterExtension.effectAsset.name);
             }
-        }
-
-        private static void FixTextureImporterSettings(Texture2D texture)
-        {
-            if (Application.isPlaying || texture == null)
-            {
-                return;
-            }
-
-#if UNITY_EDITOR
-            var texturePath = UnityEditor.AssetDatabase.GetAssetPath(texture);
-            var textureImporter =
-                (UnityEditor.TextureImporter) UnityEditor.TextureImporter.GetAtPath(texturePath);
-            if (textureImporter != null)
-            {
-                textureImporter.isReadable = true;
-                textureImporter.textureCompression = UnityEditor.TextureImporterCompression.Uncompressed;
-                textureImporter.SaveAndReimport();
-            }
-#endif
         }
     }
 }

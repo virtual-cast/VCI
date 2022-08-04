@@ -3,7 +3,7 @@
 namespace VCI
 {
     [Serializable]
-    public class EffekseerEmitterJsonObject
+    public sealed class EffekseerEmitterJsonObject
     {
         [UniGLTF.JsonSchema(Required = true, Minimum = 0)]
         public int effectIndex = -1;

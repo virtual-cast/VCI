@@ -1,5 +1,4 @@
-#pragma warning disable
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using UnityEngine;
@@ -19,9 +18,10 @@ namespace Effekseer.Internal
 		public string path;
 		[SerializeField]
 		public EffekseerMaterialAsset asset;
-			
+
 #if UNITY_EDITOR
-		public static EffekseerMaterialResource LoadAsset(string dirPath, string resPath) {
+		public static EffekseerMaterialResource LoadAsset(string dirPath, string resPath)
+		{
 			resPath = Path.ChangeExtension(resPath, ".asset");
 
 			EffekseerMaterialAsset asset = AssetDatabase.LoadAssetAtPath<EffekseerMaterialAsset>(EffekseerEffectAsset.NormalizeAssetPath(dirPath + "/" + resPath));
@@ -31,10 +31,12 @@ namespace Effekseer.Internal
 			res.asset = asset;
 			return res;
 		}
-		public static bool InspectorField(EffekseerMaterialResource res) {
+		public static bool InspectorField(EffekseerMaterialResource res)
+		{
 			EditorGUILayout.LabelField(res.path);
 			var result = EditorGUILayout.ObjectField(res.asset, typeof(EffekseerMaterialAsset), false) as EffekseerMaterialAsset;
-			if (result != res.asset) {
+			if (result != res.asset)
+			{
 				res.asset = result;
 				return true;
 			}
@@ -49,8 +51,18 @@ namespace Effekseer
 	public class EffekseerMaterialAsset : ScriptableObject
 	{
 		[System.Serializable]
+		public enum TextureType
+		{
+			Color,
+			Value,
+		}
+
+		[System.Serializable]
 		public class TextureProperty
 		{
+			[SerializeField]
+			public TextureType Type = TextureType.Color;
+
 			[SerializeField]
 			public string Name;
 
@@ -135,16 +147,16 @@ namespace Effekseer
 		public static void CreateAsset(string path, ImportingAsset importingAsset)
 		{
 			// modify
-			if(importingAsset.CustomData1Count > 0)
+			if (importingAsset.CustomData1Count > 0)
 				importingAsset.CustomData1Count = Math.Max(2, importingAsset.CustomData1Count);
-	
-			if(importingAsset.CustomData2Count > 0)
+
+			if (importingAsset.CustomData2Count > 0)
 				importingAsset.CustomData2Count = Math.Max(2, importingAsset.CustomData2Count);
 
 			// modifiy importing asset to avoid invalid name
-			foreach(var texture in importingAsset.Textures)
+			foreach (var texture in importingAsset.Textures)
 			{
-				if(texture.Name == string.Empty)
+				if (texture.Name == string.Empty)
 				{
 					texture.Name = texture.UniformName;
 				}
@@ -169,7 +181,7 @@ namespace Effekseer
 				isNewAsset = true;
 			}
 
-			if(importingAsset.IsCacheFile)
+			if (importingAsset.IsCacheFile)
 			{
 				asset.cachedMaterialBuffers = importingAsset.Data;
 			}
@@ -181,10 +193,16 @@ namespace Effekseer
 				asset.CustomData1Count = importingAsset.CustomData1Count;
 				asset.CustomData2Count = importingAsset.CustomData2Count;
 				asset.HasRefraction = importingAsset.HasRefraction;
-				asset.shader = CreateShader(Path.ChangeExtension(path, ".shader"), importingAsset);
+				var shader = CreateShader(Path.ChangeExtension(path, ".shader"), importingAsset);
+
+				// sometimes return null
+				if (shader != null)
+				{
+					asset.shader = shader;
+				}
 			}
 
-			if(isNewAsset)
+			if (isNewAsset)
 			{
 				AssetDatabase.CreateAsset(asset, assetPath);
 			}
@@ -240,6 +258,7 @@ namespace Effekseer
 			baseCode = baseCode.Replace("$F3$", "float3");
 			baseCode = baseCode.Replace("$F4$", "float4");
 			baseCode = baseCode.Replace("$TIME$", "_Time.y");
+			baseCode = baseCode.Replace("$EFFECTSCALE$", "predefined_uniform.y");
 			baseCode = baseCode.Replace("$UV$", "uv");
 
 			int actualTextureCount = Math.Min(importingAsset.UserTextureSlotMax, importingAsset.Textures.Count);
@@ -249,21 +268,28 @@ namespace Effekseer
 				var keyP = "$TEX_P" + i + "$";
 				var keyS = "$TEX_S" + i + "$";
 
+				var replacedP = string.Empty;
+				var replacedS = string.Empty;
 
 				if (stage == 0)
 				{
-					baseCode = baseCode.Replace(
-									   keyP,
-									   "tex2Dlod(" + importingAsset.Textures[i].Name + ",float4(GetUV(");
-					baseCode =baseCode.Replace(keyS, "),0,0))");
+					replacedP = "tex2Dlod(" + importingAsset.Textures[i].Name + ",float4(GetUV(";
+					replacedS = "),0,0))";
 				}
 				else
 				{
-					baseCode = baseCode.Replace(
-									   keyP,
-									   "tex2D(" + importingAsset.Textures[i].Name + ",GetUV(");
-					baseCode = baseCode.Replace(keyS, "))");
+					replacedP = "tex2D(" + importingAsset.Textures[i].Name + ",GetUV(";
+					replacedS = "))";
 				}
+
+				if(importingAsset.Textures[i].Type == TextureType.Color)
+				{
+					replacedP = "ConvertFromSRGBTexture(" + replacedP;
+					replacedS = replacedS + ")";
+				}
+
+				baseCode = baseCode.Replace(keyP, replacedP);
+				baseCode = baseCode.Replace(keyS, replacedS);
 
 			}
 
@@ -320,7 +346,7 @@ namespace Effekseer
 				codeVariable += "sampler2D " + importingAsset.Textures[i].Name + ";" + nl;
 			}
 
-			for(int i = 0; i < importingAsset.Uniforms.Count; i++)
+			for (int i = 0; i < importingAsset.Uniforms.Count; i++)
 			{
 				codeUniforms += "float4 " + importingAsset.Uniforms[i].Name + ";" + nl;
 			}
@@ -329,12 +355,12 @@ namespace Effekseer
 			// HACK for efk_xxx_1 and efk_xxx_12
 			{
 				var replacingUniforms = importingAsset.Uniforms.ToArray();
-				
+
 				replacingUniforms = replacingUniforms.OrderByDescending(_ => _.UniformName.Length).ToArray();
 
 				foreach (var kv in replacingUniforms)
 				{
-					if(kv.Name == string.Empty)
+					if (kv.Name == string.Empty)
 					{
 						continue;
 					}
@@ -353,12 +379,12 @@ namespace Effekseer
 			code = code.Replace("%PSCODE%", mainPSCode);
 			code = code.Replace("%MATERIAL_NAME%", System.IO.Path.GetFileNameWithoutExtension(path));
 
-			if(importingAsset.HasRefraction)
+			if (importingAsset.HasRefraction)
 			{
 				code = code.Replace("//PRAGMA_REFRACTION_FLAG", "#pragma multi_compile _ _MATERIAL_REFRACTION_");
 			}
 
-			if(importingAsset.ShadingModel == 0)
+			if (importingAsset.ShadingModel == 0)
 			{
 				code = code.Replace("//PRAGMA_LIT_FLAG", "#define _MATERIAL_LIT_ 1");
 			}
@@ -391,7 +417,7 @@ namespace Effekseer
 
 			AssetDatabase.Refresh(ImportAssetOptions.ImportRecursive);
 			AssetDatabase.ImportAsset(path, ImportAssetOptions.ImportRecursive);
-			
+
 			var asset = AssetDatabase.LoadAssetAtPath<Shader>(path);
 			return asset;
 		}
@@ -423,6 +449,62 @@ Cull[_Cull]
 
 		CGPROGRAM
 
+		@define FLT_EPSILON 1.192092896e-07f
+		
+		float convertColorSpace;
+
+		float3 PositivePow(float3 base, float3 power)
+		{
+			return pow(max(abs(base), float3(FLT_EPSILON, FLT_EPSILON, FLT_EPSILON)), power);
+		}
+		
+		// based on http://chilliant.blogspot.com/2012/08/srgb-approximations-for-hlsl.html?m=1
+		float3 SRGBToLinear(float3 c)
+		{
+			return min(c, c * (c * (c * 0.305306011 + 0.682171111) + 0.012522878));
+		}
+		
+		float4 SRGBToLinear(float4 c)
+		{
+			return float4(SRGBToLinear(c.rgb), c.a);
+		}
+		
+		float3 LinearToSRGB(float3 c)
+		{
+			return max(1.055 * PositivePow(c, 0.416666667) - 0.055, 0.0);
+		}
+		
+		float4 LinearToSRGB(float4 c)
+		{
+			return float4(LinearToSRGB(c.rgb), c.a);
+		}
+		
+		float4 ConvertFromSRGBTexture(float4 c)
+		{
+		@if defined(UNITY_COLORSPACE_GAMMA)
+			return c;
+		@else
+			if (convertColorSpace == 0.0f)
+			{
+				return c;
+			}
+			return LinearToSRGB(c);
+		@endif
+		}
+		
+		float4 ConvertToScreen(float4 c)
+		{
+		@if defined(UNITY_COLORSPACE_GAMMA)
+			return c;
+		@else
+			if (convertColorSpace == 0.0f)
+			{
+				return c;
+			}
+			return SRGBToLinear(c);
+		@endif
+		}
+
 		@define MOD fmod
 		@define FRAC frac
 		@define LERP lerp
@@ -439,6 +521,7 @@ Cull[_Cull]
 		@if _MATERIAL_REFRACTION_
 		sampler2D _BackTex;
 		@endif
+		sampler2D _depthTex;
 
 		%TEX_VARIABLE%
 
@@ -503,7 +586,8 @@ Cull[_Cull]
 			float3 WorldN : TEXCOORD3;
 			float3 WorldT : TEXCOORD4;
 			float3 WorldB : TEXCOORD5;
-			float2 ScreenUV : TEXCOORD6;
+			float4 PosP : TEXCOORD6;
+			//float2 ScreenUV : TEXCOORD6;
 			//%CUSTOM_VSPS_INOUT1%
 			//%CUSTOM_VSPS_INOUT2%
 		};
@@ -511,6 +595,9 @@ Cull[_Cull]
 		float4 lightDirection;
 		float4 lightColor;
 		float4 lightAmbientColor;
+		float4 predefined_uniform;
+		float4 reconstructionParam1;
+		float4 reconstructionParam2;
 
 		float2 GetUV(float2 uv)
 		{
@@ -523,6 +610,22 @@ Cull[_Cull]
 			uv.y = uv.y;
 			return uv;
 		}
+
+		float CalcDepthFade(float2 screenUV, float meshZ, float softParticleParam)
+		{
+			float backgroundZ = tex2D(_depthTex, GetUVBack(screenUV)).x;
+			float distance = softParticleParam * predefined_uniform.y;
+			float2 rescale = reconstructionParam1.xy;
+			float4 params = reconstructionParam2;
+
+			float2 zs = float2(backgroundZ * rescale.x + rescale.y, meshZ);
+
+			float2 depth = (zs * params.w - params.y) / (params.x - zs* params.z);
+			float dir = sign(depth.x);
+			depth *= dir;
+			return min(max((depth.x - depth.y) / distance, 0.0), 1.0);
+		}
+
 
 		ps_input vert(uint id : SV_VertexID, uint inst : SV_InstanceID)
 		{
@@ -608,6 +711,10 @@ Cull[_Cull]
 			float4 vcolor = Input.Color;
 			@endif
 
+			// Dummy
+			float2 screenUV = float2(0.0, 0.0);
+			float meshZ =  0.0f;
+
 			%VSCODE%
 
 			worldPos = worldPos + worldPositionOffset;
@@ -621,8 +728,9 @@ Cull[_Cull]
 			Output.VColor = vcolor;
 			Output.UV1 = uv1;
 			Output.UV2 = uv2;
-			Output.ScreenUV = Output.Position.xy / Output.Position.w;
-			Output.ScreenUV.xy = float2(Output.ScreenUV.x + 1.0, 1.0 - Output.ScreenUV.y) * 0.5;
+			Output.PosP = Output.Position;
+			// Output.ScreenUV = Output.Position.xy / Output.Position.w;
+			// Output.ScreenUV.xy = float2(Output.ScreenUV.x + 1.0, 1.0 - Output.ScreenUV.y) * 0.5;
 		
 			return Output;
 		}
@@ -701,6 +809,9 @@ Cull[_Cull]
 		
 			float3 pixelNormalDir = worldNormal;
 			float4 vcolor = Input.VColor;
+			float2 screenUV = Input.PosP.xy / Input.PosP.w;
+			float meshZ =  Input.PosP.z / Input.PosP.w;
+			screenUV.xy = float2(screenUV.x + 1.0, 1.0 - screenUV.y) * 0.5;
 
 			float3 objectScale = float3(1.0, 1.0, 1.0);
 		
@@ -713,7 +824,7 @@ Cull[_Cull]
 
 			float2 distortUV = 	dir.xy * (refraction - airRefraction);
 
-			distortUV += Input.ScreenUV;
+			distortUV += screenUV;
 			distortUV = GetUVBack(distortUV);	
 
 			float4 bg = tex2D(_BackTex, distortUV);
@@ -744,7 +855,7 @@ Cull[_Cull]
 			if(opacityMask <= 0.0f) discard;
 			if(opacity <= 0.0) discard;
 		
-			return Output;
+			return ConvertToScreen(Output);
 			@endif
 		}
 

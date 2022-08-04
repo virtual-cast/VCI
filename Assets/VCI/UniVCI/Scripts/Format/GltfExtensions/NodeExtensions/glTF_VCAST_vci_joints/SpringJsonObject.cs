@@ -3,7 +3,7 @@
 namespace VCI
 {
     [Serializable]
-    public class SpringJsonObject
+    public sealed class SpringJsonObject
     {
         public float spring;
         public float damper;

@@ -3,7 +3,7 @@
 namespace VCI
 {
     [Serializable]
-    public class AnimationReferenceJsonObject
+    public sealed class AnimationReferenceJsonObject
     {
         [UniGLTF.JsonSchema(Required = true, Minimum = 0)]
         public int animation = -1;

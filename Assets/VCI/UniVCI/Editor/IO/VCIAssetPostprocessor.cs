@@ -34,12 +34,9 @@ namespace VCI
                 throw new Exception();
             }
 
-            var data = new VciFileParser(path.FullPath).Parse();
-
             var prefabPath = path.Parent.Child(path.FileNameWithoutExtension + ".prefab");
 
-            var editorImporter = new VciEditorImporter(data, prefabPath);
-            editorImporter.Load();
+            new VciEditorImporter(path, prefabPath).Load();
         }
     }
 }

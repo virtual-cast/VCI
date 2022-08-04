@@ -1,28 +1,34 @@
+using System;
 using UniGLTF;
 
 namespace VCI
 {
     public sealed class VciEditorImporter
     {
-        private readonly VciData _data;
+        private readonly UnityPath _filePath;
         private readonly UnityPath _prefabPath;
 
-        public VciEditorImporter(VciData data, UnityPath prefabPath)
+        public VciEditorImporter(UnityPath filePath, UnityPath prefabPath)
         {
-            _data = data;
+            _filePath = filePath;
             _prefabPath = prefabPath;
         }
 
         public void Load()
         {
-            using (var firstPassImporter = new VciEditorImporterFirstPass(_data, _prefabPath))
+            var data = new VciFileParser(_filePath.FullPath).Parse();
+
+            using (var firstPassImporter = new VciEditorImporterFirstPass(data, _prefabPath))
             {
                 firstPassImporter.Load((paths) =>
                 {
-                    using (var secondPassImporter = new VciEditorImporterSecondPass(_data, _prefabPath, paths))
+                    using (var secondPassImporter = new VciEditorImporterSecondPass(data, _prefabPath, paths))
                     {
                         secondPassImporter.Load();
                     }
+
+                    // NOTE: すべてのロード処理が終わったあとに、VciData を破棄する.
+                    data.Dispose();
                 });
             }
         }

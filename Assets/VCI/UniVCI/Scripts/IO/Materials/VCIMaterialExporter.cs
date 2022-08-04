@@ -10,7 +10,7 @@ using ColorSpace = VRMShaders.ColorSpace;
 
 namespace VRM
 {
-    public class VCIMaterialExporter : MaterialExporter
+    public sealed class VCIMaterialExporter : MaterialExporter
     {
         public static string VrmMaterialName(string shaderName)
         {
@@ -60,18 +60,21 @@ namespace VRM
             material.alphaMode = "OPAQUE";
             return material;
         }
+
         static glTFMaterial Export_VRMUnlitTransparent(Material m)
         {
             var material = glTF_KHR_materials_unlit.CreateDefault();
             material.alphaMode = "BLEND";
             return material;
         }
+
         static glTFMaterial Export_VRMUnlitCutout(Material m)
         {
             var material = glTF_KHR_materials_unlit.CreateDefault();
             material.alphaMode = "MASK";
             return material;
         }
+
         static glTFMaterial Export_VRMUnlitTransparentZWrite(Material m)
         {
             var material = glTF_KHR_materials_unlit.CreateDefault();
@@ -122,7 +125,8 @@ namespace VRM
 
         #region CreateFromMaterial
 
-        static readonly string[] TAGS = new string[]{
+        static readonly string[] TAGS = new string[]
+        {
             "RenderType",
             // "Queue",
         };
@@ -136,16 +140,17 @@ namespace VRM
                 renderQueue = m.renderQueue,
             };
 
-            if (!PreShaderPropExporter.VRMExtensionShaders.Contains(m.shader.name))
+            if (m.shader.name != MToon.Utils.ShaderName)
             {
                 material.shader = VciMaterialJsonObject.VRM_USE_GLTFSHADER;
                 return material;
             }
 
-            var prop = PreShaderPropExporter.GetPropsForSupportedShader(m.shader.name);
+            var prop = PreShaderPropExporter.GetPropsForMToon();
             if (prop == null)
             {
-                Debug.LogWarningFormat("Fail to export shader: {0}", m.shader.name);
+                // ありえない
+                throw new Exception();
             }
             else
             {
@@ -182,8 +187,8 @@ namespace VRM
                                 if (texture != null)
                                 {
                                     var value = kv.Key == "_BumpMap"
-                                        ? textureExporter.RegisterExportingAsNormal(texture)
-                                        : textureExporter.RegisterExportingAsSRgb(texture, kv.Key == "_MainTex")
+                                            ? textureExporter.RegisterExportingAsNormal(texture)
+                                            : textureExporter.RegisterExportingAsSRgb(texture, kv.Key == "_MainTex")
                                         ;
                                     if (value == -1)
                                     {
@@ -227,6 +232,7 @@ namespace VRM
 
             return material;
         }
+
         #endregion
     }
 }

@@ -3,7 +3,7 @@
 namespace VCI
 {
     [Serializable]
-    public class EffekseerImageJsonObject
+    public sealed class EffekseerImageJsonObject
     {
         public const string PngMimeTypeString = "image/png";
 

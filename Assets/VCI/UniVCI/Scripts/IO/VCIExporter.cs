@@ -8,26 +8,29 @@ using VRMShaders;
 
 namespace VCI
 {
-
     public sealed class VCIExporter : gltfExporter
     {
         internal static readonly GltfExportSettings VciExportSettings = new GltfExportSettings
         {
             InverseAxis = Axes.Z, // VCI の仕様
-            DivideVertexBuffer = default,
+            DivideVertexBuffer = false,
             UseSparseAccessorForMorphTarget = true, // ファイル容量削減
-            ExportOnlyBlendShapePosition = default,
+            ExportOnlyBlendShapePosition = false, // すべて出力する
             ExportTangents = false, // 要らない
-            UseEmissiveMultiplier = true, // VCI は同等のものを自前で定義しているが、重複しても問題ない
+            KeepVertexColor = false, // 要らない
+            MeshFilterAllowedHideFlags = HideFlags.HideInInspector | HideFlags.NotEditable // 通常の MeshFilter に加えて ProBuilder MeshFilter も出力する
         };
 
+        private readonly IVciAnimationNodeExporter _animationNodeExporter;
         private readonly IVciColliderLayerProvider _colliderLayerProvider;
 
         private List<Transform> _originalNodes = new List<Transform>();
 
         // NOTE: GltfExportSettings には VCI の仕様が含まれるため、強制的に上書きする.
-        public VCIExporter(ExportingGltfData gltfData, IVciColliderLayerProvider colliderLayerProvider = null) : base(gltfData, VciExportSettings)
+        public VCIExporter(ExportingGltfData gltfData, IVciAnimationNodeExporter animationNodeExporter = null, IVciColliderLayerProvider colliderLayerProvider = null)
+            : base(gltfData, VciExportSettings, animationExporter: animationNodeExporter?.GltfRootAnimationExporter)
         {
+            _animationNodeExporter = animationNodeExporter ?? new RuntimeAnimationNodeExporter();
             _colliderLayerProvider = colliderLayerProvider ?? new VciDefaultLayerSettings();
         }
 
@@ -211,7 +214,7 @@ namespace VCI
             }
 
             // Animation
-            var animationExtensions = AnimationNodeExporter.ExportAnimations(_data, Copy, Nodes);
+            var animationExtensions = _animationNodeExporter.ExportAnimations(_data, Copy, Nodes);
             foreach (var (gltfNode, animationExtension) in animationExtensions)
             {
                 var f = new UniJSON.JsonFormatter();
@@ -253,8 +256,8 @@ namespace VCI
             // Scene Lighting
             if (VciSymbols.IsDevelopmentEnabled)
             {
-                var lightmapTextureExporter = new LightmapTextureExporter(TextureExporter);
-                var cubemapTextureExporter = new CubemapTextureExporter(TextureExporter);
+                var lightmapTextureExporter = new LightmapTextureExporter(TextureExporter, textureSerializer);
+                var cubemapTextureExporter = new CubemapTextureExporter(TextureExporter, textureSerializer);
 
                 // Lightmap Nodes
                 var lightmapExtensions = LightmapExporter.ExportLightmaps(

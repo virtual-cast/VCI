@@ -3,7 +3,7 @@
 namespace VCI
 {
     [Serializable]
-    public class LimitsJsonObject
+    public sealed class LimitsJsonObject
     {
         public float min;
         public float max;

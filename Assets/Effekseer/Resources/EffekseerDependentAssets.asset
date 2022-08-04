@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14b4767e3be63d246ac675d4f9c0d467, type: 3}
+  m_Name: EffekseerDependentAssets
+  m_EditorClassIdentifier: 
+  texture2DArrayBlitMaterial: {fileID: 4800000, guid: 67d08a86aa6a44b41bf877601419e9d7,
+    type: 3}
+  texture2DBlitMaterial: {fileID: 4800000, guid: 481306851e1e5834bb2c03a0fb529629,
+    type: 3}
+  grabDepthShader: {fileID: 4800000, guid: 90ee1bc0a4dae04408b460d655b419ef, type: 3}
+  fixedShader: {fileID: 4800000, guid: addc52f57a6457a41952f47196de99d8, type: 3}
+  fakeMaterial: {fileID: 4800000, guid: 7c7fc95c6efbe1149b2f9f4747030f6e, type: 3}

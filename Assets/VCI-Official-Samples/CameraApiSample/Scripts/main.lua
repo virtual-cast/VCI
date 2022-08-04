@@ -4,14 +4,14 @@
 -- * 本サンプルでは、カメラで撮影した写真と写真のディスプレイを表示するマテリアルが割り当てられているメッシュは、
 --   16:9 で UV 割り当てされていることが期待されています
 -- 
+-- 以下の操作はネットワーク同期されます
 -- * ズームアウトボタンをUseすると、カメラがズームアウトします
 -- * ズームインボタンをUseすると、カメラがズームインします
+
+-- 以下の操作はUseした本人の環境上でのみ実行されます
 -- * カメラ本体をUseすると、写真を撮影します
 -- * 撮影される写真のプレビューは、カメラ本体の背面のディスプレイに表示されます
 -- * 撮影した写真は、カメラ本体下のディスプレイに表示されます
--- * 上記すべての操作は、ネットワーク上で同期されます
-
-local instanceId = vci.assets.GetInstanceId()
 
 local cameraName = "Camera"
 local cameraLensAnchorName = "LensAnchor"
@@ -32,8 +32,6 @@ local minFov = 10
 local maxFov = 170
 local fovStep = 2
 
-local takePhotoMessageName = "message_take_photo"
-
 local previewMaterialName = "Display"
 local photoMaterialName = "Photo"
 
@@ -51,12 +49,6 @@ function onTakePhotoCallback(photoMetadata)
     vci.assets.material.SetTexture(photoMaterialName, photoTextureId)
 end
 
--- 写真撮影の message 受け取り時に実行される関数
--- * リモート側でこのVCIがUseされたときに実行されます
-function onTakePhotoMessageReceived(sender, name, messnilge)
-    photographyCamera.TakePhotograph()
-end
-
 -- 写真撮影用カメラ生成
 -- * 写真撮影用カメラが生成され、"LensAnchor"のTransformに追従するようになります。
 local lensTransform = vci.assets.GetTransform(cameraLensAnchorName)
@@ -72,31 +64,42 @@ vci.assets.material.SetTexture(previewMaterialName, previewTextureId)
 -- * ExportPhotographyCamera.TakePhotograph実行時に、ここで渡した関数が実行されます。
 photographyCamera.SetOnTakePhotoCallback(onTakePhotoCallback)
 
--- アイテム内同期変数を初期化
--- * 自身がこのVCIの所有権を持っているときのみ実行します。
-if vci.assets.IsMine then
-    local isFovInitialized = vci.state.Get(fovStateName) ~= nil
--- カメラの fov が初期化されていない場合、初期化処理を実行する
-    if not isFovInitialized then
-        print("initialize fov...")
-        vci.state.Set(fovStateName, initialFov)
+local initCameraStateCoroutine = coroutine.create(
+    function()
+        while true do
+            -- アイテム内同期変数を取得して状態をチェック
+            local fov = vci.state.Get(fovStateName)
+            -- FOVは初期化済みか？（取得結果はnilではない値か？）
+            local isFovInitialized = fov ~= nil
+            if isFovInitialized then
+                print("initial FOV is: "..fov)
+                -- カメラの垂直FOVの初期値をセット
+                photographyCamera.SetVerticalFieldOfView(fov)
+                break
+            end
+
+            -- アイテム内同期変数を初期化
+            -- * 自身がこのVCIの所有権を持っているときのみ実行します。
+            if vci.assets.IsMine then
+                print("initialize fov...")
+                print(fovStateName.." -> "..initialFov)
+                vci.state.Set(fovStateName, initialFov)
+                break
+            end
+            
+            -- アイテム内同期変数の初期化を待つ
+            print("waiting for state init...")
+            coroutine.yield()
+        end
+
+        print("init completed.")
+        -- カメラの初期化完了
+        isInitialized = true
     end
-end
+)
 
-
--- カメラのNear Clip Planeと垂直FOVの初期値をセット
-initialFov = vci.state.Get(fovStateName)
-photographyCamera.SetVerticalFieldOfView(initialFov)
--- 必要ならば、near clip plane を任意の値にセットする
--- photographyCamera.SetNearClipPlane(initialNearClip)
-
--- 写真撮影のメッセージを受け取る
--- * リモート側から送信された、"message_take_photo"という名前のメッセージを受信したときに、
---   ここで渡した関数が実行されます。
-vci.message.On(takePhotoMessageName, onTakePhotoMessageReceived)
-
--- カメラの初期化完了
-isInitialized = true
+-- カメラの状態の同期をコルーチンで待つ
+vci.StartCoroutine(initCameraStateCoroutine)
 
 function updateAll()
     -- ズームアウトのボタンをカメラ本体に追従させる
@@ -147,9 +150,8 @@ function onUse(item)
 
     -- カメラ本体がUseされた
     if item == cameraName then
-        -- "message_take_photo"メッセージをリモート側に送信する
-        -- * instanceIdを指定することで、自身にのみメッセージを送信します。
-        vci.message.EmitWithId(takePhotoMessageName, nil, instanceId)
+        -- 写真撮影を実行する
+        photographyCamera.TakePhotograph()
     end
 
     -- ズームアウトボタンがUseされた

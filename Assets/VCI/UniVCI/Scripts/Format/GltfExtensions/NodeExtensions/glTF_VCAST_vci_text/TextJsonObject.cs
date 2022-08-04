@@ -6,7 +6,7 @@ using VRMShaders;
 namespace VCI
 {
     [Serializable, JsonSchema(Title = "vci.text")]
-    public class TextJsonObject
+    public sealed class TextJsonObject
     {
         public string fontName;
 

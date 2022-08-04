@@ -36,7 +36,7 @@ namespace VCI
             if (!_lightmapTextureCache.ContainsKey(colorTextureGltfIndex))
             {
                 var (key, param) =
-                    GltfTextureImporter.CreateSRGB(_data, colorTextureGltfIndex, Vector2.zero, Vector2.one);
+                    GltfTextureImporter.CreateSrgb(_data, colorTextureGltfIndex, Vector2.zero, Vector2.one);
                 var colorTexture = await _textureFactory.GetTextureAsync(param, awaitCaller);
 
                 var lightmapTexture = await ConvertLightmapTexture(colorTexture, awaitCaller);
@@ -52,7 +52,7 @@ namespace VCI
             var importerShader = GetImporterShader();
             if (importerShader == null)
             {
-                return default;
+                return src as Texture2D;
             }
 
             var importerMaterial = new Material(importerShader);
@@ -81,7 +81,7 @@ namespace VCI
             await awaitCaller.NextFrame();
 
             RenderTexture.ReleaseTemporary(rt);
-            UnityEngine.Object.DestroyImmediate(importerMaterial);
+            UnityObjectDestoyer.DestroyRuntimeOrEditor(importerMaterial);
 
             return dst;
         }
