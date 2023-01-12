@@ -24,6 +24,25 @@ namespace VCI
             {
                 gameObject.AddComponent<Rigidbody>();
             }
+            InitializeKey();
+        }
+
+        private void OnValidate()
+        {
+            InitializeKey();
+        }
+
+        public void InitializeKey()
+        {
+            var parent = transform.parent;
+            if (parent == null) { return; }
+
+            var parentVciObject = parent.GetComponent<VCIObject>();
+            if (parentVciObject == null) { return; }
+
+            if (Key != 0 && !parentVciObject.IsDuplicatedSubItemKey(Key)) { return; }
+
+            Key = parentVciObject.GenerateSubItemKey();
         }
 
         #region
@@ -32,8 +51,14 @@ namespace VCI
         public bool Scalable;
         public bool UniformScaling;
         public bool Attractable = true;
+        public float AttractableDistance = DefaultAttractableDistance;
         public int GroupId;
         public int NodeIndex;
+        /// <summary>VCI内で一意となる値</summary>
+        /// <remarks>0 の時は未設定と見なす</remarks>
+        public int Key;
+
+        public static readonly float DefaultAttractableDistance = 20;
 
         public VCISubItem CopyTo(GameObject go)
         {
@@ -42,8 +67,10 @@ namespace VCI
             subItem.Scalable = Scalable;
             subItem.UniformScaling = UniformScaling;
             subItem.Attractable = Attractable;
+            subItem.AttractableDistance = AttractableDistance;
             subItem.GroupId = GroupId;
             subItem.NodeIndex = NodeIndex;
+            subItem.Key = Key;
             return subItem;
         }
 

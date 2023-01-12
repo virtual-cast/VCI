@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace VCI
 {
-    [CreateAssetMenu]
+    [CreateAssetMenu(menuName = "VCI/VCI Config")]
     public sealed class VCIConfig : ScriptableObject
     {
         private static VCIConfig _config;

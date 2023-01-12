@@ -98,7 +98,7 @@ namespace Effekseer.Internal
 		{
 		}
 
-		internal void ApplyToCommandBuffer(CommandBuffer cb, DepthRenderTexture depthRenderTexture, IEffekseerBlitter blitter)
+		internal void ApplyToCommandBuffer(CommandBuffer cb, DepthRenderTexture depthRenderTexture)
 		{
 			if (depthRenderTexture != null)
 			{
@@ -117,13 +117,13 @@ namespace Effekseer.Internal
 
 				if (renderFeature == RenderFeature.PostProcess)
 				{
-					blitter.Blit(cb, BuiltinRenderTextureType.None, depthRenderTexture.renderTexture, grabDepthMat);
+					cb.Blit(null, depthRenderTexture.renderTexture, grabDepthMat);
 				}
 				else if (renderFeature == RenderFeature.URP)
 				{
 					if (canGrabDepth)
 					{
-						blitter.Blit(cb, BuiltinRenderTextureType.None,depthRenderTexture.renderTexture, grabDepthMat);
+						cb.Blit(null, depthRenderTexture.renderTexture, grabDepthMat);
 					}
 					else
 					{
@@ -176,7 +176,7 @@ namespace Effekseer.Internal
 						Viewport.y / colorTargetRenderTexture.height));
 					cb.SetRenderTarget(backgroundRenderTexture.renderTexture);
 					cb.ClearRenderTarget(true, true, new Color(0, 0, 0));
-					blitter.Blit(cb, colorTargetIdentifier, backgroundRenderTexture.renderTexture, m);
+					cb.Blit(colorTargetIdentifier, backgroundRenderTexture.renderTexture, m);
 				}
 				else
 				{
@@ -189,7 +189,7 @@ namespace Effekseer.Internal
 						Viewport.y / colorTargetRenderTexture.height));
 					cb.SetRenderTarget(backgroundRenderTexture.renderTexture);
 					cb.ClearRenderTarget(true, true, new Color(0, 0, 0));
-					blitter.Blit(cb, colorTargetIdentifier, backgroundRenderTexture.renderTexture, m);
+					cb.Blit(colorTargetIdentifier, backgroundRenderTexture.renderTexture, m);
 				}
 			}
 			else if (isRequiredToCopyBackground)

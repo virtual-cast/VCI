@@ -16,8 +16,10 @@ namespace VCI
             Texture2D thumbTexture = default;
             if (meta.thumbnail != -1)
             {
-                var (_, param) = GltfTextureImporter.CreateSrgb(gltfData, meta.thumbnail, Vector2.zero, Vector2.one);
-                thumbTexture = await textureFactory.GetTextureAsync(param, awaitCaller) as Texture2D;
+                if (GltfTextureImporter.TryCreateSrgb(gltfData, meta.thumbnail, Vector2.zero, Vector2.one, out _, out var param))
+                {
+                    thumbTexture = await textureFactory.GetTextureAsync(param, awaitCaller) as Texture2D;
+                }
             }
 
             return new VCIMeta

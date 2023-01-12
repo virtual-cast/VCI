@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace VCI
 {
@@ -8,12 +9,16 @@ namespace VCI
         /// <summary>
         /// システムの VCI バージョン
         /// </summary>
-        public int RuntimeVciVersionNumber { get; } = GetVersionNumber(VCIVersion.VCI_VERSION);
+        public static int RuntimeVciMajorVersion => VCIVersion.MAJOR;
+
+        public static int RuntimeVciMinorVersion => VCIVersion.MINOR;
 
         /// <summary>
         /// VCI ファイルの出力 VCI バージョン
         /// </summary>
-        public int ExportedVciVersionNumber { get; } = GetVersionNumber(VCIVersion.VCI_VERSION);
+        public int FileVciMajorVersion { get; } = VCIVersion.MAJOR;
+
+        public int FileVciMinorVersion { get; } = VCIVersion.MINOR;
 
         /// <summary>
         /// UniVCI v0.30 未満のバージョンでは Attractable フラグは未定義のため true と見做したい。
@@ -30,38 +35,43 @@ namespace VCI
         /// </summary>
         public bool IsAudioClipAttachPointUndefined { get; }
 
-        public VciMigrationFlags(glTF_VCAST_vci_meta meta)
+        /// <summary>
+        /// UniVCI v0.36 未満のバージョンでは AttractableDistance は未定義のため、デフォルト値としたい。
+        /// </summary>
+        public bool IsItemAttractableDistanceUndefined { get; }
+
+        /// <summary>
+        /// UniVCI v0.37 未満のバージョンでは Key は未定義のため、 NodeIndex の値を Key としたい。
+        /// </summary>
+        public bool IsSubItemKeyUndefined { get; }
+
+        public VciMigrationFlags(string exporterVciVersion)
         {
-            if (meta == null) return;
+            if (string.IsNullOrEmpty(exporterVciVersion)) return;
 
-            ExportedVciVersionNumber = GetVersionNumber(meta.exporterVCIVersion);
+            (FileVciMajorVersion, FileVciMinorVersion) = GetVersionValue(exporterVciVersion);
 
-            IsItemAttractableFlagUndefined = ExportedVciVersionNumber < 30;
-            IsPbrBaseColorSrgb = ExportedVciVersionNumber <= 27;
-            IsAudioClipAttachPointUndefined = ExportedVciVersionNumber < 32;
+            IsItemAttractableFlagUndefined = FileVciMajorVersion == 0 && FileVciMinorVersion < 30;
+            IsPbrBaseColorSrgb = FileVciMajorVersion == 0 && FileVciMinorVersion <= 27;
+            IsAudioClipAttachPointUndefined = FileVciMajorVersion == 0 && FileVciMinorVersion < 32;
+            IsItemAttractableDistanceUndefined = FileVciMajorVersion == 0 && FileVciMinorVersion < 36;
+            IsSubItemKeyUndefined = FileVciMajorVersion == 0 && FileVciMinorVersion < 37;
         }
 
-        private static int GetVersionNumber(string exportedVciVersion)
-        {
-            return (int) Math.Round(float.Parse(GetVersionValue(exportedVciVersion), CultureInfo.InvariantCulture) * 100);
-        }
-
-        private static string GetVersionValue(string exportedVciVersion)
+        private static (int major, int minor) GetVersionValue(string exportedVciVersion)
         {
             if (string.IsNullOrEmpty(exportedVciVersion))
             {
                 throw new Exception("exportedVciVersion is empty.");
             }
 
-            System.Text.RegularExpressions.Regex r =
-                new System.Text.RegularExpressions.Regex(
-                    @"UniVCI-(?<version>[+-]?[0-9]+[.]?[0-9]([eE][+-])?[0-9])",
-                    System.Text.RegularExpressions.RegexOptions.IgnoreCase
-                    | System.Text.RegularExpressions.RegexOptions.Singleline);
+            var r = new Regex(
+                @"UniVCI-(?<major>[0-9]+)\.(?<minor>[0-9]+)",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline);
             var match = r.Match(exportedVciVersion);
-            var version = match.Groups["version"].Value;
-            return version;
+            var major = int.Parse(match.Groups["major"].Value);
+            var minor = int.Parse(match.Groups["minor"].Value);
+            return (major, minor);
         }
-
     }
 }

@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Effekseer;
 using UniGLTF;
 using UnityEditor;
 using UnityEngine;
@@ -189,6 +191,14 @@ namespace VCI
                     emitterComponent.effectAsset = effects[effectIndex];
                     emitterComponent.playOnStart = emitter.isPlayOnStart;
                     emitterComponent.isLooping = emitter.isLoop;
+
+                    // 過去バージョンのVCIでは値が存在しないことがある
+                    emitterComponent.EmitterScale = (emitter.emitterScale ?? string.Empty) switch
+                    {
+                        "local" => EffekseerEmitterScale.Local,
+                        "global" => EffekseerEmitterScale.Global,
+                        _ => EffekseerEmitterScale.Local, // 値が存在しない場合や、不正な値が渡されたときのデフォルト挙動はlocal
+                    };
                 }
             }
         }

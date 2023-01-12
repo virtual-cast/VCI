@@ -23,12 +23,12 @@ namespace VCI
             try
             {
                 rootGameObject = GameObjectSelectionService.GetSingleSelectedObject();
-                VCIValidator.ValidateVCIRequirements(rootGameObject);
+                VciValidator.ValidateVciRequirements(rootGameObject);
             }
-            catch (VCIValidatorException e)
+            catch (VciValidatorException e)
             {
-                VCIValidationError.ShowErrorDialog(e);
-                VCIValidationError.SelectObject(e);
+                VciValidatorExceptionUtils.ShowErrorDialog(e);
+                VciValidatorExceptionUtils.SelectObject(e);
                 GUIUtility.ExitGUI();
                 return;
             }

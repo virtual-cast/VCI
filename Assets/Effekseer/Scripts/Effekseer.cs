@@ -254,6 +254,9 @@ namespace Effekseer
 		public static extern int EffekseerGetRestInstancesCount();
 
 		[DllImport(pluginName)]
+		public static extern void EffekseerSendTrigger(int handle, int index);
+
+		[DllImport(pluginName)]
 		public static extern float EffekseerGetDynamicInput(int handle, int index);
 
 		[DllImport(pluginName)]
@@ -389,6 +392,10 @@ namespace Effekseer
 			public int LoopType;
 			public int DivideX;
 			public int DivideY;
+			public float OneSizeX;
+			public float OneSizeY;
+			public float OffsetX;
+			public float OffsetY;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]

@@ -48,7 +48,7 @@ namespace Effekseer.Internal
 
 namespace Effekseer
 {
-	public class EffekseerMaterialAsset : ScriptableObject
+	public partial class EffekseerMaterialAsset : ScriptableObject
 	{
 		[System.Serializable]
 		public enum TextureType
@@ -69,6 +69,7 @@ namespace Effekseer
 			[SerializeField]
 			public string UniformName;
 		}
+
 		[System.Serializable]
 		public class UniformProperty
 		{
@@ -82,6 +83,39 @@ namespace Effekseer
 			public int Count;
 		}
 
+		[System.Serializable]
+		public class GradientProperty
+		{
+			public string Name;
+
+			public string UniformName;
+
+			public ColorMarker[] ColorMarkers;
+			public AlphaMarker[] AlphaMarkers;
+
+			public struct ColorMarker
+			{
+				public float Position;
+				public float ColorR;
+				public float ColorG;
+				public float ColorB;
+				public float Intensity;
+			}
+
+			public struct AlphaMarker
+			{
+				public float Position;
+				public float Alpha;
+			}
+		}
+
+		public enum MaterialRequiredFunctionType : int
+		{
+			Gradient = 0,
+			Noise = 1,
+			Light = 2,
+		}
+
 		public class ImportingAsset
 		{
 			public byte[] Data = new byte[0];
@@ -93,7 +127,10 @@ namespace Effekseer
 			public bool HasRefraction = false;
 			public List<TextureProperty> Textures = new List<TextureProperty>();
 			public List<UniformProperty> Uniforms = new List<UniformProperty>();
+			public List<GradientProperty> FixedGradients = new List<GradientProperty>();
+			public List<GradientProperty> Gradients = new List<GradientProperty>();
 			public int ShadingModel = 0;
+			public MaterialRequiredFunctionType[] MaterialRequiredFunctionTypes = new MaterialRequiredFunctionType[0];
 		}
 
 		[SerializeField]
@@ -110,6 +147,9 @@ namespace Effekseer
 
 		[SerializeField]
 		public UniformProperty[] uniforms = new UniformProperty[0];
+
+		[SerializeField]
+		public GradientProperty[] gradients = new GradientProperty[0];
 
 		[SerializeField]
 		public int CustomData1Count = 0;
@@ -190,6 +230,7 @@ namespace Effekseer
 				asset.materialBuffers = importingAsset.Data;
 				asset.uniforms = importingAsset.Uniforms.ToArray();
 				asset.textures = importingAsset.Textures.ToArray();
+				asset.gradients = importingAsset.Gradients.ToArray();
 				asset.CustomData1Count = importingAsset.CustomData1Count;
 				asset.CustomData2Count = importingAsset.CustomData2Count;
 				asset.HasRefraction = importingAsset.HasRefraction;
@@ -259,6 +300,7 @@ namespace Effekseer
 			baseCode = baseCode.Replace("$F4$", "float4");
 			baseCode = baseCode.Replace("$TIME$", "_Time.y");
 			baseCode = baseCode.Replace("$EFFECTSCALE$", "predefined_uniform.y");
+			baseCode = baseCode.Replace("$LOCALTIME$", "predefined_uniform.w");
 			baseCode = baseCode.Replace("$UV$", "uv");
 
 			int actualTextureCount = Math.Min(importingAsset.UserTextureSlotMax, importingAsset.Textures.Count);
@@ -282,7 +324,7 @@ namespace Effekseer
 					replacedS = "))";
 				}
 
-				if(importingAsset.Textures[i].Type == TextureType.Color)
+				if (importingAsset.Textures[i].Type == TextureType.Color)
 				{
 					replacedP = "ConvertFromSRGBTexture(" + replacedP;
 					replacedS = replacedS + ")";
@@ -331,7 +373,29 @@ namespace Effekseer
 			var mainVSCode = CreateMainShaderCode(importingAsset, 0);
 			var mainPSCode = CreateMainShaderCode(importingAsset, 1);
 
-			var code = shaderTemplate;
+			var code = string.Empty;
+
+			var functions = string.Empty;
+
+			if (importingAsset.MaterialRequiredFunctionTypes.Contains(MaterialRequiredFunctionType.Gradient))
+			{
+				functions += ShaderGenerator.gradientTemplate;
+			}
+			else if (importingAsset.MaterialRequiredFunctionTypes.Contains(MaterialRequiredFunctionType.Noise))
+			{
+				functions += ShaderGenerator.noiseTemplate;
+			}
+			else if (importingAsset.MaterialRequiredFunctionTypes.Contains(MaterialRequiredFunctionType.Light))
+			{
+				functions += lightTemplate;
+			}
+
+			foreach (var gradient in importingAsset.FixedGradients)
+			{
+				functions += ShaderGenerator.GetFixedGradient(gradient.Name, gradient);
+			}
+
+			code += shaderTemplate;
 			code = code.Replace("@", "#");
 
 			string codeProperty = string.Empty;
@@ -349,6 +413,16 @@ namespace Effekseer
 			for (int i = 0; i < importingAsset.Uniforms.Count; i++)
 			{
 				codeUniforms += "float4 " + importingAsset.Uniforms[i].Name + ";" + nl;
+			}
+
+			for (int i = 0; i < importingAsset.Gradients.Count; i++)
+			{
+				var gradient = importingAsset.Gradients[i];
+
+				for (int j = 0; j < 13; j++)
+				{
+					codeUniforms += "float4 " + gradient.UniformName + "_" + j.ToString() + ";" + nl;
+				}
 			}
 
 			// replace for usability
@@ -371,7 +445,7 @@ namespace Effekseer
 				}
 			}
 
-
+			code = code.Replace("%FUNCTIONS%", functions);
 			code = code.Replace("%TEX_PROPERTY%", codeProperty);
 			code = code.Replace("%TEX_VARIABLE%", codeVariable);
 			code = code.Replace("%UNIFORMS%", codeUniforms);
@@ -421,6 +495,18 @@ namespace Effekseer
 			var asset = AssetDatabase.LoadAssetAtPath<Shader>(path);
 			return asset;
 		}
+
+		const string lightTemplate = @"
+float3 GetLightDirection() {
+	return lightDirection.xyz;
+}
+float3 GetLightColor() {
+	return lightColor.xyz;
+}
+float3 GetLightAmbientColor() {
+	return lightAmbientColor.xyz;
+}
+";
 
 		const string shaderTemplate = @"
 
@@ -626,6 +712,7 @@ Cull[_Cull]
 			return min(max((depth.x - depth.y) / distance, 0.0), 1.0);
 		}
 
+		%FUNCTIONS%
 
 		ps_input vert(uint id : SV_VertexID, uint inst : SV_InstanceID)
 		{

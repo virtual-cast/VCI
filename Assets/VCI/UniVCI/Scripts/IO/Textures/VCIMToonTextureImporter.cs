@@ -23,9 +23,9 @@ namespace VCI
                     tagMap = vciMaterial.tagMap,
                 };
 
-                if (VRMMToonTextureImporter.TryGetTextureFromMaterialProperty(data, vrmMaterial, kv.Key, out var texture))
+                if (VRMMToonTextureImporter.TryGetTextureFromMaterialProperty(data, vrmMaterial, kv.Key, out var key, out var desc))
                 {
-                    yield return texture;
+                    yield return (key, desc);
                 }
             }
         }

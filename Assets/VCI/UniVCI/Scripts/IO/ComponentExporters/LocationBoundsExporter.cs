@@ -20,6 +20,7 @@ namespace VCI
 
         private static LocationBoundsJsonObject ExportLocationBoundsComponent(VCILocationBounds locationBounds)
         {
+            // NOTE: Unity 座標系での値になってしまっているので、変換は行わない.
             return new LocationBoundsJsonObject
             {
                 bounds_center = locationBounds.Bounds.center,

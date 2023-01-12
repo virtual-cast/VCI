@@ -32,9 +32,8 @@ namespace VCI
                 var (_, rootNode) = animationRootNodes[animationIdx];
 
                 await animationClipFactory.LoadAnimationClipAsync(key, async () =>
-                {
-                    return AnimationImporterUtil.ConvertAnimationClip(data.GltfData, gltfAnimation, inverter, rootNode);
-                });
+                    await AnimationImporterUtil.ConvertAnimationClipAsync(data.GltfData, gltfAnimation, inverter, awaitCaller, rootNode)
+                );
             }
 
             await awaitCaller.NextFrame();

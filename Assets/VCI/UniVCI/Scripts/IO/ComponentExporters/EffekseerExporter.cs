@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Effekseer;
 using UniGLTF;
 using UnityEngine;
 using VRMShaders;
@@ -45,7 +47,13 @@ namespace VCI
                         {
                             effectIndex = effectIndex,
                             isLoop = emitter.isLooping,
-                            isPlayOnStart = emitter.playOnStart
+                            isPlayOnStart = emitter.playOnStart,
+                            emitterScale = emitter.EmitterScale switch
+                            {
+                                EffekseerEmitterScale.Local => EffekseerEmitterJsonObject.LocalEmitterScale,
+                                EffekseerEmitterScale.Global => EffekseerEmitterJsonObject.GlobalEmitterScale,
+                                _ => EffekseerEmitterJsonObject.LocalEmitterScale // まず通り得ないが、デフォルト挙動はLocal
+                            }
                         });
                     }
 

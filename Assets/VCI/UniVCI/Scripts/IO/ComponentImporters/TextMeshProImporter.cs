@@ -75,8 +75,7 @@ namespace VCI
                 tmp.paragraphSpacing = textJson.paragraphSpacing;
                 tmp.alignment = (TextAlignmentOptions) textJson.alignment;
                 tmp.enableWordWrapping = textJson.enableWordWrapping;
-                // NOTE: overflowModeのインポート時にエラーになる可能性があるので無効にする。
-                // tmp.overflowMode = (TextOverflowModes) vci_text.overflowMode;
+                tmp.overflowMode = (TextOverflowModes) textJson.overflowMode;
                 tmp.enableKerning = textJson.enableKerning;
                 tmp.extraPadding = textJson.extraPadding;
                 tmp.margin = new Vector4(textJson.margin[0], textJson.margin[1], textJson.margin[2],

@@ -13,20 +13,20 @@ namespace VCI
         /// GameObjectが選択されていない/複数選択されている場合はexceptionをthrowする
         /// </summary>
         /// <returns></returns>
-        /// <exception cref="VCIValidatorException"></exception>
+        /// <exception cref="VciValidatorException"></exception>
         public static GameObject GetSingleSelectedObject()
         {
             var selectedGameObjects = Selection.gameObjects;
             if (selectedGameObjects.Length == 0)
             {
-                var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.GameObjectNotSelected}");
-                throw new VCIValidatorException(ValidationErrorType.GameObjectNotSelected, errorText);
+                var errorText = VCIConfig.GetText($"error{(int) VciValidationErrorType.GameObjectNotSelected}");
+                throw new VciValidatorException(VciValidationErrorType.GameObjectNotSelected, errorText);
             }
 
             if (2 <= selectedGameObjects.Length)
             {
-                var errorText = VCIConfig.GetText($"error{(int) ValidationErrorType.MultipleSelection}");
-                throw new VCIValidatorException(ValidationErrorType.MultipleSelection, errorText);
+                var errorText = VCIConfig.GetText($"error{(int) VciValidationErrorType.MultipleSelection}");
+                throw new VciValidatorException(VciValidationErrorType.MultipleSelection, errorText);
             }
 
             return selectedGameObjects[0];

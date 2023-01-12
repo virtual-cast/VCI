@@ -76,7 +76,7 @@ namespace VCI
             var root = vciInstance.Root;
 
             // NOTE: RuntimeGltfInstance Component は prefab には不要.
-            UnityObjectDestoyer.DestroyRuntimeOrEditor(vciInstance.GltfModel);
+            UnityObjectDestroyer.DestroyRuntimeOrEditor(vciInstance.GltfModel);
 
             // NOTE: VCI そのものの Prefab を作成するか、アップデートする.
             if (_prefabPath.IsFileExists)
@@ -92,7 +92,7 @@ namespace VCI
             }
 
             // NOTE: シーン上のインスタンスを削除
-            UnityObjectDestoyer.DestroyRuntimeOrEditor(root);
+            UnityObjectDestroyer.DestroyRuntimeOrEditor(root);
 
             foreach (var x in assetPathList)
             {

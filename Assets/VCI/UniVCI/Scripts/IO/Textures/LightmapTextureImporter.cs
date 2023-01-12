@@ -35,12 +35,13 @@ namespace VCI
             // FIXME: 自前でキャッシュを持つべきではない
             if (!_lightmapTextureCache.ContainsKey(colorTextureGltfIndex))
             {
-                var (key, param) =
-                    GltfTextureImporter.CreateSrgb(_data, colorTextureGltfIndex, Vector2.zero, Vector2.one);
+                if (!GltfTextureImporter.TryCreateSrgb(_data, colorTextureGltfIndex, Vector2.zero, Vector2.one, out _, out var param))
+                {
+                    return null;
+                }
+
                 var colorTexture = await _textureFactory.GetTextureAsync(param, awaitCaller);
-
                 var lightmapTexture = await ConvertLightmapTexture(colorTexture, awaitCaller);
-
                 _lightmapTextureCache.Add(colorTextureGltfIndex, lightmapTexture);
             }
 
@@ -81,7 +82,7 @@ namespace VCI
             await awaitCaller.NextFrame();
 
             RenderTexture.ReleaseTemporary(rt);
-            UnityObjectDestoyer.DestroyRuntimeOrEditor(importerMaterial);
+            UnityObjectDestroyer.DestroyRuntimeOrEditor(importerMaterial);
 
             return dst;
         }

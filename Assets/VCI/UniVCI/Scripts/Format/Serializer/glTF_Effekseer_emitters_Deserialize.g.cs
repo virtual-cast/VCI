@@ -59,6 +59,11 @@ public static EffekseerEmitterJsonObject glTF_Effekseer_emitters_Deserializevci_
             continue;
         }
 
+        if(key=="emitterScale"){
+            value.emitterScale = kv.Value.GetString();
+            continue;
+        }
+
     }
     return value;
 }

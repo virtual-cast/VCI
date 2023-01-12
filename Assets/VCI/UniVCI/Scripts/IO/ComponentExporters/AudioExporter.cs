@@ -91,7 +91,7 @@ namespace VCI
             else
             {
                 var path = UnityPath.FromAsset(clip);
-                if (!path.IsUnderAssetsFolder) return null;
+                if (!path.IsFileExists) return null;
                 if (path.Extension.ToLower() == ".wav")
                 {
                     var bytes = File.ReadAllBytes(path.FullPath);

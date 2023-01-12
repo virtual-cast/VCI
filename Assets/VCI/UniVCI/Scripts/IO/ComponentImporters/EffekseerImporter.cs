@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using UniGLTF;
+using Effekseer;
 using UnityEngine;
 using VRMShaders;
 using ColorSpace = VRMShaders.ColorSpace;
@@ -114,12 +114,20 @@ namespace VCI
                     effectAsset.Scale = effect.scale;
                     effectAsset.textureResources = effekseerTextures.ToArray();
                     effectAsset.modelResources = effekseerModels.ToArray();
-                    effectAsset.soundResources = new Effekseer.Internal.EffekseerSoundResource[0];
+                    effectAsset.soundResources = Array.Empty<Effekseer.Internal.EffekseerSoundResource>();
 
                     var emitterComponent = go.AddComponent<Effekseer.EffekseerEmitter>();
                     emitterComponent.effectAsset = effectAsset;
                     emitterComponent.playOnStart = emitter.isPlayOnStart;
                     emitterComponent.isLooping = emitter.isLoop;
+
+                    // 過去バージョンのVCIでは値が存在しないことがある
+                    emitterComponent.EmitterScale = (emitter.emitterScale ?? "") switch
+                    {
+                        EffekseerEmitterJsonObject.LocalEmitterScale => EffekseerEmitterScale.Local,
+                        EffekseerEmitterJsonObject.GlobalEmitterScale => EffekseerEmitterScale.Global,
+                        _ => EffekseerEmitterScale.Local, // 値が存在しない場合や、不正な値が渡されたときのデフォルト挙動はlocal
+                    };
 
                     emitterComponent.effectAsset.LoadEffect();
                     effekseerEmitterComponents.Add(emitterComponent);
