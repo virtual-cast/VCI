@@ -1,5 +1,4 @@
 ﻿using UnityEditor;
-using UnityEngine;
 
 namespace VCI
 {
@@ -11,6 +10,7 @@ namespace VCI
         private SerializedProperty scalable;
         private SerializedProperty uniform;
         private SerializedProperty attractable;
+        private SerializedProperty attractableDistance;
         private SerializedProperty group;
 
         private void OnEnable()
@@ -19,6 +19,7 @@ namespace VCI
             scalable = serializedObject.FindProperty("Scalable");
             uniform = serializedObject.FindProperty("UniformScaling");
             attractable = serializedObject.FindProperty("Attractable");
+            attractableDistance = serializedObject.FindProperty("AttractableDistance");
             group = serializedObject.FindProperty("GroupId");
         }
 
@@ -56,6 +57,14 @@ namespace VCI
                             EditorGUILayout.PropertyField(uniform);
                         }
                         EditorGUILayout.PropertyField(attractable);
+                        // TODO: クライアントがまだ実装されていないので、一旦設定 UI を塞ぐ。対応されたらコメントアウトを外す
+                        /*
+                        using (new EditorGUI.DisabledGroupScope(!attractable.boolValue))
+                        using (new EditorGUI.IndentLevelScope())
+                        {
+                            attractableDistance.floatValue = EditorGUILayout.Slider("Attractable Distance", attractableDistance.floatValue, 0, 20);
+                        }
+                        */
                     }
                 }
 

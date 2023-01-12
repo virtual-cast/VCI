@@ -1,5 +1,4 @@
-﻿using UniGLTF;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace VCI
 {
@@ -7,10 +6,11 @@ namespace VCI
     {
         public static void Load(VciData vciData, GameObject unityRoot)
         {
-            foreach (var (nodeIdx, locationBoundsExtension) in vciData.LocationBoundsNodes)
+            if (vciData.LocationBounds != null)
             {
                 var locationBounds = unityRoot.AddComponent<VCILocationBounds>();
-                var values = locationBoundsExtension.LocationBounds;
+                var values = vciData.LocationBounds.LocationBounds;
+                // NOTE: Unity 座標系での値になってしまっているので、変換は行わない.
                 locationBounds.Bounds = new Bounds(values.bounds_center, values.bounds_size);
             }
         }

@@ -18,7 +18,8 @@ namespace VCI
 
         public Func<bool, bool> AttachFunc { get; set; }
 
-        public bool IsAttached { get; set; }
+        public bool IsAttached { get; private set; }
+        public string AttachedPlayerId { get; private set; }
 
         public HumanBodyBones[] AttachableHumanBodyBones
         {
@@ -42,6 +43,23 @@ namespace VCI
         {
             get => _offset;
             set => _offset = value;
+        }
+
+        public void AttachTo(string attachedPlayerId)
+        {
+            if (string.IsNullOrEmpty(attachedPlayerId))
+            {
+                throw new ArgumentException("attach player cannot be null.");
+            }
+
+            IsAttached = true;
+            AttachedPlayerId = attachedPlayerId;
+        }
+
+        public void Detach()
+        {
+            IsAttached = false;
+            AttachedPlayerId = null;
         }
 
 # if UNITY_EDITOR

@@ -418,7 +418,7 @@ namespace Effekseer.Internal
 	internal class EffekseerRendererUnity : IEffekseerRenderer
 	{
 		const CameraEvent cameraEvent = CameraEvent.AfterForwardAlpha;
-		private IEffekseerBlitter standardBlitter = new StandardBlitter();
+		private StandardBlitter standardBlitter = new StandardBlitter();
 
 		class MaterialPropCollection
 		{
@@ -673,7 +673,7 @@ namespace Effekseer.Internal
 			{
 				if (!HasBuffer(stride))
 				{
-					if(!rewuireToAllocate)
+					if (!rewuireToAllocate)
 					{
 						return null;
 					}
@@ -850,7 +850,7 @@ namespace Effekseer.Internal
 			{
 				if (this.isDistortionEnabled != EffekseerRendererUtils.IsDistortionEnabled) return false;
 				if (this.isDepthEnabled != EffekseerRendererUtils.IsDepthEnabled) return false;
-				
+
 				if (depthTexture != null)
 				{
 					var targetSize = BackgroundRenderTexture.GetRequiredSize(this.camera, renderTargetProperty);
@@ -1208,7 +1208,7 @@ namespace Effekseer.Internal
 			{
 				if (renderTargetProperty != null)
 				{
-					renderTargetProperty.ApplyToCommandBuffer(path.commandBuffer, path.depthTexture, blitter);
+					renderTargetProperty.ApplyToCommandBuffer(path.commandBuffer, path.depthTexture);
 
 					if (renderTargetProperty.Viewport.width > 0)
 					{
@@ -1289,8 +1289,6 @@ namespace Effekseer.Internal
 			}
 
 			RenderInternal(path.commandBuffer, path.computeBufferFront, path.materiaProps, path.modelBuffers, path.customDataBuffers, path.renderTexture, path.depthTexture);
-
-
 		}
 
 		Texture GetCachedTexture(IntPtr key, BackgroundRenderTexture background, DepthRenderTexture depth, DummyTextureType type)
@@ -1344,7 +1342,6 @@ namespace Effekseer.Internal
 					}
 				}
 			}
-
 		}
 
 		unsafe void RenderSprite(Plugin.UnityRenderParameter parameter, IntPtr infoBuffer, CommandBuffer commandBuffer, ComputeBufferCollection computeBuffer, MaterialPropCollection matPropCol, BackgroundRenderTexture background, DepthRenderTexture depth)
@@ -1360,7 +1357,7 @@ namespace Effekseer.Internal
 			prop.SetFloat("buf_offset", parameter.VertexBufferOffset / parameter.VertexBufferStride);
 
 			Debug.Assert(computeBuffer.HasBuffer(parameter.VertexBufferStride));
-			var vertexBuffer = computeBuffer.Get(parameter.VertexBufferStride,false);
+			var vertexBuffer = computeBuffer.Get(parameter.VertexBufferStride, false);
 			if (vertexBuffer == null)
 			{
 				Debug.LogWarning("Invalid allocation");
@@ -1380,7 +1377,7 @@ namespace Effekseer.Internal
 			if (isAdvanced)
 			{
 				var bufAd = computeBuffer.Get(sizeof(Effekseer.Plugin.AdvancedVertexParameter), false);
-				if(bufAd == null)
+				if (bufAd == null)
 				{
 					Debug.LogWarning("Invalid allocation");
 					return;
@@ -1446,11 +1443,7 @@ namespace Effekseer.Internal
 					}
 				}
 
-				for (int ui = 0; ui < efkMaterial.asset.uniforms.Length; ui++)
-				{
-					var f = ((float*)(((byte*)infoBuffer.ToPointer()) + parameter.UniformBufferOffset));
-					prop.SetVector(efkMaterial.asset.uniforms[ui].Name, new Vector4(f[ui * 4 + 0], f[ui * 4 + 1], f[ui * 4 + 2], f[ui * 4 + 3]));
-				}
+				AssignUniforms(parameter, infoBuffer, prop, efkMaterial);
 
 				if (parameter.IsRefraction > 0 && background != null)
 				{
@@ -1489,6 +1482,30 @@ namespace Effekseer.Internal
 				}
 			}
 
+		}
+
+		private static unsafe void AssignUniforms(Plugin.UnityRenderParameter parameter, IntPtr infoBuffer, MaterialPropertyBlock prop, UnityRendererMaterial efkMaterial)
+		{
+			int uniformOffset = 0;
+			for (int ui = 0; ui < efkMaterial.asset.uniforms.Length; ui++)
+			{
+				var f = ((float*)(((byte*)infoBuffer.ToPointer()) + parameter.UniformBufferOffset));
+				prop.SetVector(efkMaterial.asset.uniforms[ui].Name, new Vector4(f[uniformOffset + 0], f[uniformOffset + 1], f[uniformOffset + 2], f[uniformOffset + 3]));
+				uniformOffset += 4;
+			}
+
+			for (int gi = 0; gi < efkMaterial.asset.gradients.Length; gi++)
+			{
+				var gradient = efkMaterial.asset.gradients[gi];
+
+				var f = ((float*)(((byte*)infoBuffer.ToPointer()) + parameter.UniformBufferOffset));
+
+				for (int j = 0; j < 13; j++)
+				{
+					prop.SetVector(gradient.UniformName + "_" + j.ToString(), new Vector4(f[uniformOffset + 0], f[uniformOffset + 1], f[uniformOffset + 2], f[uniformOffset + 3]));
+					uniformOffset += 4;
+				}
+			}
 		}
 
 		unsafe void RenderModdel(Plugin.UnityRenderParameter parameter, IntPtr infoBuffer, CommandBuffer commandBuffer, MaterialPropCollection matPropCol, ModelBufferCollection modelBufferCol1, CustomDataBufferCollection customDataBuffers, BackgroundRenderTexture background, DepthRenderTexture depth)
@@ -1621,12 +1638,7 @@ namespace Effekseer.Internal
 						}
 					}
 
-					for (int ui = 0; ui < efkMaterial.asset.uniforms.Length; ui++)
-					{
-						var f = ((float*)(((byte*)infoBuffer.ToPointer()) + parameter.UniformBufferOffset));
-						var uniform = new Vector4(f[ui * 4 + 0], f[ui * 4 + 1], f[ui * 4 + 2], f[ui * 4 + 3]);
-						prop.SetVector(efkMaterial.asset.uniforms[ui].Name, uniform);
-					}
+					AssignUniforms(parameter, infoBuffer, prop, efkMaterial);
 
 					// CustomData
 					if (efkMaterial.asset.CustomData1Count > 0)
@@ -1779,11 +1791,17 @@ namespace Effekseer.Internal
 
 		void ApplyAdvancedParameter(in Plugin.UnityRenderParameter parameter, MaterialPropertyBlock prop)
 		{
-			prop.SetVector("fFlipbookParameter", new Vector4(
+			prop.SetVector("flipbookParameter1", new Vector4(
 				parameter.FlipbookParams.Enable,
 				parameter.FlipbookParams.LoopType,
 				parameter.FlipbookParams.DivideX,
 				parameter.FlipbookParams.DivideY));
+
+			prop.SetVector("flipbookParameter2", new Vector4(
+				parameter.FlipbookParams.OneSizeX,
+				parameter.FlipbookParams.OneSizeY,
+				parameter.FlipbookParams.OffsetX,
+				parameter.FlipbookParams.OffsetY));
 
 			prop.SetVector("fUVDistortionParameter", new Vector4(parameter.UVDistortionIntensity, parameter.BlendUVDistortionIntensity, 1.0f, 0.0f));
 			prop.SetVector("fBlendTextureParameter", new Vector4(parameter.TextureBlendType, 0.0f, 0.0f, 0.0f));

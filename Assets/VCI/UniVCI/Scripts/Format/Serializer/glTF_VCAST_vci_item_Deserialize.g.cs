@@ -38,8 +38,18 @@ public static glTF_VCAST_vci_item Deserialize(JsonNode parsed)
             continue;
         }
 
+        if(key=="attractableDistance"){
+            value.attractableDistance = kv.Value.GetSingle();
+            continue;
+        }
+
         if(key=="groupId"){
             value.groupId = kv.Value.GetInt32();
+            continue;
+        }
+
+        if(key=="key"){
+            value.key = kv.Value.GetInt32();
             continue;
         }
 

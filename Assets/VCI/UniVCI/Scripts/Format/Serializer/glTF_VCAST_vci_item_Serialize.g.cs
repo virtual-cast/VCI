@@ -36,8 +36,18 @@ public static void Serialize(JsonFormatter f, glTF_VCAST_vci_item value)
     }
 
     if(true){
+        f.Key("attractableDistance");
+        f.Value(value.attractableDistance);
+    }
+
+    if(true){
         f.Key("groupId");
         f.Value(value.groupId);
+    }
+
+    if(true){
+        f.Key("key");
+        f.Value(value.key);
     }
 
     f.EndMap();

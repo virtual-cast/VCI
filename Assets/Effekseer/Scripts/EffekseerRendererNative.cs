@@ -58,8 +58,8 @@ namespace Effekseer.Internal
 #endif
 			}
 
-			public void Init(bool enableDistortion, bool enableDepth, RenderTargetProperty renderTargetProperty, IEffekseerBlitter blitter
-				, StereoRendererUtil.StereoRenderingTypes stereoRenderingType = StereoRendererUtil.StereoRenderingTypes.None)
+			public void Init(bool enableDistortion, bool enableDepth, RenderTargetProperty renderTargetProperty,
+				IEffekseerBlitter blitter, StereoRendererUtil.StereoRenderingTypes stereoRenderingType = StereoRendererUtil.StereoRenderingTypes.None)
 			{
 				this.isDistortionEnabled = enableDistortion;
 				isDepthEnabled = enableDepth;
@@ -155,7 +155,7 @@ namespace Effekseer.Internal
 				{
 					if (renderTargetProperty != null)
 					{
-						renderTargetProperty.ApplyToCommandBuffer(cmbBuf, this.depthTexture, blitter);
+						renderTargetProperty.ApplyToCommandBuffer(cmbBuf, this.depthTexture);
 
 						if (renderTargetProperty.Viewport.width > 0)
 						{

@@ -15,14 +15,17 @@ namespace VCI
         public VciData Parse()
         {
             var gltfData = new GlbLowLevelParser(_filePath, File.ReadAllBytes(_filePath)).Parse();
+            var extensionMeta = VciBinaryParser.DeserializeMetaExtension(gltfData.GLTF);
 
             return new VciData(
                 gltfData,
-                VciBinaryParser.CheckMigrationFlags(gltfData),
+                VciBinaryParser.CheckMigrationFlags(gltfData, extensionMeta),
+                extensionMeta,
                 VciBinaryParser.DeserializeScriptExtension(gltfData.GLTF),
                 VciBinaryParser.DeserializeAudioExtension(gltfData.GLTF),
                 VciBinaryParser.DeserializeUnityMaterialExtension(gltfData.GLTF),
                 VciBinaryParser.DeserializeLocationLightingExtension(gltfData.GLTF),
+                VciBinaryParser.DeserializeLocationBoundsExtension(gltfData.GLTF),
                 VciBinaryParser.DeserializeSpringBoneExtension(gltfData.GLTF),
                 VciBinaryParser.DeserializeEffekseerExtension(gltfData.GLTF),
                 VciBinaryParser.DeserializeAudioSourcesNodeExtensions(gltfData.GLTF),
@@ -30,7 +33,6 @@ namespace VCI
                 VciBinaryParser.DeserializeAttachableExtensions(gltfData.GLTF),
                 VciBinaryParser.DeserializeLightmapExtensions(gltfData.GLTF),
                 VciBinaryParser.DeserializeReflectionProbeExtensions(gltfData.GLTF),
-                VciBinaryParser.DeserializeLocationBoundsExtensions(gltfData.GLTF),
                 VciBinaryParser.DeserializeCollidersExtensions(gltfData.GLTF),
                 VciBinaryParser.DeserializeJointsExtensions(gltfData.GLTF),
                 VciBinaryParser.DeserializeRigidbodyExtensions(gltfData.GLTF),

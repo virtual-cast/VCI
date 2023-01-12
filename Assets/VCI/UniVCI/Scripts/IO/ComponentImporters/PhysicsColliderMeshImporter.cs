@@ -1,5 +1,6 @@
 ﻿using System;
 using UniGLTF;
+using Unity.Collections;
 using UnityEngine;
 
 namespace VCI
@@ -37,32 +38,39 @@ namespace VCI
                 return loadedMesh;
             }
 
-            // NOTE: VCI の仕様により Z 軸反転する.
-            var positions= _data.GetArrayFromAccessor<Vector3>(positionAccessorIndex);
-            for (var idx = 0; idx < positions.Length; ++idx)
+            var gltfPositions= _data.GetArrayFromAccessor<Vector3>(positionAccessorIndex);
+            var gltfIndicesAccessor = _data.GetIndicesFromAccessorIndex(indicesAccessorIndex);
+
+            using (var positionsBuffer = new NativeArray<Vector3>(gltfPositions.Length, Allocator.Persistent))
+            using (var indicesBuffer = new NativeArray<int>(gltfIndicesAccessor.Count, Allocator.Persistent))
             {
-                positions[idx] = _axisInverter.InvertVector3(positions[idx]);
+                // NOTE: C# の struct の制約により CS1654 が発生するため、その回避
+                var unityPositions = positionsBuffer;
+
+                // NOTE: VCI の仕様により Z 軸反転する.
+                for (var idx = 0; idx < gltfPositions.Length; ++idx)
+                {
+                    unityPositions[idx] = _axisInverter.InvertVector3(gltfPositions[idx]);
+                }
+
+                SetUnityIndices(gltfIndicesAccessor, indicesBuffer);
+
+                return _factory.LoadColliderMesh(id, unityPositions, indicesBuffer);
             }
-
-            var indicesAccessor = _data.GetIndicesFromAccessorIndex(indicesAccessorIndex);
-            var indices = GenerateUnityIndicesArray(indicesAccessor);
-
-            return _factory.LoadColliderMesh(id, positions, indices);
         }
 
         /// <summary>
         /// MeshContext.cs からロジックをコピー.
         /// glTF -> Unity の仕様上、面を反転させながらコピーする.
         /// </summary>
-        private static int[] GenerateUnityIndicesArray(BufferAccessor src)
+        private static void SetUnityIndices(BufferAccessor accessor, NativeArray<int> array)
         {
-            var array = new int[src.Count];
-            switch (src.ComponentType)
+            switch (accessor.ComponentType)
             {
                 case AccessorValueType.UNSIGNED_BYTE:
                     {
-                        var indices = src.Bytes;
-                        for (var i = 0; i < src.Count - 2; i += 3)
+                        var indices = accessor.Bytes;
+                        for (var i = 0; i < accessor.Count - 2; i += 3)
                         {
                             array[i + 0] = indices[i + 2];
                             array[i + 1] = indices[i + 1];
@@ -70,11 +78,10 @@ namespace VCI
                         }
                     }
                     break;
-
                 case AccessorValueType.UNSIGNED_SHORT:
                     {
-                        var indices = src.Bytes.Reinterpret<ushort>(1);
-                        for (var i = 0; i < src.Count - 2; i += 3)
+                        var indices = accessor.Bytes.Reinterpret<ushort>(1);
+                        for (var i = 0; i < accessor.Count - 2; i += 3)
                         {
                             array[i + 0] = indices[i + 2];
                             array[i + 1] = indices[i + 1];
@@ -82,12 +89,11 @@ namespace VCI
                         }
                     }
                     break;
-
                 case AccessorValueType.UNSIGNED_INT:
                     {
                         // NOTE: 値が型の範囲外になる可能性があるが、Unity の仕様上仕方ないのでそのままロードする.
-                        var indices = src.Bytes.Reinterpret<int>(1);
-                        for (var i = 0; i < src.Count - 2; i += 3)
+                        var indices = accessor.Bytes.Reinterpret<int>(1);
+                        for (var i = 0; i < accessor.Count - 2; i += 3)
                         {
                             array[i + 0] = indices[i + 2];
                             array[i + 1] = indices[i + 1];
@@ -98,7 +104,6 @@ namespace VCI
                 default:
                     throw new NotImplementedException();
             }
-            return array;
         }
     }
 }

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace VCI
 {
-    public static class VCIMetaValidator
+    internal static class VciMetaValidator
     {
         private struct ValidationRule
         {
@@ -52,8 +53,10 @@ namespace VCI
             return "";
         }
 
-        public static void Validate(VCIObject vciObject)
+        public static void Validate(GameObject gameObject)
         {
+            var vciObject = gameObject.GetComponent<VCIObject>();
+
             var errorMessages = new[]
             {
                 ValidateField("Version", vciObject.Meta.version),
@@ -68,8 +71,8 @@ namespace VCI
 
             if (errorMessages.Any(m => m != ""))
             {
-                throw new VCIValidatorException(
-                    ValidationErrorType.InvalidMetaData,
+                throw new VciValidatorException(
+                    VciValidationErrorType.InvalidMetaData,
                     vciObject,
                     string.Join(Environment.NewLine, errorMessages.Where(m => m != "").ToArray()));
             }

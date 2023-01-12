@@ -36,7 +36,7 @@ namespace VCI
 
         protected override IMaterialExporter CreateMaterialExporter()
         {
-            return new VRMMaterialExporter();
+            return new BuiltInVciMaterialExporter();
         }
 
         public override void Prepare(GameObject go)
@@ -61,7 +61,7 @@ namespace VCI
                 VCAST_vci_material_unity.materials = new List<VciMaterialJsonObject>();
                 foreach (var material in exporter.Materials)
                 {
-                    VCAST_vci_material_unity.materials.Add(VCIMaterialExporter.CreateFromMaterial(material, TextureExporter));
+                    VCAST_vci_material_unity.materials.Add(BuiltInVciExtensionMaterialPropertyExporter.ExportMaterial(material, TextureExporter));
                 }
 
                 var f = new UniJSON.JsonFormatter();

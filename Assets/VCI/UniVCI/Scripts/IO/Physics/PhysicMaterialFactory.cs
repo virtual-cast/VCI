@@ -21,7 +21,7 @@ namespace VCI
         {
             foreach (var kv in _runtimeGeneratedMaterials)
             {
-                UnityObjectDestoyer.DestroyRuntimeOrEditor(kv.Value);
+                UnityObjectDestroyer.DestroyRuntimeOrEditor(kv.Value);
             }
             _runtimeGeneratedMaterials.Clear();
         }

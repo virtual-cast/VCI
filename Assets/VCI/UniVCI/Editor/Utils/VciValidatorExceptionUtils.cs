@@ -3,15 +3,15 @@ using UnityEditor;
 
 namespace VCI
 {
-    public sealed class VCIValidationError
+    public static class VciValidatorExceptionUtils
     {
-        public static void ShowErrorDialog(VCIValidatorException e)
+        public static void ShowErrorDialog(VciValidatorException e)
         {
             var title = $"Error{(int)e.ErrorType}";
             var text = e.Message;
             text = text.Replace("\\n", Environment.NewLine);
 
-            if (e.ErrorType == ValidationErrorType.InvalidCharacter)
+            if (e.ErrorType == VciValidationErrorType.InvalidCharacter)
             {
                 EditorGUILayout.HelpBox(e.Message, MessageType.Warning);
             }
@@ -22,7 +22,7 @@ namespace VCI
         /// <summary>
         /// Exception に対象となるオブジェクトが設定されている場合は、シーン上で選択をする
         /// </summary>
-        public static void SelectObject(VCIValidatorException e)
+        public static void SelectObject(VciValidatorException e)
         {
             if (e.Object != null)
             {

@@ -55,6 +55,11 @@ public static void glTF_Effekseer_emitters_Serializevci_emitters_ITEM(JsonFormat
         f.Value(value.isLoop);
     }
 
+    if(!string.IsNullOrEmpty(value.emitterScale)){
+        f.Key("emitterScale");
+        f.Value(value.emitterScale);
+    }
+
     f.EndMap();
 }
 

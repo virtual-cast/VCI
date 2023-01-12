@@ -19,13 +19,17 @@ namespace VCI
         public VciData Parse()
         {
             var gltfData = new GlbLowLevelParser(string.Empty, _data).Parse();
+            var extensionMeta = DeserializeMetaExtension(gltfData.GLTF);
 
-            return new VciData(gltfData,
-                CheckMigrationFlags(gltfData),
+            return new VciData(
+                gltfData,
+                CheckMigrationFlags(gltfData, extensionMeta),
+                extensionMeta,
                 DeserializeScriptExtension(gltfData.GLTF),
                 DeserializeAudioExtension(gltfData.GLTF),
                 DeserializeUnityMaterialExtension(gltfData.GLTF),
                 DeserializeLocationLightingExtension(gltfData.GLTF),
+                DeserializeLocationBoundsExtension(gltfData.GLTF),
                 DeserializeSpringBoneExtension(gltfData.GLTF),
                 DeserializeEffekseerExtension(gltfData.GLTF),
                 DeserializeAudioSourcesNodeExtensions(gltfData.GLTF),
@@ -33,7 +37,6 @@ namespace VCI
                 DeserializeAttachableExtensions(gltfData.GLTF),
                 DeserializeLightmapExtensions(gltfData.GLTF),
                 DeserializeReflectionProbeExtensions(gltfData.GLTF),
-                DeserializeLocationBoundsExtensions(gltfData.GLTF),
                 DeserializeCollidersExtensions(gltfData.GLTF),
                 DeserializeJointsExtensions(gltfData.GLTF),
                 DeserializeRigidbodyExtensions(gltfData.GLTF),
@@ -46,29 +49,42 @@ namespace VCI
             );
         }
 
-        public static VciMigrationFlags CheckMigrationFlags(GltfData data)
+        public static VciMigrationFlags CheckMigrationFlags(GltfData data, glTF_VCAST_vci_meta extensionMeta)
         {
-            if (data.GLTF.extensions.TryDeserializeExtensions(glTF_VCAST_vci_meta.ExtensionName,
-                glTF_VCAST_vci_meta_Deserializer.Deserialize, out var extMeta))
+            if (extensionMeta != null)
             {
-                var vciFlags = new VciMigrationFlags(extMeta);
-                // UniGLTF 向けの Migration Flag 設定
+                // NOTE: VCI 側のマイグレーションフラグを作成
+                var vciFlags = new VciMigrationFlags(extensionMeta.exporterVCIVersion);
+
+                // NOTE: UniGLTF のマイグレーションフラグを作成
                 // UniVCI v0.33 未満のバージョンの場合は、PBR の smoothness texture の値が 2 乗されているため、インポート時に手心を加える
-                data.MigrationFlags.IsRoughnessTextureValueSquared = vciFlags.ExportedVciVersionNumber < 33;
+                data.MigrationFlags.IsRoughnessTextureValueSquared = vciFlags.FileVciMajorVersion == 0 && vciFlags.FileVciMinorVersion < 33;
+                // UniVCI v0.38.0 未満のバージョンの場合は、PBR の EmissiveFactor がガンマになっている
+                data.MigrationFlags.IsEmissiveFactorGamma = vciFlags.FileVciMajorVersion == 0 && vciFlags.FileVciMinorVersion < 38;
 
                 return vciFlags;
             }
             return new VciMigrationFlags(null);
         }
 
+        public static glTF_VCAST_vci_meta DeserializeMetaExtension(glTF gltf)
+        {
+            return DeserializeRootExtension(
+                gltf,
+                glTF_VCAST_vci_meta.ExtensionName,
+                glTF_VCAST_vci_meta_Deserializer.Deserialize
+            );
+        }
+
         public static glTF_VCAST_vci_embedded_script DeserializeScriptExtension(glTF gltf)
         {
-            if (gltf?.extensions == null)
-            {
-                return null;
-            }
-            if (!gltf.extensions.TryDeserializeExtensions(glTF_VCAST_vci_embedded_script.ExtensionName,
-                glTF_VCAST_vci_embedded_script_Deserializer.Deserialize, out var extension))
+            var extension = DeserializeRootExtension(
+                gltf,
+                glTF_VCAST_vci_embedded_script.ExtensionName,
+                glTF_VCAST_vci_embedded_script_Deserializer.Deserialize
+            );
+
+            if (extension == null)
             {
                 return null;
             }
@@ -99,12 +115,13 @@ namespace VCI
 
         public static glTF_VCAST_vci_audios DeserializeAudioExtension(glTF gltf)
         {
-            if (gltf?.extensions == null)
-            {
-                return null;
-            }
-            if (!gltf.extensions.TryDeserializeExtensions(glTF_VCAST_vci_audios.ExtensionName,
-                glTF_VCAST_vci_audios_Deserializer.Deserialize, out var audioExt))
+            var audioExt = DeserializeRootExtension(
+                gltf,
+                glTF_VCAST_vci_audios.ExtensionName,
+                glTF_VCAST_vci_audios_Deserializer.Deserialize
+            );
+
+            if (audioExt == null)
             {
                 return null;
             }
@@ -128,67 +145,58 @@ namespace VCI
 
         public static glTF_VCAST_vci_material_unity DeserializeUnityMaterialExtension(glTF gltf)
         {
-            if (gltf.extensions.TryDeserializeExtensions(glTF_VCAST_vci_material_unity.ExtensionName,
-                glTF_VCAST_vci_material_unity_Deserializer.Deserialize,
-                out var extMaterial))
-            {
-                return extMaterial;
-            }
+            var extMaterial = DeserializeRootExtension(
+                gltf,
+                glTF_VCAST_vci_material_unity.ExtensionName,
+                glTF_VCAST_vci_material_unity_Deserializer.Deserialize
+            );
 
-            Debug.LogWarning($"This file has no {nameof(glTF_VCAST_vci_material_unity)} extension.");
-            extMaterial = new glTF_VCAST_vci_material_unity
+            if (extMaterial == null)
             {
-                materials = gltf.materials.Select(x => new VciMaterialJsonObject()).ToList()
-            };
+                Debug.LogWarning($"This file has no {nameof(glTF_VCAST_vci_material_unity)} extension.");
+                extMaterial = new glTF_VCAST_vci_material_unity
+                {
+                    materials = gltf.materials.Select(x => new VciMaterialJsonObject()).ToList()
+                };
+            }
 
             return extMaterial;
         }
 
         public static glTF_VCAST_vci_location_lighting DeserializeLocationLightingExtension(glTF gltf)
         {
-            if (gltf?.extensions == null) return null;
-            if (gltf.extensions.TryDeserializeExtensions(glTF_VCAST_vci_location_lighting.ExtensionName,
-                glTF_VCAST_vci_location_lighting_Deserializer.Deserialize,
-                out var extension))
-            {
-                return extension;
-            }
-            else
-            {
-                return null;
-            }
+            return DeserializeRootExtension(
+                gltf,
+                glTF_VCAST_vci_location_lighting.ExtensionName,
+                glTF_VCAST_vci_location_lighting_Deserializer.Deserialize
+            );
+        }
+
+        public static glTF_VCAST_vci_location_bounds DeserializeLocationBoundsExtension(glTF gltf)
+        {
+            return DeserializeRootExtension(
+                gltf,
+                glTF_VCAST_vci_location_bounds.ExtensionName,
+                glTF_VCAST_vci_location_bounds_Deserializer.Deserialize
+            );
         }
 
         public static glTF_VCAST_vci_spring_bone DeserializeSpringBoneExtension(glTF gltf)
         {
-            if (gltf?.extensions == null) return null;
-            if (gltf.extensions.TryDeserializeExtensions(
+            return DeserializeRootExtension(
+                gltf,
                 glTF_VCAST_vci_spring_bone.ExtensionName,
-                glTF_VCAST_vci_spring_bone_Deserializer.Deserialize,
-                out var extension))
-            {
-                return extension;
-            }
-            else
-            {
-                return null;
-            }
+                glTF_VCAST_vci_spring_bone_Deserializer.Deserialize
+            );
         }
 
         public static glTF_Effekseer DeserializeEffekseerExtension(glTF gltf)
         {
-            if (gltf?.extensions == null) return null;
-            if (gltf.extensions.TryDeserializeExtensions(
+            return DeserializeRootExtension(
+                gltf,
                 glTF_Effekseer.ExtensionName,
-                glTF_Effekseer_Deserializer.Deserialize,
-                out var extension))
-            {
-                return extension;
-            }
-            else
-            {
-                return null;
-            }
+                glTF_Effekseer_Deserializer.Deserialize
+            );
         }
 
         public static List<(int gltfNodeIdx, glTF_VCAST_vci_audio_sources ext)> DeserializeAudioSourcesNodeExtensions(glTF gltf)
@@ -233,15 +241,6 @@ namespace VCI
                 gltf,
                 glTF_VCAST_vci_reflectionProbe.ExtensionName,
                 glTF_VCAST_vci_reflectionProbe_Deserializer.Deserialize
-            );
-        }
-
-        public static List<(int gltfNodeIdx, glTF_VCAST_vci_location_bounds extension)> DeserializeLocationBoundsExtensions(glTF gltf)
-        {
-            return DeserializeNodeExtensions(
-                gltf,
-                glTF_VCAST_vci_location_bounds.ExtensionName,
-                glTF_VCAST_vci_location_bounds_Deserializer.Deserialize
             );
         }
 
@@ -324,6 +323,19 @@ namespace VCI
                 glTF_Effekseer_emitters.ExtensionName,
                 glTF_Effekseer_emitters_Deserializer.Deserialize
             );
+        }
+
+        private static T DeserializeRootExtension<T>(glTF gltf, string extensionName, Func<JsonNode, T> deserializer) where T : class
+        {
+            if (gltf?.extensions == null)
+            {
+                return null;
+            }
+            if (gltf.extensions.TryDeserializeExtensions(extensionName, deserializer, out var extension))
+            {
+                return extension;
+            }
+            return null;
         }
 
         private static List<(int gltfNodeIdx, T extension)> DeserializeNodeExtensions<T>(glTF gltf, string extensionName, Func<JsonNode, T> deserializer)

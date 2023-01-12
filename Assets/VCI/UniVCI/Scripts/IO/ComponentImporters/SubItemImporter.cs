@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using UniGLTF;
 using UnityEngine;
 
 namespace VCI
@@ -18,8 +17,12 @@ namespace VCI
                 item.UniformScaling = subItemExtension.uniformScaling;
                 // NOTE: UniVCI0.30で追加したフラグ。それ以前のVCIではGrabbable=trueならすべてTrueに
                 item.Attractable = subItemExtension.grabbable &&
-                                   (vciData.VciMigrationFlags.IsItemAttractableFlagUndefined || subItemExtension.attractable);
+                    (vciData.VciMigrationFlags.IsItemAttractableFlagUndefined || subItemExtension.attractable);
+                // NOTE: UniVCI 0.36 で追加した項目。それ以前の VCI ではデフォルト値に
+                item.AttractableDistance = vciData.VciMigrationFlags.IsItemAttractableDistanceUndefined ? VCISubItem.DefaultAttractableDistance : subItemExtension.attractableDistance;
                 item.GroupId = subItemExtension.groupId;
+                // NOTE: UniVCI 0.37 で追加した項目。それ以前の VCI では NodeIndex を Key とする。
+                item.Key = vciData.VciMigrationFlags.IsSubItemKeyUndefined ? nodeIdx : subItemExtension.key;
             }
         }
     }

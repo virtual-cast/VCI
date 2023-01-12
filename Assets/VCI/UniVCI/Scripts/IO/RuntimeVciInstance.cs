@@ -73,7 +73,22 @@ namespace VCI
 
         public void Dispose()
         {
-            TransferOwnership((key, obj) => UnityObjectDestoyer.DestroyRuntimeOrEditor(obj));
+            TransferOwnership((key, obj) => UnityObjectDestroyer.DestroyRuntimeOrEditor(obj));
+
+            // Effekseer resources
+            foreach (var emitter in EffekseerEmitterComponents)
+            {
+                // NOTE: material, sound, curve は現時点では利用されていないため、 texture, model のみ破棄する
+                foreach (var texture in emitter.effectAsset.textureResources)
+                {
+                    UnityObjectDestroyer.DestroyRuntimeOrEditor(texture.texture);
+                }
+                foreach (var model in emitter.effectAsset.modelResources)
+                {
+                    UnityObjectDestroyer.DestroyRuntimeOrEditor(model.asset);
+                }
+                UnityObjectDestroyer.DestroyRuntimeOrEditor(emitter.effectAsset);
+            }
 
             if (GltfModel != null)
             {

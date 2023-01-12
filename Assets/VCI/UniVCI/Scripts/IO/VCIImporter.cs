@@ -20,7 +20,6 @@ namespace VCI
 
         private readonly VciData _data;
         private readonly bool _isLocation;
-        private readonly glTF_VCAST_vci_meta _vciMeta;
         private readonly IFontProvider _fontProvider;
         private readonly IVciDefaultLayerProvider _vciDefaultLayerProvider;
         private readonly IVciColliderLayerProvider _vciColliderLayerProvider;
@@ -60,21 +59,20 @@ namespace VCI
             // VCI Specification
             InvertAxis = Axes.Z;
 
-            if (!GLTF.extensions.TryDeserializeExtensions(glTF_VCAST_vci_meta.ExtensionName,
-                glTF_VCAST_vci_meta_Deserializer.Deserialize, out var extMeta))
+            if (_data.Meta == null)
             {
                 throw new Exception($"This file has no {nameof(glTF_VCAST_vci_meta)} extension.");
             }
-            _vciMeta = extMeta;
 
             // Version Check
             if (!ImportableVersionCheck(_data.VciMigrationFlags))
             {
-                throw new Exception("The current UniVCI cannot read this VCI version. " + _data.VciMigrationFlags.ExportedVciVersionNumber);
+                var (major, minor) = (_data.VciMigrationFlags.FileVciMajorVersion, _data.VciMigrationFlags.FileVciMinorVersion);
+                throw new Exception($"The current UniVCI cannot read this VCI version. ({major}.{minor})");
             }
 
-            MaterialDescriptorGenerator = materialDescriptorGenerator ?? new VciMaterialDescriptorGenerator(data.UnityMaterials, _data.VciMigrationFlags.IsPbrBaseColorSrgb);
-            TextureDescriptorGenerator = new VciTextureDescriptorGenerator(data.GltfData, data.UnityMaterials, _vciMeta);
+            MaterialDescriptorGenerator = materialDescriptorGenerator ?? new VciMaterialDescriptorGenerator(_data.UnityMaterials, _data.VciMigrationFlags.IsPbrBaseColorSrgb);
+            TextureDescriptorGenerator = new VciTextureDescriptorGenerator(_data.GltfData, _data.UnityMaterials, _data.Meta);
         }
 
         public override void TransferOwnership(TakeResponsibilityForDestroyObjectFunc take)
@@ -92,10 +90,9 @@ namespace VCI
 
         private bool ImportableVersionCheck(VciMigrationFlags flags)
         {
-            if (flags.ExportedVciVersionNumber > flags.RuntimeVciVersionNumber)
-            {
-                return false;
-            }
+            if (flags.FileVciMajorVersion > VciMigrationFlags.RuntimeVciMajorVersion) return false;
+            if (flags.FileVciMajorVersion == VciMigrationFlags.RuntimeVciMajorVersion &&
+                flags.FileVciMinorVersion > VciMigrationFlags.RuntimeVciMinorVersion) return false;
 
             return true;
         }
@@ -257,7 +254,7 @@ namespace VCI
         {
             awaitCaller = awaitCaller ?? new ImmediateCaller();
 
-            return await MetaImporter.LoadMetaAsync(Data, _vciMeta, TextureFactory, awaitCaller);
+            return await MetaImporter.LoadMetaAsync(Data, _data.Meta, TextureFactory, awaitCaller);
         }
     }
 }

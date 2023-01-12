@@ -8,10 +8,12 @@ namespace VCI
     {
         public GltfData GltfData { get; }
         public VciMigrationFlags VciMigrationFlags { get; }
+        public glTF_VCAST_vci_meta Meta { get; }
         public glTF_VCAST_vci_embedded_script Script { get; }
         public glTF_VCAST_vci_audios Audios { get; }
         public glTF_VCAST_vci_material_unity UnityMaterials { get; }
         public glTF_VCAST_vci_location_lighting LocationLighting { get; }
+        public glTF_VCAST_vci_location_bounds LocationBounds { get; }
         public glTF_VCAST_vci_spring_bone SpringBone { get; }
         public glTF_Effekseer Effekseer { get; }
         public IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_audio_sources ext)> AudioSourcesNodes { get; }
@@ -19,7 +21,6 @@ namespace VCI
         public IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_attachable extension)> AttachableNodes { get; }
         public IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_lightmap extension)> LightmapNodes { get; }
         public IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_reflectionProbe extension)> ReflectionProbeNodes { get; }
-        public IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_location_bounds extension)> LocationBoundsNodes { get; }
         public IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_colliders extension)> CollidersNodes { get; }
         public IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_joints extension)> JointsNodes { get; }
         public IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_rigidbody extension)> RigidbodyNodes { get; }
@@ -33,10 +34,12 @@ namespace VCI
         public VciData(
             GltfData gltfData,
             VciMigrationFlags vciMigrationFlags,
+            glTF_VCAST_vci_meta meta,
             glTF_VCAST_vci_embedded_script script,
             glTF_VCAST_vci_audios audios,
             glTF_VCAST_vci_material_unity unityMaterials,
             glTF_VCAST_vci_location_lighting locationLighting,
+            glTF_VCAST_vci_location_bounds locationBounds,
             glTF_VCAST_vci_spring_bone springBone,
             glTF_Effekseer effekseer,
             IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_audio_sources ext)> audioSourcesNodes,
@@ -44,7 +47,6 @@ namespace VCI
             IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_attachable extension)> attachableNodes,
             IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_lightmap extension)> lightmapNodes,
             IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_reflectionProbe extension)> reflectionProbeNodes,
-            IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_location_bounds extension)> locationBoundsNodes,
             IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_colliders extension)> collidersNodes,
             IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_joints extension)> jointsNodes,
             IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_rigidbody extension)> rigidbodyNodes,
@@ -57,10 +59,12 @@ namespace VCI
         {
             GltfData = gltfData;
             VciMigrationFlags = vciMigrationFlags;
+            Meta = meta;
             Script = script;
             Audios = audios;
             UnityMaterials = unityMaterials;
             LocationLighting = locationLighting;
+            LocationBounds = locationBounds;
             SpringBone = springBone;
             Effekseer = effekseer;
             AudioSourcesNodes = audioSourcesNodes;
@@ -68,7 +72,6 @@ namespace VCI
             AttachableNodes = attachableNodes;
             LightmapNodes = lightmapNodes;
             ReflectionProbeNodes = reflectionProbeNodes;
-            LocationBoundsNodes = locationBoundsNodes;
             CollidersNodes = collidersNodes;
             JointsNodes = jointsNodes;
             RigidbodyNodes = rigidbodyNodes;

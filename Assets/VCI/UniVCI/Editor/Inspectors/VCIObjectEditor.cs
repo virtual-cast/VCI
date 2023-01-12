@@ -129,13 +129,13 @@ namespace VCI
                 try
                 {
                     var rootGameObject = GameObjectSelectionService.GetSingleSelectedObject();
-                    VCIValidator.ValidateVCIRequirements(rootGameObject);
+                    VciValidator.ValidateVciRequirements(rootGameObject);
                     EditorUtility.DisplayDialog("Result", VCIConfig.GetText("no_error"), "OK");
                 }
-                catch (VCIValidatorException e)
+                catch (VciValidatorException e)
                 {
-                    VCIValidationError.ShowErrorDialog(e);
-                    VCIValidationError.SelectObject(e);
+                    VciValidatorExceptionUtils.ShowErrorDialog(e);
+                    VciValidatorExceptionUtils.SelectObject(e);
                     GUIUtility.ExitGUI();
                 }
             }

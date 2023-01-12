@@ -24,7 +24,9 @@ namespace VCI
                 scalable = item.Scalable,
                 uniformScaling = item.UniformScaling,
                 attractable = item.Attractable,
+                attractableDistance = item.AttractableDistance,
                 groupId = item.GroupId,
+                key = item.Key,
             };
         }
     }

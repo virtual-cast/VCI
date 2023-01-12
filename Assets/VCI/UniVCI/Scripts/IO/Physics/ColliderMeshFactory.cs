@@ -22,7 +22,7 @@ namespace VCI
         {
             foreach (var kv in _runtimeGeneratedMeshes)
             {
-                UnityObjectDestoyer.DestroyRuntimeOrEditor(kv.Value);
+                UnityObjectDestroyer.DestroyRuntimeOrEditor(kv.Value);
             }
             _runtimeGeneratedMeshes.Clear();
         }
@@ -36,7 +36,7 @@ namespace VCI
             }
         }
 
-        public Mesh LoadColliderMesh(ColliderMeshIdentifier id, NativeArray<Vector3> positions, int[] indices)
+        public Mesh LoadColliderMesh(ColliderMeshIdentifier id, NativeArray<Vector3> positions, NativeArray<int> indices)
         {
             if (TryGetLoadedColliderMesh(id, out var loadedMesh))
             {
@@ -52,7 +52,7 @@ namespace VCI
                 mesh.indexFormat = IndexFormat.UInt32;
             }
             mesh.SetVertices(positions);
-            mesh.SetTriangles(indices, 0);
+            mesh.SetIndices(indices, MeshTopology.Triangles, 0);
             mesh.RecalculateBounds();
             mesh.RecalculateNormals();
 

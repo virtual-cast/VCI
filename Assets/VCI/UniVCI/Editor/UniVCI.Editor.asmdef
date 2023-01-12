@@ -1,5 +1,6 @@
 {
     "name": "UniVCI.Editor",
+    "rootNamespace": "",
     "references": [
         "GUID:d509503b08aff8748bb271bf805c1551",
         "GUID:6055be8ebefd69e48b49212b09b47b2f",

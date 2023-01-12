@@ -29,7 +29,7 @@ namespace VCI
 
         private static void ImportVci(UnityPath path)
         {
-            if (!path.IsUnderAssetsFolder)
+            if (!path.IsUnderWritableFolder)
             {
                 throw new Exception();
             }

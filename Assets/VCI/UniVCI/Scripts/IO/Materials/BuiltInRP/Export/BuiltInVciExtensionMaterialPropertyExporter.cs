@@ -1,137 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using UniGLTF;
 using UniGLTF.ShaderPropExporter;
 using UnityEngine;
-using VCI;
 using VRMShaders;
 using ColorSpace = VRMShaders.ColorSpace;
 
-namespace VRM
+namespace VCI
 {
-    public sealed class VCIMaterialExporter : MaterialExporter
+    /// <summary>
+    /// VCI 拡張に書き込むマテリアル情報のエクスポート。
+    /// 現状 MToon のみを対象とする。
+    /// </summary>
+    public static class BuiltInVciExtensionMaterialPropertyExporter
     {
-        public static string VrmMaterialName(string shaderName)
-        {
-            switch (shaderName)
-            {
-                case "VRM/UnlitTexture":
-                case "VRM/UnlitTransparent":
-                case "VRM/UnlitCutout":
-                case "VRM/UnlitTransparentZWrite":
-                    return "KHR_materials_unlit";
-
-                case "VRM/MToon":
-                    return "MToon";
-
-                default:
-                    return null;
-            }
-        }
-
-        protected override glTFMaterial CreateMaterial(Material m)
-        {
-            switch (m.shader.name)
-            {
-                case "VRM/UnlitTexture":
-                    return Export_VRMUnlitTexture(m);
-
-                case "VRM/UnlitTransparent":
-                    return Export_VRMUnlitTransparent(m);
-
-                case "VRM/UnlitCutout":
-                    return Export_VRMUnlitCutout(m);
-
-                case "VRM/UnlitTransparentZWrite":
-                    return Export_VRMUnlitTransparentZWrite(m);
-
-                case "VRM/MToon":
-                    return Export_VRMMToon(m);
-
-                default:
-                    return base.CreateMaterial(m);
-            }
-        }
-
-        static glTFMaterial Export_VRMUnlitTexture(Material m)
-        {
-            var material = glTF_KHR_materials_unlit.CreateDefault();
-            material.alphaMode = "OPAQUE";
-            return material;
-        }
-
-        static glTFMaterial Export_VRMUnlitTransparent(Material m)
-        {
-            var material = glTF_KHR_materials_unlit.CreateDefault();
-            material.alphaMode = "BLEND";
-            return material;
-        }
-
-        static glTFMaterial Export_VRMUnlitCutout(Material m)
-        {
-            var material = glTF_KHR_materials_unlit.CreateDefault();
-            material.alphaMode = "MASK";
-            return material;
-        }
-
-        static glTFMaterial Export_VRMUnlitTransparentZWrite(Material m)
-        {
-            var material = glTF_KHR_materials_unlit.CreateDefault();
-            material.alphaMode = "BLEND";
-            return material;
-        }
-
-        static glTFMaterial Export_VRMMToon(Material m)
-        {
-            var material = glTF_KHR_materials_unlit.CreateDefault();
-
-            switch (m.GetTag("RenderType", true))
-            {
-                case "Transparent":
-                    material.alphaMode = "BLEND";
-                    break;
-
-                case "TransparentCutout":
-                    material.alphaMode = "MASK";
-                    material.alphaCutoff = m.GetFloat("_Cutoff");
-                    break;
-
-                default:
-                    material.alphaMode = "OPAQUE";
-                    break;
-            }
-
-            switch ((int)m.GetFloat("_CullMode"))
-            {
-                case 0:
-                    material.doubleSided = true;
-                    break;
-
-                case 1:
-                    Debug.LogWarning("ignore cull front");
-                    break;
-
-                case 2:
-                    // cull back
-                    break;
-
-                default:
-                    throw new NotImplementedException();
-            }
-
-            return material;
-        }
-
-        #region CreateFromMaterial
-
-        static readonly string[] TAGS = new string[]
+        private static readonly string[] TAGS = new string[]
         {
             "RenderType",
             // "Queue",
         };
 
-        public static VciMaterialJsonObject CreateFromMaterial(Material m, ITextureExporter textureExporter)
+        public static VciMaterialJsonObject ExportMaterial(Material m, ITextureExporter textureExporter)
         {
             var material = new VciMaterialJsonObject
             {
@@ -232,7 +120,5 @@ namespace VRM
 
             return material;
         }
-
-        #endregion
     }
 }
