@@ -1,9 +1,9 @@
 # VCI: Virtual Cast Interactive
 ## 概要 (About)
 
-これはバーチャルキャスト用アイテム「VCI」の作成環境の配布用リポジトリです。配布パッケージをUnityEditorにインストールすることでVCIを作成することができます。
+これはバーチャルキャスト用アイテム「VCI」の作成環境を配布するリポジトリです。配布パッケージをUnityEditorにインストールすることでVCIを作成することができます。
 
-This is a distribution repository for an environment for creating VCI, interactive items for VirtualCast. You can create a VCI by installing the distribution package into UnityEditor.
+This is the official VirtualCast VCI repository, providing an environment to create VCIs (interactive items for VirtualCast). You can create a VCI by installing the distributed package into UnityEditor.
 
 ## ダウンロード・インストール (Download/Install)
 
