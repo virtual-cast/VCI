@@ -1,29 +1,37 @@
-# VCI
+# VCI: Virtual Cast Interactive
+## 概要 (About)
 
-これはVCI作成用のプロジェクトです。
-UnityのEditorから `VCI` をエクスポートすることができます。
+これはバーチャルキャスト用アイテム「VCI」の作成環境の配布用リポジトリです。配布パッケージをUnityEditorにインストールすることでVCIを作成することができます。
 
-* Unity-2022.1.24f1
-* .Net-4.5
+This is a distribution repository for an environment for creating VCI, interactive items for VirtualCast. You can create a VCI by installing the distribution package into UnityEditor.
 
-をサポートしています。
+## ダウンロード・インストール (Download/Install)
 
-このライブラリはアルファバージョンで機能の変更があります。
-製品に組み込まないでください。Runtimeのエクスポートは未確認です。
+__[リリースページ](https://github.com/virtual-cast/VCI/releases)__ を参照してください。
 
-## License
+See __[Releases](https://github.com/virtual-cast/VCI/releases)__.
 
-[MIT License](./LICENSE.txt)
+## お問い合わせ先 (Inquiries)
 
-## Download
+- [公式discordサーバー (Official discord server)](https://discord.gg/jtsXVVA)
+- [お問い合わせフォーム (Inquiry form)](https://virtualcast.jp/contact/)
 
-* https://github.com/virtual-cast/VCI/releases
+## ライセンス (License)
 
-## 依存ライブラリ
+- [MIT License](./LICENSE.txt)
 
-* UniVRM開発版の一部(UniGLTF, MToon)を含んでいます。
-* Effekseerライブラリ https://github.com/effekseer/Effekseer
+サブディレクトリにLICENSE.txtが配置されている場合はそのライセンスが優先されます。
 
-## お問い合わせ先
-- お問い合わせフォーム https://virtualcast.jp/contact/
-- 公式 Discord コミュニティ https://discord.gg/jtsXVVA
+If LICENSE.txt is located in a subdirectory, that license takes precedence.
+
+## 依存ライブラリ (Dependencies)
+
+- [UniVRM](https://github.com/vrm-c/UniVRM)
+- [Effekseer](https://github.com/effekseer/EffekseerForUnity)
+- [NAudio](https://github.com/naudio/NAudio)
+
+## 注意事項 (Notes)
+
+このプロジェクトおよびパッケージはEdit Modeでの利用を想定して開発されています。Play Modeでの動作は保証されません。
+
+This project and package have been developed for use in Edit Mode, and are not guaranteed to work in Play Mode.
