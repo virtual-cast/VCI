@@ -18,7 +18,7 @@ MonoBehaviour:
     _packageNamespace: univci
   _packageVersion:
     _major: 0
-    _minor: 33
+    _minor: 41
     _patch: 0
   _displayName: VCI
   _description: VCI Exporter

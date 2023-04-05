@@ -54,6 +54,21 @@ public static AudioSourceJsonObject glTF_VCAST_vci_audio_sources_Deserializevci_
             continue;
         }
 
+        if(key=="pitch"){
+            value.pitch = kv.Value.GetSingle();
+            continue;
+        }
+
+        if(key=="minDistance"){
+            value.minDistance = kv.Value.GetSingle();
+            continue;
+        }
+
+        if(key=="maxDistance"){
+            value.maxDistance = kv.Value.GetSingle();
+            continue;
+        }
+
     }
     return value;
 }

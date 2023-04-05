@@ -249,7 +249,10 @@ namespace VCI
                     new AudioSourceJsonObject()
                     {
                         audio = 1,
-                        spatialBlend = 0.5f
+                        spatialBlend = 0.5f,
+                        pitch = 1.2f,
+                        minDistance = 2.12f,
+                        maxDistance = 3.95f
                     }
                 }
             };
@@ -266,6 +269,9 @@ namespace VCI
                 Assert.AreEqual(1, dst.audioSources.Count());
                 Assert.AreEqual(1, dst.audioSources[0].audio);
                 Assert.AreEqual(0.5f, dst.audioSources[0].spatialBlend);
+                Assert.AreEqual(1.2f, dst.audioSources[0].pitch);
+                Assert.AreEqual(2.12f, dst.audioSources[0].minDistance);
+                Assert.AreEqual(3.95f, dst.audioSources[0].maxDistance);
             }
             else
             {

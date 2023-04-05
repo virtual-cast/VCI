@@ -16,5 +16,17 @@
 #endif
             }
         }
+
+        public static bool IsExperimentalFeatureEnabled
+        {
+            get
+            {
+#if VCI_UNSUPPORTED_EXPERIMENTAL_FEATURE
+                return true;
+#else
+                return false;
+#endif
+            }
+        }
     }
 }

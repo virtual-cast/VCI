@@ -21,6 +21,9 @@ MonoBehaviour:
     value: Select a GameObject with VCIObject attached.
   - key: error103
     value: VCIObject needs at least one child GameObject.
+  - key: error1101
+    value: 'Invalid AudioSource 3DSetting (Volume RollOff). Only LogarithmicRollOff
+      is supported. \nGameObject name: {0}'
   - key: error200
     value: The first script must be named \"main\".
   - key: error201

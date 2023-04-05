@@ -50,6 +50,21 @@ public static void glTF_VCAST_vci_audio_sources_Serializevci_audioSources_ITEM(J
         f.Value(value.spatialBlend);
     }
 
+    if(true){
+        f.Key("pitch");
+        f.Value(value.pitch);
+    }
+
+    if(true){
+        f.Key("minDistance");
+        f.Value(value.minDistance);
+    }
+
+    if(true){
+        f.Key("maxDistance");
+        f.Value(value.maxDistance);
+    }
+
     f.EndMap();
 }
 

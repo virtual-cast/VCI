@@ -9,10 +9,10 @@ namespace VCI
         public const string VCI_VERSION = "UniVCI-" + VERSION;
 
         public const int MAJOR = 0;
-        public const int MINOR = 39;
-        public const int PATCH = 1;
+        public const int MINOR = 41;
+        public const int PATCH = 0;
 
-        public const string VERSION = "0.39";
-        public const string PATCH_NUMBER = "1";
+        public const string VERSION = "0.41";
+        public const string PATCH_NUMBER = "0";
     }
 }

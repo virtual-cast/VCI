@@ -37,7 +37,7 @@ namespace VCI
 
             migratedMatDesc = new MaterialDescriptor(
                 matDesc.Name,
-                matDesc.ShaderName,
+                matDesc.Shader,
                 matDesc.RenderQueue,
                 matDesc.TextureSlots,
                 matDesc.FloatValues,

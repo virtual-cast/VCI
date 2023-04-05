@@ -53,5 +53,8 @@
 
         // Collider
         NonConvexMeshColliderIsUnderRigidbody = 1001,
+
+        // Audio
+        RollOffModeNotSupported = 1101,
     }
 }

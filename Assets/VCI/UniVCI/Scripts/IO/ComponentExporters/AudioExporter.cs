@@ -132,10 +132,18 @@ namespace VCI
 
         private static AudioSourceJsonObject ExportAudioSource(AudioSource audioSource, glTF_VCAST_vci_audios audios)
         {
+            if (audioSource.rolloffMode != AudioRolloffMode.Logarithmic)
+            {
+                throw new Exception("Only Logarithmic Volume RollOff is supported. " + audioSource.name);
+            }
+
             var result = new AudioSourceJsonObject
             {
                 audio = audios.audios.FindIndex(x => x.name == audioSource.clip.name),
-                spatialBlend = audioSource.spatialBlend
+                spatialBlend = audioSource.spatialBlend,
+                minDistance = audioSource.minDistance,
+                maxDistance = audioSource.maxDistance,
+                pitch = audioSource.pitch
             };
 
             return result;

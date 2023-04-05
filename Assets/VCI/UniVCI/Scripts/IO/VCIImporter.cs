@@ -71,7 +71,7 @@ namespace VCI
                 throw new Exception($"The current UniVCI cannot read this VCI version. ({major}.{minor})");
             }
 
-            MaterialDescriptorGenerator = materialDescriptorGenerator ?? new VciMaterialDescriptorGenerator(_data.UnityMaterials, _data.VciMigrationFlags.IsPbrBaseColorSrgb);
+            MaterialDescriptorGenerator = materialDescriptorGenerator ?? new BuiltInVciMaterialDescriptorGenerator(_data.UnityMaterials, _data.VciMigrationFlags.IsPbrBaseColorSrgb);
             TextureDescriptorGenerator = new VciTextureDescriptorGenerator(_data.GltfData, _data.UnityMaterials, _data.Meta);
         }
 
