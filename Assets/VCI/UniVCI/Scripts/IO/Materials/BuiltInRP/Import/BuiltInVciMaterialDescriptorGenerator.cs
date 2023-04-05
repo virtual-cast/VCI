@@ -5,16 +5,15 @@ using UnityEngine;
 using UniGLTF;
 using VRM;
 using VRMShaders;
-using ColorSpace = VRMShaders.ColorSpace;
 
 namespace VCI
 {
-    public sealed class VciMaterialDescriptorGenerator : IMaterialDescriptorGenerator
+    public sealed class BuiltInVciMaterialDescriptorGenerator : IMaterialDescriptorGenerator
     {
-        private readonly glTF_VRM_extensions _temporaryConvertedVrmExt = new glTF_VRM_extensions();
+        private readonly glTF_VRM_extensions _temporaryConvertedVrmExt = new();
         private readonly bool _migrateSrgbColor;
 
-        public VciMaterialDescriptorGenerator(glTF_VCAST_vci_material_unity vciMaterials, bool migrateSrgbColor)
+        public BuiltInVciMaterialDescriptorGenerator(glTF_VCAST_vci_material_unity vciMaterials, bool migrateSrgbColor)
         {
             _temporaryConvertedVrmExt.materialProperties = vciMaterials.materials
                 .Select(x => new glTF_VRM_Material
@@ -35,19 +34,19 @@ namespace VCI
         public MaterialDescriptor Get(GltfData data, int i)
         {
             // mtoon
-            if (VRMMToonMaterialImporter.TryCreateParam(data, _temporaryConvertedVrmExt, i, out MaterialDescriptor matDesc))
+            if (BuiltInVrmMToonMaterialImporter.TryCreateParam(data, _temporaryConvertedVrmExt, i, out var matDesc))
             {
                 return matDesc;
             }
 
             // unlit
-            if (VciUnlitMaterialImporter.TryCreateParam(data, i, out matDesc, _migrateSrgbColor))
+            if (BuiltInVciUnlitMaterialImporter.TryCreateParam(data, i, out matDesc, _migrateSrgbColor))
             {
                 return matDesc;
             }
 
             // pbr
-            if (VciPbrMaterialImporter.TryCreateParam(data, i, out matDesc, _migrateSrgbColor))
+            if (BuiltInVciPbrMaterialImporter.TryCreateParam(data, i, out matDesc, _migrateSrgbColor))
             {
                 return matDesc;
             }
@@ -58,14 +57,19 @@ namespace VCI
                 Debug.LogWarning($"material: {i} out of range. fallback");
             }
             return new MaterialDescriptor(
-                GltfMaterialDescriptorGenerator.GetMaterialName(i, null),
-                GltfPbrMaterialImporter.ShaderName,
+                GltfMaterialImportUtils.ImportMaterialName(i, null),
+                BuiltInGltfPbrMaterialImporter.Shader,
                 null,
                 new Dictionary<string, TextureDescriptor>(),
                 new Dictionary<string, float>(),
                 new Dictionary<string, Color>(),
                 new Dictionary<string, Vector4>(),
                 new Action<Material>[]{});
+        }
+
+        public MaterialDescriptor GetGltfDefault()
+        {
+            return BuiltInGltfDefaultMaterialImporter.CreateParam();
         }
     }
 }

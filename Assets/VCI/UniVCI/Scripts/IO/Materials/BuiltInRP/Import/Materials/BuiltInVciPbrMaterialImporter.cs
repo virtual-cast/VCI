@@ -1,15 +1,14 @@
-﻿using System.Linq;
-using UniGLTF;
+﻿using UniGLTF;
 using VRMShaders;
 
 namespace VCI
 {
-    public static class VciPbrMaterialImporter
+    public static class BuiltInVciPbrMaterialImporter
     {
         public static bool TryCreateParam(GltfData data, int i, out MaterialDescriptor matDesc, bool migrateSrgbColor)
         {
             // NOTE: GLTF の PBR 定義に準じる.
-            if (!GltfPbrMaterialImporter.TryCreateParam(data, i, out matDesc))
+            if (!BuiltInGltfPbrMaterialImporter.TryCreateParam(data, i, out matDesc))
             {
                 return false;
             }

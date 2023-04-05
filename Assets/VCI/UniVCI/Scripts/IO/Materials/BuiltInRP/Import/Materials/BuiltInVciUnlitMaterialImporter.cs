@@ -3,12 +3,12 @@ using VRMShaders;
 
 namespace VCI
 {
-    public static class VciUnlitMaterialImporter
+    public static class BuiltInVciUnlitMaterialImporter
     {
         public static bool TryCreateParam(GltfData data, int i, out MaterialDescriptor matDesc, bool migrateSrgbColor)
         {
             // NOTE: GLTF の KHR_materials_unlit 定義に準じる.
-            if (!GltfUnlitMaterialImporter.TryCreateParam(data, i, out matDesc))
+            if (!BuiltInGltfUnlitMaterialImporter.TryCreateParam(data, i, out matDesc))
             {
                 return false;
             }

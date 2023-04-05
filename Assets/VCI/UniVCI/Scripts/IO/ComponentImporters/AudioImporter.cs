@@ -67,6 +67,9 @@ namespace VCI
                     audioSource.playOnAwake = false;
                     audioSource.loop = false;
                     audioSource.spatialBlend = 0;
+                    audioSource.pitch = 1.0f;
+                    audioSource.minDistance = 1f;
+                    audioSource.maxDistance = 500f;
                     audioSource.dopplerLevel = 0;
                 }
             }
@@ -88,6 +91,9 @@ namespace VCI
                             audioSource.playOnAwake = false;
                             audioSource.loop = false;
                             audioSource.spatialBlend = source.spatialBlend;
+                            audioSource.pitch = source.pitch;
+                            audioSource.minDistance = source.minDistance;
+                            audioSource.maxDistance = source.maxDistance;
                             audioSource.dopplerLevel = 0;
                         }
                         else

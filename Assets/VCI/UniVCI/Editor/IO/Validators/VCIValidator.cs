@@ -14,6 +14,7 @@ namespace VCI
             VciPhysicsValidator.Validate(gameObject);
             VciRendererValidator.Validate(gameObject);
             VciAnimationValidator.Validate(gameObject);
+            VciAudioValidator.Validate(gameObject);
             VciSpringBoneValidator.Validate(gameObject);
             VciEffekseerValidator.Validate(gameObject);
 
