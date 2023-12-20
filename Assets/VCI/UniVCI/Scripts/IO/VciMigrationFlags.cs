@@ -1,6 +1,4 @@
-﻿using System;
-using System.Globalization;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace VCI
 {
@@ -62,7 +60,7 @@ namespace VCI
         {
             if (string.IsNullOrEmpty(exportedVciVersion))
             {
-                throw new Exception("exportedVciVersion is empty.");
+                throw new VciMigrationException("exportedVciVersion is empty.");
             }
 
             var r = new Regex(

@@ -38,7 +38,7 @@ namespace VCI
             if (prop == null)
             {
                 // ありえない
-                throw new Exception();
+                throw new MaterialPropertyExporterException();
             }
             else
             {

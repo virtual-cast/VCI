@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UniGLTF;
@@ -134,7 +133,7 @@ namespace VCI
         {
             if (audioSource.rolloffMode != AudioRolloffMode.Logarithmic)
             {
-                throw new Exception("Only Logarithmic Volume RollOff is supported. " + audioSource.name);
+                throw new AudioExporterException("Only Logarithmic Volume RollOff is supported. " + audioSource.name);
             }
 
             var result = new AudioSourceJsonObject

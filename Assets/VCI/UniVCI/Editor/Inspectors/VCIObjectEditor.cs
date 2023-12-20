@@ -145,9 +145,7 @@ namespace VCI
             // Export Button
             if (GUILayout.Button(VCIConfig.GetText("export_button"), GUILayout.MinHeight(32)))
             {
-#if UNITY_EDITOR_WIN
                 VCIObjectExporterMenu.ExportObject();
-#endif
             }
 
             if (_target.transform.childCount == 0)

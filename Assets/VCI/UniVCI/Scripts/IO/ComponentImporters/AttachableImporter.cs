@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using UniGLTF;
 using UnityEngine;
 
 namespace VCI
@@ -23,7 +21,7 @@ namespace VCI
                         return bone;
                     }
 
-                    throw new Exception("unknown AttachableHumanBodyBones: " + x);
+                    throw new AttachableImporterException("unknown AttachableHumanBodyBones: " + x);
                 }).ToArray();
 
                 attachable.AttachableDistance = extension.attachableDistance;

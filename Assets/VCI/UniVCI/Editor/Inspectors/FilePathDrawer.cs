@@ -10,7 +10,7 @@ namespace VCI
     public sealed class FilePathDrawer : PropertyDrawer
     {
         private string EmbeddedScriptWorkspacePath =>
-            Path.GetFullPath(System.Environment.GetEnvironmentVariable("USERPROFILE") + @"\AppData\LocalLow\infiniteloop Co,Ltd\VirtualCast\EmbeddedScriptWorkspace");
+            Path.GetFullPath(System.Environment.GetEnvironmentVariable("USERPROFILE") + @"\AppData\LocalLow\VirtualCast\VirtualCast\EmbeddedScriptWorkspace");
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {

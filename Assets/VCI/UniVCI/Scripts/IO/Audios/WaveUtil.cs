@@ -12,6 +12,7 @@ namespace VCI
             public Int32 FileSize; // ファイルサイズ-8
             public string WaveHeader; // "WAVE"
             public string FormatChunk; // "fmt "
+            public long FormatChunkOffset; // fmtチャンクまでのオフセット
             public Int32 FormatChunkSize; // fmtチャンクのバイト数
             public Int16 FormatID; // フォーマット
             public Int16 Channel; // チャンネル数
@@ -20,6 +21,7 @@ namespace VCI
             public Int16 BlockSize; // ブロックサイズ
             public Int16 BitPerSample; // 量子化ビット数
             public string DataChunk; // "data"
+            public long DataChunkOffset; // dataチャンクまでのオフセット
             public Int32 DataChunkSize; // 波形データのバイト数
             public Int32 PlayTimeMsec;
 
@@ -48,6 +50,7 @@ namespace VCI
                     if (chunk.ToLower().CompareTo("fmt ") == 0)
                     {
                         waveHeader.FormatChunk = chunk;
+                        waveHeader.FormatChunkOffset = br.BaseStream.Position - 4;
                         waveHeader.FormatChunkSize = BitConverter.ToInt32(br.ReadBytes(4), 0);
                         waveHeader.FormatID = BitConverter.ToInt16(br.ReadBytes(2), 0);
                         waveHeader.Channel = BitConverter.ToInt16(br.ReadBytes(2), 0);
@@ -62,6 +65,7 @@ namespace VCI
                     else if (chunk.ToLower().CompareTo("data") == 0)
                     {
                         waveHeader.DataChunk = chunk;
+                        waveHeader.DataChunkOffset = br.BaseStream.Position - 4;
                         waveHeader.DataChunkSize = BitConverter.ToInt32(br.ReadBytes(4), 0);
                         waveHeader.PlayTimeMsec =
                             (int)((double)waveHeader.DataChunkSize / (double)bytesPerSec * 1000);

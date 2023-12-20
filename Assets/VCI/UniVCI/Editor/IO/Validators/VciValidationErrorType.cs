@@ -43,6 +43,7 @@
         // Animation
         RootIsAnimated = 701,
         RotationInterpolationIsEulerAngles = 702,
+        ContainsMissingBlendShape = 703,
 
         // Effekseer
         EffekseerMaterialIncluded = 801,
