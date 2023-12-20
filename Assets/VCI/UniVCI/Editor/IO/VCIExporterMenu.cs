@@ -3,7 +3,6 @@ using System.IO;
 using UniGLTF;
 using UnityEditor;
 using UnityEngine;
-using VRMShaders;
 
 namespace VCI
 {
@@ -36,14 +35,12 @@ namespace VCI
             try
             {
                 // save dialog
-                var path = VCI.FileDialogForWindows.SaveDialog("Save " + Constants.Extension,
-                    rootGameObject.name + Constants.Extension);
-
-                //var path = EditorUtility.SaveFilePanel(
-                //    "Save " + VCIVersion.EXTENSION,
-                //    null,
-                //    root.name + VCIVersion.EXTENSION,
-                //    VCIVersion.EXTENSION.Substring(1));
+                var path = EditorUtility.SaveFilePanel(
+                    "Save VCI file",
+                    null,
+                    rootGameObject.name + Constants.Extension,
+                    Constants.Extension.Substring(1)
+                );
                 if (string.IsNullOrEmpty(path)) return;
 
                 var bytes = VciEditorExporter.Export(rootGameObject);
@@ -56,13 +53,17 @@ namespace VCI
                 }
 
                 // Show success dialog
-                var openExplorer = !EditorUtility.DisplayDialog("エクスポート成功", $"VCIファイルの出力に成功しました。\nPath: {path}", "閉じる", "エクスプローラで表示");
+                var openExplorer = !EditorUtility.DisplayDialog("エクスポート成功", $"VCIファイルの出力に成功しました。\nPath: {path}", "閉じる", "ファイルを表示");
                 if (openExplorer)
                 {
                     // Show the file in the explorer.
                     if (Application.platform == RuntimePlatform.WindowsEditor)
                     {
                         System.Diagnostics.Process.Start("explorer.exe", " /e,/select," + path.Replace("/", "\\"));
+                    }
+                    else if(Application.platform == RuntimePlatform.OSXEditor)
+                    {
+                        System.Diagnostics.Process.Start("open", "-R " + path);
                     }
                 }
             }

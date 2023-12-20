@@ -61,14 +61,14 @@ namespace VCI
 
             if (_data.Meta == null)
             {
-                throw new Exception($"This file has no {nameof(glTF_VCAST_vci_meta)} extension.");
+                throw new InvalidVciMetaException($"This file has no {nameof(glTF_VCAST_vci_meta)} extension.");
             }
 
             // Version Check
             if (!ImportableVersionCheck(_data.VciMigrationFlags))
             {
                 var (major, minor) = (_data.VciMigrationFlags.FileVciMajorVersion, _data.VciMigrationFlags.FileVciMinorVersion);
-                throw new Exception($"The current UniVCI cannot read this VCI version. ({major}.{minor})");
+                throw new NotSupportedVciVersionException($"The current UniVCI cannot read this VCI version. ({major}.{minor})");
             }
 
             MaterialDescriptorGenerator = materialDescriptorGenerator ?? new BuiltInVciMaterialDescriptorGenerator(_data.UnityMaterials, _data.VciMigrationFlags.IsPbrBaseColorSrgb);

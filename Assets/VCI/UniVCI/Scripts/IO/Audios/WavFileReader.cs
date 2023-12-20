@@ -11,13 +11,9 @@ namespace VCI
         private const int BIT_8 = 8;
         private const int BIT_16 = 16;
         private const int BIT_24 = 24;
-        // NOTE: WAVファイルフォーマットの各チャンク/フィールドのバイト数
+        // NOTE: RIFFファイルの各チャンクの先頭8byteはメタデータが専有している
         // 参考 -> https://www.youfit.co.jp/archives/1418
-        private const int RIFF_CHUNK_BYTES = 12;
-        private const int FMT_CHUNK_ID_FIELD_BYTES = 4;
-        private const int FMT_CHUNK_SIZE_FIELD_BYTES = 4;
-        private const int DATA_CHUNK_ID_FIELD_BYTES = 4;
-        private const int DATA_CHUNK_SIZE_FIELD_BYTES = 4;
+        private const int RIFF_CHUNK_HEADER_BYTES = 8;
 
         public static WavReadResult ReadSamplesFromRawBytes(byte[] wavBytes)
         {
@@ -31,10 +27,7 @@ namespace VCI
             var channels = waveHeader.Channel;
             var bitPerSample = waveHeader.BitPerSample;
             // NOTE: WAVファイルの音声データ部の先頭のindex
-            var dataBufferIndex =
-                RIFF_CHUNK_BYTES +
-                FMT_CHUNK_ID_FIELD_BYTES + FMT_CHUNK_SIZE_FIELD_BYTES + waveHeader.FormatChunkSize +
-                DATA_CHUNK_ID_FIELD_BYTES + DATA_CHUNK_SIZE_FIELD_BYTES;
+            var dataBufferIndex = (int)waveHeader.DataChunkOffset + RIFF_CHUNK_HEADER_BYTES;
 
             var allSampleCount = samplesPerChannel * channels;
 

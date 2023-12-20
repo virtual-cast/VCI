@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace VCI
+﻿namespace VCI
 {
-    public sealed class WavFileReadException : Exception
+    public sealed class WavFileReadException : VciException
     {
         public WavFileReadException(string message) : base(message)
         {
