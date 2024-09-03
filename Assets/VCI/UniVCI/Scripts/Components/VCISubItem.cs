@@ -20,6 +20,10 @@ namespace VCI
 
         private void Reset()
         {
+            // Rigidbodyの存在チェック
+            // MEMO: RequireComponent属性を付けると、RuntimeでVCISubItemと同時にRigidbodyがアタッチされてしまう
+            //       ImporterではRigidbodyをアタッチする際に物理演算を無効化しているため、同時にアタッチするべきではない
+            //       MonoBehaviour.Reset()はEditorモードでのみ呼ばれるため問題ない
             if (GetComponent<Rigidbody>() == null)
             {
                 gameObject.AddComponent<Rigidbody>();

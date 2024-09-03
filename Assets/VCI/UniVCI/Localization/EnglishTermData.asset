@@ -81,6 +81,9 @@ MonoBehaviour:
     value: The interpolation method of rotations in AnimationClips needs to be "Quaternion".
   - key: error801
     value: EffekseerMaterial is not supoprted.
+  - key: error1001
+    value: 'Rigidbody component is not attached to VCISubItem.\nGameObject name:
+      {0}'
   - key: export_button
     value: Export VCI
   - key: input

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UniGLTF;
 using UnityEngine;
-using VRM;
 using VRMShaders;
 
 namespace VCI
@@ -17,8 +16,10 @@ namespace VCI
             UseSparseAccessorForMorphTarget = true, // ファイル容量削減
             ExportOnlyBlendShapePosition = false, // すべて出力する
             ExportTangents = false, // 要らない
-            KeepVertexColor = false, // 要らない
-            MeshFilterAllowedHideFlags = HideFlags.HideInInspector | HideFlags.NotEditable // 通常の MeshFilter に加えて ProBuilder MeshFilter も出力する
+            ExportVertexColor = false, // 要らない
+            MeshFilterAllowedHideFlags = HideFlags.HideInInspector | HideFlags.NotEditable, // 通常の MeshFilter に加えて ProBuilder MeshFilter も出力する
+            ExportUvSecondary = true, // ほとんど要らないが、切り替える口が現状無いので有効
+            FreezeMesh = false, // 要らない
         };
 
         private readonly IVciAnimationNodeExporter _animationNodeExporter;

@@ -70,7 +70,7 @@ namespace VCI
                             if (image.mimeType == EffekseerImageJsonObject.PngMimeTypeString)
                             {
                                 var samplerParams = new SamplerParam(TextureWrapMode.Repeat, TextureWrapMode.Repeat, FilterMode.Bilinear, false);
-                                var textureInfo = new DeserializingTextureInfo(buffer, image.mimeType, ColorSpace.sRGB, samplerParams);
+                                var textureInfo = new DeserializingTextureInfo(buffer, image.mimeType, ColorSpace.sRGB, samplerParams, TextureImportTypes.sRGB);
                                 var texture = await textureFactory.TextureDeserializer.LoadTextureAsync(textureInfo, awaitCaller);
                                 effekseerTextures.Add(new Effekseer.Internal.EffekseerTextureResource()
                                 {

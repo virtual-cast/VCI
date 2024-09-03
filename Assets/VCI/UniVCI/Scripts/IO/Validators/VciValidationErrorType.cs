@@ -53,7 +53,8 @@
         SubItemKeyDuplicated = 902,
 
         // Collider
-        NonConvexMeshColliderIsUnderRigidbody = 1001,
+        SubItemWithoutRigidbody = 1001,
+        NonConvexMeshColliderIsUnderRigidbody = 1002,
 
         // Audio
         RollOffModeNotSupported = 1101,

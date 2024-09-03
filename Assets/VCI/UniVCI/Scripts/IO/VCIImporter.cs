@@ -36,7 +36,7 @@ namespace VCI
             IFontProvider fontProvider = null,
             IMp3FileDecoder mp3FileDecoder = null,
             ISpringBoneImporter springBoneImporter = null
-        ) : base(data.GltfData, externalObjectMap, textureDeserializer)
+        ) : base(data.GltfData, externalObjectMap, textureDeserializer, materialDescriptorGenerator)
         {
             _data = data;
             _isLocation = isLocation;
