@@ -18,4 +18,14 @@ namespace VCI
             ctx.SetMainObject(textAsset);
         }
     }
+    [ScriptedImporter(1, "js")]
+    public sealed class JsImporter : ScriptedImporter
+    {
+        public override void OnImportAsset(AssetImportContext ctx)
+        {
+            var textAsset = new TextAsset(File.ReadAllText(ctx.assetPath));
+            ctx.AddObjectToAsset("main obj", textAsset);
+            ctx.SetMainObject(textAsset);
+        }
+    }
 }

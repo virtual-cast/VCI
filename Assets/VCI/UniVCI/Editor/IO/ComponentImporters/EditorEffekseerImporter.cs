@@ -137,6 +137,9 @@ namespace VCI
                     System.IO.Path.ChangeExtension(effectFilePath.Value, "asset"));
                 effects.Add(effectIdx, effectAsset);
 
+                // Scale
+                effectAsset.Scale = effect.scale;
+
                 // find assets
                 // textures
                 for (int t = 0; t < effectAsset.textureResources.Count(); t++)
@@ -150,7 +153,7 @@ namespace VCI
                     effectAsset.textureResources[t].texture = texture;
 
                     // texture Importer settings
-                    var textureImporter = (TextureImporter) TextureImporter.GetAtPath(textureFilePath.Value);
+                    var textureImporter = (TextureImporter)TextureImporter.GetAtPath(textureFilePath.Value);
                     if (textureImporter != null)
                     {
                         textureImporter.isReadable = true;
@@ -187,7 +190,7 @@ namespace VCI
                 foreach (var emitter in effekseerEmitterExtension.emitters)
                 {
                     var effectIndex = emitter.effectIndex;
-                    var emitterComponent = gameObject.GetOrAddComponent<Effekseer.EffekseerEmitter>();
+                    var emitterComponent = gameObject.AddComponent<EffekseerEmitter>();
                     emitterComponent.effectAsset = effects[effectIndex];
                     emitterComponent.playOnStart = emitter.isPlayOnStart;
                     emitterComponent.isLooping = emitter.isLoop;

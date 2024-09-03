@@ -22,7 +22,7 @@ namespace VCI
             try
             {
                 rootGameObject = GameObjectSelectionService.GetSingleSelectedObject();
-                VciValidator.ValidateVciRequirements(rootGameObject);
+                EditorVciValidator.ValidateVciRequirements(rootGameObject);
             }
             catch (VciValidatorException e)
             {
