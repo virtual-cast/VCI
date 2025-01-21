@@ -21,7 +21,7 @@ namespace VCI
             var gltfData = new GlbLowLevelParser(string.Empty, _data).Parse();
             var extensionMeta = DeserializeMetaExtension(gltfData.GLTF);
 
-            return new VciData(
+            return VciMigrator.Migrate(
                 gltfData,
                 CheckMigrationFlags(gltfData, extensionMeta),
                 extensionMeta,

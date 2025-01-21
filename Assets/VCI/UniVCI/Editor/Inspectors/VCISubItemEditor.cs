@@ -6,12 +6,14 @@ namespace VCI
     [CanEditMultipleObjects]
     public sealed class VCISubItemEditor : Editor
     {
+        private static readonly string[] CameraMaskOptions = { "Visible to Camera Items", "Invisible to Camera Items" };
         private SerializedProperty grabbable;
         private SerializedProperty scalable;
         private SerializedProperty uniform;
         private SerializedProperty attractable;
         private SerializedProperty attractableDistance;
         private SerializedProperty group;
+        private SerializedProperty isVisibleToCamera;
 
         private void OnEnable()
         {
@@ -21,6 +23,7 @@ namespace VCI
             attractable = serializedObject.FindProperty("Attractable");
             attractableDistance = serializedObject.FindProperty("AttractableDistance");
             group = serializedObject.FindProperty("GroupId");
+            isVisibleToCamera = serializedObject.FindProperty("IsVisibleToCamera");
         }
 
         public override void OnInspectorGUI()
@@ -31,12 +34,17 @@ namespace VCI
                 subItemParent == null ||
                 subItemParent.GetComponent<VCIObject>() == null ||
                 subItemParent.parent != null
-            ) {
+               )
+            {
                 EditorGUILayout.HelpBox(VCIConfig.GetText("warning_subitem_not_under_vciobject"), MessageType.Error);
             }
 
+
             serializedObject.Update();
             {
+                // 利用環境によらない設定
+                EditorGUILayout.LabelField("Common", EditorStyles.boldLabel);
+
                 using (var check = new EditorGUI.ChangeCheckScope())
                 {
                     EditorGUILayout.PropertyField(grabbable);
@@ -45,7 +53,6 @@ namespace VCI
                         attractable.boolValue = grabbable.boolValue;
                     }
                 }
-
                 using (new EditorGUI.IndentLevelScope())
                 {
                     using (new EditorGUI.DisabledGroupScope(!grabbable.boolValue))
@@ -73,6 +80,14 @@ namespace VCI
                 else if (!scalable.boolValue) uniform.boolValue = false;
 
                 EditorGUILayout.PropertyField(group);
+
+                // ルーム専用の設定
+                EditorGUILayout.LabelField("For Room", EditorStyles.boldLabel);
+
+                // カメラマスク
+                var selectedCameraMaskOption = isVisibleToCamera.boolValue ? 0 : 1;
+                selectedCameraMaskOption = EditorGUILayout.Popup("Camera Mask", selectedCameraMaskOption, CameraMaskOptions);
+                isVisibleToCamera.boolValue = selectedCameraMaskOption == 0; // 0: Visible, 1: Invisible
             }
 
             serializedObject.ApplyModifiedProperties();

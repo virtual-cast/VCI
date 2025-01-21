@@ -50,6 +50,11 @@ public static void Serialize(JsonFormatter f, glTF_VCAST_vci_item value)
         f.Value(value.key);
     }
 
+    if(true){
+        f.Key("isVisibleToCamera");
+        f.Value(value.isVisibleToCamera);
+    }
+
     f.EndMap();
 }
 

@@ -90,6 +90,9 @@ namespace VCI
 
                 texts.Add(tmp);
 
+                // 初期状態は非表示
+                tmp.renderer.enabled = false;
+
                 // NOTE: TMP の追加は非常にスパイクが大きい。(2ms)
                 await awaitCaller.NextFrame();
             }

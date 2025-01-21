@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine.Serialization;
 
 namespace VCI
 {
@@ -17,5 +18,6 @@ namespace VCI
         public float attractableDistance;
         public int groupId;
         public int key;
+        public bool isVisibleToCamera;
     }
 }

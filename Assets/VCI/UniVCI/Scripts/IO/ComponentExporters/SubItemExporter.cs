@@ -27,6 +27,7 @@ namespace VCI
                 attractableDistance = item.AttractableDistance,
                 groupId = item.GroupId,
                 key = item.Key,
+                isVisibleToCamera = item.IsVisibleToCamera,
             };
         }
     }

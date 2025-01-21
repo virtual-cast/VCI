@@ -23,6 +23,8 @@ namespace VCI
                 item.GroupId = subItemExtension.groupId;
                 // NOTE: UniVCI 0.37 で追加した項目。それ以前の VCI では NodeIndex を Key とする。
                 item.Key = vciData.VciMigrationFlags.IsSubItemKeyUndefined ? nodeIdx : subItemExtension.key;
+                // NOTE: UniVCI 0.43 で追加した項目。それ以前の VCI では true とする。
+                item.IsVisibleToCamera = vciData.VciMigrationFlags.IsSubItemVisibilityUndefined || subItemExtension.isVisibleToCamera;
             }
         }
     }
