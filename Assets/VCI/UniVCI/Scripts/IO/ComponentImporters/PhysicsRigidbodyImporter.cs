@@ -19,12 +19,10 @@ namespace VCI
         public static async Task<Dictionary<Rigidbody, RigidbodySetting>> LoadAsync(VciData vciData, IReadOnlyList<Transform> unityNodes, IAwaitCaller awaitCaller)
         {
             var rigidBodySettings = new Dictionary<Rigidbody, RigidbodySetting>();
-            var rigidbodyNodeIndices = new HashSet<int>();
 
             var rigidbodyCount = 0;
             foreach (var (nodeIdx, rigidbodyExtension) in vciData.RigidbodyNodes)
             {
-                rigidbodyNodeIndices.Add(nodeIdx);
                 var gameObject = unityNodes[nodeIdx].gameObject;
                 foreach (var rigidbodyJsonObject in rigidbodyExtension.rigidbodies)
                 {
@@ -34,28 +32,6 @@ namespace VCI
                     // NOTE: ロード中に Rigidbody が動くべきではない. ロード終了後に EnablePhysicalBehaviour で有効になる.
                     PhysicalBehaviourChanger.DisableRigidbody(rb);
                 }
-
-                rigidbodyCount += 1;
-                if (rigidbodyCount % AwaitIntervalCount == 0)
-                {
-                    await awaitCaller.NextFrame();
-                }
-            }
-
-            foreach (var (nodeIdx, subItemExtension) in vciData.SubItemNodes)
-            {
-                if (rigidbodyNodeIndices.Contains(nodeIdx)) continue;
-
-                // NOTE: SubItem 拡張を持つが、Rigidbody 拡張を持たない、過去の VCI に対応する.
-                // TODO: 最古 public な UniVCI v0.15 でもそのような仕様はないため、必要がない処理の可能性が高い. 消したい.
-                var gameObject = unityNodes[nodeIdx].gameObject;
-                var rb = gameObject.GetOrAddComponent<Rigidbody>();
-                rb.isKinematic = true;
-                rb.useGravity = false;
-                rigidBodySettings.Add(rb, new RigidbodySetting(rb));
-
-                // NOTE: ロード中に Rigidbody が動くべきではない. ロード終了後に EnablePhysicalBehaviour で有効になる.
-                PhysicalBehaviourChanger.DisableRigidbody(rb);
 
                 rigidbodyCount += 1;
                 if (rigidbodyCount % AwaitIntervalCount == 0)

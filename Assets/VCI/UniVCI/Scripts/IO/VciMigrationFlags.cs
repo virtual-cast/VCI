@@ -2,6 +2,7 @@
 
 namespace VCI
 {
+    /// TODO: <see cref="VciMigrator"/>に移行する
     public sealed class VciMigrationFlags
     {
         /// <summary>
@@ -43,6 +44,11 @@ namespace VCI
         /// </summary>
         public bool IsSubItemKeyUndefined { get; }
 
+        /// <summary>
+        /// UniVCI v0.43 未満のバージョンでは isVisibleToCameras は未定義のため、 デフォルト値としたい。
+        /// </summary>
+        public bool IsSubItemVisibilityUndefined { get; }
+
         public VciMigrationFlags(string exporterVciVersion)
         {
             if (string.IsNullOrEmpty(exporterVciVersion)) return;
@@ -54,6 +60,7 @@ namespace VCI
             IsAudioClipAttachPointUndefined = FileVciMajorVersion == 0 && FileVciMinorVersion < 32;
             IsItemAttractableDistanceUndefined = FileVciMajorVersion == 0 && FileVciMinorVersion < 36;
             IsSubItemKeyUndefined = FileVciMajorVersion == 0 && FileVciMinorVersion < 37;
+            IsSubItemVisibilityUndefined = FileVciMajorVersion == 0 && FileVciMinorVersion < 43;
         }
 
         private static (int major, int minor) GetVersionValue(string exportedVciVersion)

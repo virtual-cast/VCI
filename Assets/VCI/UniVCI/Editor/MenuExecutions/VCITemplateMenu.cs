@@ -10,13 +10,15 @@ namespace VCI
         [MenuItem("GameObject/VCI/Simple VCI", false, 0)]
         public static void CreateSimpleVCI()
         {
-            var vciObjectComponent = CreateVCIObject();
+            var vciObject = CreateVCIObject();
 
             var vciSubItem = GameObject.CreatePrimitive(PrimitiveType.Cube);
             vciSubItem.name = "Cube";
-            vciSubItem.transform.SetParent(vciObjectComponent.transform);
+            vciSubItem.transform.SetParent(vciObject.transform);
             var vciSubItemObjectComponent = vciSubItem.AddComponent<VCISubItem>();
             vciSubItemObjectComponent.Grabbable = true;
+
+            Undo.RegisterCreatedObjectUndo(vciObject, "Create Simple VCI");
         }
 
         [MenuItem("GameObject/VCI/Text", false, 0)]
@@ -30,9 +32,11 @@ namespace VCI
             tmp.enableWordWrapping = false;
             tmp.alignment = TextAlignmentOptions.Center;
             rt.sizeDelta = Vector2.one;
+
+            Undo.RegisterCreatedObjectUndo(go, "Create VCI Text");
         }
 
-        private static VCIObject CreateVCIObject()
+        private static GameObject CreateVCIObject()
         {
             var vciObject = new GameObject("VCIObject");
             var vciObjectComponent = vciObject.AddComponent<VCIObject>();
@@ -53,7 +57,7 @@ namespace VCI
             };
             vciObjectComponent.Scripts = new List<VciScript> {script};
 
-            return vciObjectComponent;
+            return vciObject;
         }
 
     }

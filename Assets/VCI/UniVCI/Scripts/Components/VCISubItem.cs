@@ -61,6 +61,7 @@ namespace VCI
         /// <summary>VCI内で一意となる値</summary>
         /// <remarks>0 の時は未設定と見なす</remarks>
         public int Key;
+        public bool IsVisibleToCamera = true;
 
         public static readonly float DefaultAttractableDistance = 20;
 
@@ -75,6 +76,7 @@ namespace VCI
             subItem.GroupId = GroupId;
             subItem.NodeIndex = NodeIndex;
             subItem.Key = Key;
+            subItem.IsVisibleToCamera = IsVisibleToCamera;
             return subItem;
         }
 

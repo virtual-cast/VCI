@@ -22,8 +22,12 @@ namespace VCI
         public float angularDrag = 0.05f;
         public bool useGravity = true;
         public bool isKinematic = false;
-        public string interpolate;
-        public string collisionDetection;
+
+        // PhysicsRigidbodyImporterでは不明値をInterpolateとして扱っている。
+        // 該当箇所のコメントに（なぜ？）と書かれているので、経緯を確認する必要がある。
+        // Rigidbodyを新しく作成したときの値に合わせて、ここではデフォルト値をNoneとしておく。
+        public string interpolate = NoneInterpolateString;
+        public string collisionDetection = DiscreteCollisionDetectionString;
 
         public bool freezePositionX = false;
         public bool freezePositionY = false;

@@ -53,6 +53,11 @@ public static glTF_VCAST_vci_item Deserialize(JsonNode parsed)
             continue;
         }
 
+        if(key=="isVisibleToCamera"){
+            value.isVisibleToCamera = kv.Value.GetBoolean();
+            continue;
+        }
+
     }
     return value;
 }
