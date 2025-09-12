@@ -1,5 +1,4 @@
-﻿#pragma warning disable 659
-using System;
+﻿using System;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
@@ -168,6 +167,16 @@ namespace Effekseer.Editor.Utils
 				}
 
 				return true;
+			}
+
+			public override int GetHashCode()
+			{
+				if (ColorMarkers == null || AlphaMarkers == null)
+				{
+					return 0;
+				}
+
+				return ColorMarkers.GetHashCode() + AlphaMarkers.GetHashCode();
 			}
 		}
 

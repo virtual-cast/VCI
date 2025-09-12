@@ -1,6 +1,8 @@
-﻿using TMPro;
+﻿using System.Linq;
+using TMPro;
 using UniGLTF;
 using UnityEngine;
+using UnityEngine.TextCore;
 using ColorSpace = VRMShaders.ColorSpace;
 
 namespace VCI
@@ -72,9 +74,9 @@ namespace VCI
                 lineSpacing = tmp.lineSpacing,
                 paragraphSpacing = tmp.paragraphSpacing,
                 alignment = (int)tmp.alignment,
-                enableWordWrapping = tmp.enableWordWrapping,
+                textWrappingMode = (int)tmp.textWrappingMode,
                 overflowMode = (int)tmp.overflowMode,
-                enableKerning = tmp.enableKerning,
+                fontFeatures = tmp.fontFeatures.Select(x => (uint)x).ToArray(),
                 extraPadding = tmp.extraPadding,
                 margin = tmp.margin.ToArray()
             };

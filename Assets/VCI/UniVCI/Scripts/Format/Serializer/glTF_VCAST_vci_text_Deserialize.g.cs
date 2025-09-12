@@ -125,6 +125,11 @@ public static TextJsonObject glTF_VCAST_vci_text_Deserializevci_text(JsonNode pa
             continue;
         }
 
+        if(key=="textWrappingMode"){
+            value.textWrappingMode = kv.Value.GetInt32();
+            continue;
+        }
+
         if(key=="overflowMode"){
             value.overflowMode = kv.Value.GetInt32();
             continue;
@@ -132,6 +137,11 @@ public static TextJsonObject glTF_VCAST_vci_text_Deserializevci_text(JsonNode pa
 
         if(key=="enableKerning"){
             value.enableKerning = kv.Value.GetBoolean();
+            continue;
+        }
+
+        if(key=="fontFeatures"){
+            value.fontFeatures = glTF_VCAST_vci_text_Deserializevci_text_fontFeatures(kv.Value);
             continue;
         }
 
@@ -200,6 +210,17 @@ public static Single[] glTF_VCAST_vci_text_Deserializevci_text_bottomRightColor(
     foreach(var x in parsed.ArrayItems())
     {
         value[i++] = x.GetSingle();
+    }
+	return value;
+} 
+
+public static UInt32[] glTF_VCAST_vci_text_Deserializevci_text_fontFeatures(JsonNode parsed)
+{
+    var value = new UInt32[parsed.GetArrayCount()];
+    int i=0;
+    foreach(var x in parsed.ArrayItems())
+    {
+        value[i++] = x.GetUInt32();
     }
 	return value;
 } 

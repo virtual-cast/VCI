@@ -113,9 +113,14 @@ public static void glTF_VCAST_vci_text_Serializevci_text(JsonFormatter f, TextJs
         f.Value(value.alignment);
     }
 
-    if(true){
+    if(true&&JsonSchemaUtil.False){
         f.Key("enableWordWrapping");
         f.Value(value.enableWordWrapping);
+    }
+
+    if(true){
+        f.Key("textWrappingMode");
+        f.Value(value.textWrappingMode);
     }
 
     if(true){
@@ -123,9 +128,14 @@ public static void glTF_VCAST_vci_text_Serializevci_text(JsonFormatter f, TextJs
         f.Value(value.overflowMode);
     }
 
-    if(true){
+    if(true&&JsonSchemaUtil.False){
         f.Key("enableKerning");
         f.Value(value.enableKerning);
+    }
+
+    if(value.fontFeatures!=null&&value.fontFeatures.Length>=0){
+        f.Key("fontFeatures");
+        glTF_VCAST_vci_text_Serializevci_text_fontFeatures(f, value.fontFeatures);
     }
 
     if(true){
@@ -190,6 +200,18 @@ public static void glTF_VCAST_vci_text_Serializevci_text_bottomLeftColor(JsonFor
 }
 
 public static void glTF_VCAST_vci_text_Serializevci_text_bottomRightColor(JsonFormatter f, Single[] value)
+{
+    f.BeginList();
+
+    foreach(var item in value)
+    {
+    f.Value(item);
+
+    }
+    f.EndList();
+}
+
+public static void glTF_VCAST_vci_text_Serializevci_text_fontFeatures(JsonFormatter f, UInt32[] value)
 {
     f.BeginList();
 

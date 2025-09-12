@@ -155,7 +155,7 @@ namespace VCI
                         return animPath;
                     }
                 // NOTE: VCI assets
-                case PhysicMaterial _:
+                case PhysicsMaterial _:
                     {
                         var materialDir = prefabPath.GetAssetFolder(".PhysicMaterials");
                         var materialPath = materialDir.Child(o.name.EscapeFilePath() + ".asset");

@@ -134,7 +134,7 @@ namespace VCI
             return collider;
         }
 
-        private static PhysicMaterial LoadPhysicMaterial(PhysicMaterialJsonObject jsonMaterial, PhysicMaterialFactory factory)
+        private static PhysicsMaterial LoadPhysicMaterial(PhysicMaterialJsonObject jsonMaterial, PhysicMaterialFactory factory)
         {
             if (jsonMaterial == null) return null;
 
@@ -146,25 +146,25 @@ namespace VCI
                 LoadPhysicMaterialCombine(jsonMaterial.bounceCombine));
         }
 
-        private static PhysicMaterialCombine LoadPhysicMaterialCombine(string jsonString)
+        private static PhysicsMaterialCombine LoadPhysicMaterialCombine(string jsonString)
         {
             switch (jsonString)
             {
                 case PhysicMaterialJsonObject.AverageCombineString:
-                    return PhysicMaterialCombine.Average;
+                    return PhysicsMaterialCombine.Average;
                 case PhysicMaterialJsonObject.MinimumCombineString:
-                    return PhysicMaterialCombine.Minimum;
+                    return PhysicsMaterialCombine.Minimum;
                 case PhysicMaterialJsonObject.MaximumCombineString:
-                    return PhysicMaterialCombine.Maximum;
+                    return PhysicsMaterialCombine.Maximum;
                 case PhysicMaterialJsonObject.MultiplyCombineString:
-                    return PhysicMaterialCombine.Multiply;
+                    return PhysicsMaterialCombine.Multiply;
                 case "":
-                    return PhysicMaterialCombine.Average;
+                    return PhysicsMaterialCombine.Average;
                 case null:
-                    return PhysicMaterialCombine.Average;
+                    return PhysicsMaterialCombine.Average;
                 default: // NOTE: Import においては、不明値は default 値にフォールバックさせる
                     Debug.LogWarning($"Unexpected PhysicMaterialCombine: {jsonString}");
-                    return PhysicMaterialCombine.Average;
+                    return PhysicsMaterialCombine.Average;
             }
         }
 

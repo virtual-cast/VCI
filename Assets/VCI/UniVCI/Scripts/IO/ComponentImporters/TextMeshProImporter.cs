@@ -4,12 +4,16 @@ using System.Threading.Tasks;
 using TMPro;
 using UniGLTF;
 using UnityEngine;
+using UnityEngine.TextCore;
 using VRMShaders;
 
 namespace VCI
 {
     public static class TextMeshProImporter
     {
+        private static readonly uint[] EmptyFontFeature = System.Array.Empty<uint>();
+        private static readonly uint[] FontFeatureKern = { (uint)OTL_FeatureTag.kern };
+
         public static async Task<List<TextMeshPro>> LoadAsync(
             VciData vciData,
             IList<Transform> unityNodes,
@@ -36,6 +40,7 @@ namespace VCI
                 var go = unityNodes[nodeIdx].gameObject;
 
                 var textJson = textExtension.text;
+                Migrate(textJson, vciData.VciMigrationFlags);
                 var rectTransformJson = rectTransformExtension.rectTransform;
                 if (textJson == null || rectTransformJson == null) continue;
 
@@ -56,7 +61,7 @@ namespace VCI
                 tmp.richText = textJson.richText;
                 tmp.fontSize = textJson.fontSize;
                 tmp.autoSizeTextContainer = textJson.autoSize;
-                tmp.fontStyle = (FontStyles) textJson.fontStyle;
+                tmp.fontStyle = (FontStyles)textJson.fontStyle;
                 tmp.color = new Color(textJson.color[0], textJson.color[1], textJson.color[2], textJson.color[3]);
                 tmp.enableVertexGradient = textJson.enableVertexGradient;
                 tmp.colorGradient = new VertexGradient(
@@ -73,10 +78,11 @@ namespace VCI
                 tmp.wordSpacing = textJson.wordSpacing;
                 tmp.lineSpacing = textJson.lineSpacing;
                 tmp.paragraphSpacing = textJson.paragraphSpacing;
-                tmp.alignment = (TextAlignmentOptions) textJson.alignment;
-                tmp.enableWordWrapping = textJson.enableWordWrapping;
-                tmp.overflowMode = (TextOverflowModes) textJson.overflowMode;
-                tmp.enableKerning = textJson.enableKerning;
+                tmp.alignment = (TextAlignmentOptions)textJson.alignment;
+                tmp.textWrappingMode = (TextWrappingModes)textJson.textWrappingMode;
+                tmp.overflowMode = (TextOverflowModes)textJson.overflowMode;
+                tmp.fontFeatures.Clear();
+                if (textJson.fontFeatures is { Length: > 0 }) tmp.fontFeatures.AddRange(textJson.fontFeatures.Select(x => (OTL_FeatureTag)x));
                 tmp.extraPadding = textJson.extraPadding;
                 tmp.margin = new Vector4(textJson.margin[0], textJson.margin[1], textJson.margin[2],
                     textJson.margin[3]);
@@ -100,6 +106,16 @@ namespace VCI
             return texts;
         }
 
-
+        private static void Migrate(TextJsonObject textJson, VciMigrationFlags flags)
+        {
+            if (flags.IsTextWrappingModeBool)
+            {
+                textJson.textWrappingMode = textJson.enableWordWrapping ? (int)TextWrappingModes.Normal : (int)TextWrappingModes.NoWrap;
+            }
+            if (flags.IsFontFeatureBool)
+            {
+                textJson.fontFeatures = textJson.enableKerning ? FontFeatureKern : EmptyFontFeature;
+            }
+        }
     }
 }
