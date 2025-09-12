@@ -49,8 +49,8 @@ namespace VCI
         {
             var result = target.GetOrAddComponent<Rigidbody>();
             result.mass = rigidbodyJsonObject.mass;
-            result.drag = rigidbodyJsonObject.drag;
-            result.angularDrag = rigidbodyJsonObject.angularDrag;
+            result.linearDamping = rigidbodyJsonObject.drag;
+            result.angularDamping = rigidbodyJsonObject.angularDrag;
             result.useGravity = rigidbodyJsonObject.useGravity;
             result.isKinematic = rigidbodyJsonObject.isKinematic;
             result.interpolation = DeserializeRigidbodyInterpolation(rigidbodyJsonObject.interpolate);

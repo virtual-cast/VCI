@@ -34,8 +34,8 @@ namespace VCI
             return new RigidbodyJsonObject
             {
                 mass = rigidbody.mass,
-                drag = rigidbody.drag,
-                angularDrag = rigidbody.angularDrag,
+                drag = rigidbody.linearDamping,
+                angularDrag = rigidbody.angularDamping,
                 useGravity = rigidbody.useGravity,
                 isKinematic = rigidbody.isKinematic,
                 interpolate = SerializeRigidbodyInterpolation(rigidbody.interpolation),

@@ -50,8 +50,8 @@ namespace VCI
                 .ToDictionary(x => x.Key, x => (AudioClip)x.Value),
                 mp3DecodeStrategy);
             PhysicMaterialFactory = new PhysicMaterialFactory(ExternalObjectMap
-                .Where(x => x.Value is PhysicMaterial)
-                .ToDictionary(x => x.Key, x => (PhysicMaterial)x.Value));
+                .Where(x => x.Value is PhysicsMaterial)
+                .ToDictionary(x => x.Key, x => (PhysicsMaterial)x.Value));
             ColliderMeshFactory = new ColliderMeshFactory(ExternalObjectMap
                 .Where(x => x.Value is Mesh)
                 .ToDictionary(x => x.Key, x => (Mesh)x.Value));

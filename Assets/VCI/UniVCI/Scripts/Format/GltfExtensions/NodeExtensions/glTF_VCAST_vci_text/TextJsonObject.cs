@@ -47,11 +47,19 @@ namespace VCI
 
         public int alignment;
 
+        /// <summary>Obsolete。シリアライズしない。</summary>
+        [JsonSchema(SerializationConditions = new [] {"JsonSchemaUtil.False"})]
         public bool enableWordWrapping;
+
+        public int textWrappingMode;
 
         public int overflowMode;
 
+        /// <summary>Obsolete。シリアライズしない。</summary>
+        [JsonSchema(SerializationConditions = new [] {"JsonSchemaUtil.False"})]
         public bool enableKerning;
+
+        public uint[] fontFeatures;
 
         public bool extraPadding;
 

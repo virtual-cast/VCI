@@ -29,7 +29,7 @@ namespace VCI
             var tmp = go.AddComponent<TextMeshPro>();
             tmp.text = "VCI";
             tmp.fontSize = 5;
-            tmp.enableWordWrapping = false;
+            tmp.textWrappingMode = TextWrappingModes.NoWrap;
             tmp.alignment = TextAlignmentOptions.Center;
             rt.sizeDelta = Vector2.one;
 

@@ -147,7 +147,7 @@ namespace VCI
             };
         }
 
-        private static PhysicMaterialJsonObject ExportPhysicMaterial(PhysicMaterial material)
+        private static PhysicMaterialJsonObject ExportPhysicMaterial(PhysicsMaterial material)
         {
             if (material == null) return null;
 
@@ -161,17 +161,17 @@ namespace VCI
             };
         }
 
-        private static string ExportPhysicMaterialCombine(PhysicMaterialCombine combine)
+        private static string ExportPhysicMaterialCombine(PhysicsMaterialCombine combine)
         {
             switch (combine)
             {
-                case PhysicMaterialCombine.Average:
+                case PhysicsMaterialCombine.Average:
                     return PhysicMaterialJsonObject.AverageCombineString;
-                case PhysicMaterialCombine.Minimum:
+                case PhysicsMaterialCombine.Minimum:
                     return PhysicMaterialJsonObject.MinimumCombineString;
-                case PhysicMaterialCombine.Maximum:
+                case PhysicsMaterialCombine.Maximum:
                     return PhysicMaterialJsonObject.MaximumCombineString;
-                case PhysicMaterialCombine.Multiply:
+                case PhysicsMaterialCombine.Multiply:
                     return PhysicMaterialJsonObject.MultiplyCombineString;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(combine), combine, null);

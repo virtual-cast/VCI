@@ -49,6 +49,16 @@ namespace VCI
         /// </summary>
         public bool IsSubItemVisibilityUndefined { get; }
 
+        /// <summary>
+        /// UniVCI v0.44 未満のバージョンでは Text の WrappingMode が bool で定義されているため、 enum に変換したい。
+        /// </summary>
+        public bool IsTextWrappingModeBool { get; }
+
+        /// <summary>
+        /// UniVCI v0.44 未満のバージョンでは FontFeature が bool で定義されているため、 enum に変換したい。
+        /// </summary>
+        public bool IsFontFeatureBool { get; }
+
         public VciMigrationFlags(string exporterVciVersion)
         {
             if (string.IsNullOrEmpty(exporterVciVersion)) return;
@@ -61,6 +71,7 @@ namespace VCI
             IsItemAttractableDistanceUndefined = FileVciMajorVersion == 0 && FileVciMinorVersion < 36;
             IsSubItemKeyUndefined = FileVciMajorVersion == 0 && FileVciMinorVersion < 37;
             IsSubItemVisibilityUndefined = FileVciMajorVersion == 0 && FileVciMinorVersion < 43;
+            IsFontFeatureBool = IsTextWrappingModeBool = FileVciMajorVersion == 0 && FileVciMinorVersion < 44;
         }
 
         private static (int major, int minor) GetVersionValue(string exportedVciVersion)

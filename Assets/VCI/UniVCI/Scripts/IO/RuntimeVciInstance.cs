@@ -17,7 +17,7 @@ namespace VCI
         public IReadOnlyList<Transform> Nodes { get; }
         public IReadOnlyList<AnimationClip> AnimationClips { get; }
         public IReadOnlyList<AudioClip> AudioClips { get; }
-        public IReadOnlyList<PhysicMaterial> PhysicMaterials { get; }
+        public IReadOnlyList<PhysicsMaterial> PhysicMaterials { get; }
         public VCIObject VCIObject { get; }
         public IReadOnlyList<Material> LoadedMaterials { get; }
         public IReadOnlyList<Collider> ColliderComponents { get; }
@@ -66,8 +66,8 @@ namespace VCI
                 .Select(x => x.Item2 as AudioClip)
                 .ToList();
             PhysicMaterials = _runtimeVciResources
-                .Where(x => x.Item1.Type == typeof(PhysicMaterial))
-                .Select(x => x.Item2 as PhysicMaterial)
+                .Where(x => x.Item1.Type == typeof(PhysicsMaterial))
+                .Select(x => x.Item2 as PhysicsMaterial)
                 .ToList();
         }
 
