@@ -4,8 +4,7 @@ using System.Linq;
 using Effekseer;
 using UniGLTF;
 using UnityEngine;
-using VRMShaders;
-using ColorSpace = VRMShaders.ColorSpace;
+using ColorSpace = UniGLTF.ColorSpace;
 
 namespace VCI
 {

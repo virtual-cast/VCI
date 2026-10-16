@@ -3,7 +3,6 @@ using System.Linq;
 using UniGLTF;
 using UnityEngine;
 using VRM;
-using VRMShaders;
 
 namespace VCI
 {

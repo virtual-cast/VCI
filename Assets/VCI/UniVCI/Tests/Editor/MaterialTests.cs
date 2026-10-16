@@ -2,7 +2,6 @@
 using UnityEngine;
 using UniGLTF;
 using UniJSON;
-using VRMShaders;
 
 namespace VCI
 {
@@ -38,11 +37,8 @@ namespace VCI
             }
         }
 
-        private static Material ExportThenImport(Material src)
+        private static byte[] ExportToGlb(Material src)
         {
-            //
-            // export
-            //
             GameObject cube = GameObject.CreatePrimitive (PrimitiveType.Cube);
             GameObject root = new GameObject("root");
             cube.transform.SetParent(root.transform);
@@ -52,16 +48,17 @@ namespace VCI
             var renderer = cube.GetComponent<Renderer>();
             renderer.sharedMaterial = src;
             var exportingGltfData = new ExportingGltfData();
-            using (var exporter = new VCIExporter(exportingGltfData))
+            using (var exporter = new VCIExporter(exportingGltfData, textureSerializer: new RuntimeTextureSerializer()))
             {
                 exporter.Prepare(root);
-                exporter.Export(new RuntimeTextureSerializer());
+                exporter.Export();
             }
-            var bytes = exportingGltfData.ToGlbBytes();
+            return exportingGltfData.ToGlbBytes();
+        }
 
-            //
-            // importer
-            //
+        private static Material ExportThenImport(Material src)
+        {
+            var bytes = ExportToGlb(src);
             using (var data = new VciBinaryParser(bytes).Parse())
             using (var importer = new VCIImporter(data))
             {
@@ -101,6 +98,17 @@ namespace VCI
                 var src = new Material(Shader.Find("VRM/MToon"));
                 var dst = ExportThenImport(src);
                 Assert.AreEqual("VRM/MToon", dst.shader.name);
+            }
+        }
+
+        [Test]
+        public void Material_MToon_ExportsGltfMaterialAsUnlit()
+        {
+            // glTF の material は VCAST_vci_material_unity を読まないローダー向けの表現なので、MToon は KHR_materials_unlit で出力する
+            var bytes = ExportToGlb(new Material(Shader.Find("VRM/MToon")));
+            using (var data = new VciBinaryParser(bytes).Parse())
+            {
+                Assert.IsTrue(glTF_KHR_materials_unlit.IsEnable(data.GltfData.GLTF.materials[0]));
             }
         }
     }

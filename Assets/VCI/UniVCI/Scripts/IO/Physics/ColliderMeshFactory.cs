@@ -4,7 +4,7 @@ using System.Linq;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
-using VRMShaders;
+using UniGLTF;
 
 namespace VCI
 {

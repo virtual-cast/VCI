@@ -4,6 +4,8 @@ using UnityEngine.Rendering;
 
 namespace VCI
 {
+    // 読み込み時に付けるコンポーネントのため、ユーザーが手で追加できないよう Add Component メニューから隠す
+    [AddComponentMenu("")]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(VCIObject))]
     public sealed class VCILocationLighting : MonoBehaviour

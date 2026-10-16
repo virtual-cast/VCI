@@ -20,6 +20,7 @@ namespace VCI
             VciEffekseerValidator.Validate(gameObject);
 
             VciLocationValidator.Validate(gameObject);
+            VciBakedLightingValidator.Validate(gameObject);
         }
     }
 }

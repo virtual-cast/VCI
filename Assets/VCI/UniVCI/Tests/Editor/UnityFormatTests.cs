@@ -2,7 +2,6 @@
 using NUnit.Framework;
 using UniGLTF;
 using UnityEngine;
-using VRMShaders;
 
 namespace VCI
 {
@@ -31,10 +30,10 @@ namespace VCI
         {
             // Export
             var exportingGltfData = new ExportingGltfData();
-            using (var exporter = new VCIExporter(exportingGltfData))
+            using (var exporter = new VCIExporter(exportingGltfData, textureSerializer: new RuntimeTextureSerializer()))
             {
                 exporter.Prepare(obj.gameObject);
-                exporter.Export(new RuntimeTextureSerializer());
+                exporter.Export();
             }
             var bytes = exportingGltfData.ToGlbBytes();
 

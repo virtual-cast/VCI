@@ -24,6 +24,27 @@ MonoBehaviour:
   - key: error1101
     value: 'Invalid AudioSource 3DSetting (Volume RollOff). Only LogarithmicRollOff
       is supported. \nGameObject name: {0}'
+  - key: error1201
+    value: Lighting is not baked. Run Generate Lighting in the Lighting window.
+  - key: error1202
+    value: 'A Light whose Mode is not Baked was found. Lights that are not Baked
+      are not included in the VCI. Set the Mode to Baked.\nGameObject name: {0}'
+  - key: error1203
+    value: Directional Mode in the Lighting window is set to Directional. Set it
+      to Non-Directional and bake again.
+  - key: error1204
+    value: No light probes found. Add a Light Probe Group and bake again.
+  - key: error1205
+    value: Fog is enabled. Fog is not exported to the VCI. Turn off Fog in the Lighting
+      window.
+  - key: error1206
+    value: 'A Reflection Probe whose Type is not Baked was found. Only Baked Reflection
+      Probes are exported. Set the Type to Baked and bake again.\nGameObject name:
+      {0}'
+  - key: error1207
+    value: 'An object that uses an MToon material is set to receive lightmaps. MToon
+      cannot use lightmaps. Set Receive Global Illumination of the MeshRenderer to
+      Light Probes and bake again.\nGameObject name: {0}'
   - key: error200
     value: The first script must be named \"main\".
   - key: error201

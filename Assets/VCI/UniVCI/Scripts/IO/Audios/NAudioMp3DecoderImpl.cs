@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NAudio.Wave;
 using NLayer.NAudioSupport;
-using VRMShaders;
+using UniGLTF;
 
 namespace VCI
 {

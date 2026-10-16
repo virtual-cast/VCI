@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using UniGLTF;
 using VRM;
-using VRMShaders;
 
 namespace VCI
 {

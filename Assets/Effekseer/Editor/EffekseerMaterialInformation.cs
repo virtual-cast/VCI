@@ -49,15 +49,25 @@ namespace Effekseer.Editor.Utils
 		InvalidFormat,
 	}
 
-	public enum MaterialVersion : int
+	public enum MaterialInformationErrorCode
 	{
-		Version0 = 0,
-		Version15 = 3,
-		Version16 = 1610,
-		Version17Alpha2 = 1700,
-		Version17Alpha4 = 1703,
-		Version17 = 1710,
+		OK,
+		TooNewFormat,
+		NotFound,
+		FailedToOpen,
+		InvalidFormat,
 	}
+
+		public enum MaterialVersion : int
+		{
+			Version0 = 0,
+			Version15 = 3,
+			Version16 = 1610,
+			Version17Alpha2 = 1700,
+			Version17Alpha4 = 1703,
+			Version17 = 1710,
+			Version18 = 1800,
+		}
 
 	public enum CompiledMaterialVersion : int
 	{
@@ -72,6 +82,9 @@ namespace Effekseer.Editor.Utils
 		Gradient = 0,
 		Noise = 1,
 		Light = 2,
+		LocalTime = 3,
+		Hsv = 4,
+		ParticleTime = 5,
 	}
 
 	public class Gradient
@@ -550,9 +563,20 @@ namespace Effekseer.Editor.Utils
 
 	public class MaterialInformation
 	{
-		const MaterialVersion LatestSupportVersion = MaterialVersion.Version17;
+		const MaterialVersion LatestSupportVersion = MaterialVersion.Version18;
 
 		public MaterialVersion Version = MaterialVersion.Version17;
+
+		public MaterialInformationErrorCode LastErrorCode = MaterialInformationErrorCode.OK;
+
+		public string LastErrorMessage = string.Empty;
+
+		public int FileVersion = 0;
+
+		public int LatestSupportedVersion
+		{
+			get { return (int)LatestSupportVersion; }
+		}
 
 		public TextureInformation[] Textures = new TextureInformation[0];
 
@@ -584,22 +608,56 @@ namespace Effekseer.Editor.Utils
 
 		public int ShadingModel = 0;
 
+		void ClearLastError()
+		{
+			LastErrorCode = MaterialInformationErrorCode.OK;
+			LastErrorMessage = string.Empty;
+			FileVersion = 0;
+		}
+
+		bool Fail(MaterialInformationErrorCode errorCode, string message)
+		{
+			LastErrorCode = errorCode;
+			LastErrorMessage = message;
+			return false;
+		}
+
+		bool Fail(System.IO.BinaryReader br, MaterialInformationErrorCode errorCode, string message)
+		{
+			br.Close();
+			return Fail(errorCode, message);
+		}
+
+		bool FailToReadChunk(System.IO.BinaryReader br, string chunkName, int expectedLength)
+		{
+			return Fail(br, MaterialInformationErrorCode.InvalidFormat,
+				string.Format("Failed to read {0} chunk payload. Expected {1} bytes.", chunkName, expectedLength));
+		}
+
 		public bool Load(string path)
 		{
+			ClearLastError();
+
 			if (string.IsNullOrEmpty(path))
-				return false;
+			{
+				return Fail(MaterialInformationErrorCode.NotFound, "The material path is empty.");
+			}
 
 			byte[] file = null;
 
-			if (!System.IO.File.Exists(path)) return false;
+			if (!System.IO.File.Exists(path))
+			{
+				return Fail(MaterialInformationErrorCode.NotFound, string.Format("The material file was not found: {0}", path));
+			}
 
 			try
 			{
 				file = System.IO.File.ReadAllBytes(path);
 			}
-			catch
+			catch (Exception e)
 			{
-				return false;
+				return Fail(MaterialInformationErrorCode.FailedToOpen,
+					string.Format("Failed to open the material file: {0}. {1}", path, e.Message));
 			}
 
 			return Load(file);
@@ -607,13 +665,20 @@ namespace Effekseer.Editor.Utils
 
 		public bool Load(byte[] file)
 		{
+			ClearLastError();
+
+			if (file == null || file.Length == 0)
+			{
+				return Fail(MaterialInformationErrorCode.InvalidFormat, "The material data is empty.");
+			}
+
 			var br = new System.IO.BinaryReader(new System.IO.MemoryStream(file));
 			var buf = new byte[1024];
 
 			if (br.Read(buf, 0, 16) != 16)
 			{
-				br.Close();
-				return false;
+				return Fail(br, MaterialInformationErrorCode.InvalidFormat,
+					string.Format("The material header is incomplete. File size: {0} bytes.", file.Length));
 			}
 
 			if (buf[0] != 'E' ||
@@ -621,16 +686,21 @@ namespace Effekseer.Editor.Utils
 				buf[2] != 'K' ||
 				buf[3] != 'M')
 			{
-				return false;
+				return Fail(br, MaterialInformationErrorCode.InvalidFormat, "The material header signature is invalid. Expected EFKM.");
 			}
 
 			int version = BitConverter.ToInt32(buf, 4);
+			FileVersion = version;
 
 			if (version > (int)LatestSupportVersion)
 			{
-				return false;
+				return Fail(br, MaterialInformationErrorCode.TooNewFormat,
+					string.Format("The material version is newer than this importer supports. File version: {0}. Latest supported version: {1}.",
+						version,
+						(int)LatestSupportVersion));
 			}
 
+			Version = (MaterialVersion)version;
 			GUID = BitConverter.ToUInt64(buf, 8);
 
 			while (true)
@@ -647,23 +717,35 @@ namespace Effekseer.Editor.Utils
 				buf[3] == 'C')
 				{
 					var temp = new byte[BitConverter.ToInt32(buf, 4)];
-					if (br.Read(temp, 0, temp.Length) != temp.Length) return false;
+					if (br.Read(temp, 0, temp.Length) != temp.Length) return FailToReadChunk(br, "DESC", temp.Length);
 
 					var reader = new BinaryReader(temp);
 
-					int count = 0;
-					reader.Get(ref count);
-
-					for (int i = 0; i < count; i++)
+					if (version >= (int)MaterialVersion.Version18)
 					{
-						int lang = 0;
 						string name = null;
 						string desc = null;
-						reader.Get(ref lang);
 						reader.Get(ref name, Encoding.UTF8);
 						reader.Get(ref desc, Encoding.UTF8);
-						Names.Add((Language)lang, name);
-						Descriptions.Add((Language)lang, desc);
+						Names[Language.English] = name;
+						Descriptions[Language.English] = desc;
+					}
+					else
+					{
+						int count = 0;
+						reader.Get(ref count);
+
+						for (int i = 0; i < count; i++)
+						{
+							int lang = 0;
+							string name = null;
+							string desc = null;
+							reader.Get(ref lang);
+							reader.Get(ref name, Encoding.UTF8);
+							reader.Get(ref desc, Encoding.UTF8);
+							Names.Add((Language)lang, name);
+							Descriptions.Add((Language)lang, desc);
+						}
 					}
 				}
 
@@ -673,7 +755,7 @@ namespace Effekseer.Editor.Utils
 				buf[3] == '_')
 				{
 					var temp = new byte[BitConverter.ToInt32(buf, 4)];
-					if (br.Read(temp, 0, temp.Length) != temp.Length) return false;
+					if (br.Read(temp, 0, temp.Length) != temp.Length) return FailToReadChunk(br, "PRM_", temp.Length);
 
 					var reader = new BinaryReader(temp);
 
@@ -835,7 +917,7 @@ namespace Effekseer.Editor.Utils
 				buf[3] == '2')
 				{
 					var temp = new byte[BitConverter.ToInt32(buf, 4)];
-					if (br.Read(temp, 0, temp.Length) != temp.Length) return false;
+					if (br.Read(temp, 0, temp.Length) != temp.Length) return FailToReadChunk(br, "PRM2", temp.Length);
 
 					var reader = new BinaryReader(temp);
 
@@ -847,6 +929,51 @@ namespace Effekseer.Editor.Utils
 
 						for (int j = 0; j < customDataCount; j++)
 						{
+							if (version >= (int)MaterialVersion.Version18)
+							{
+								string name = null;
+								string desc = null;
+								reader.Get(ref name, Encoding.UTF8);
+								reader.Get(ref desc, Encoding.UTF8);
+								CustomData[j].Summaries[Language.English] = name;
+								CustomData[j].Descriptions[Language.English] = desc;
+							}
+							else
+							{
+								int count = 0;
+								reader.Get(ref count);
+
+								for (int i = 0; i < count; i++)
+								{
+									int lang = 0;
+									string name = null;
+									string desc = null;
+									reader.Get(ref lang);
+									reader.Get(ref name, Encoding.UTF8);
+									reader.Get(ref desc, Encoding.UTF8);
+									CustomData[j].Summaries.Add((Language)lang, name);
+									CustomData[j].Descriptions.Add((Language)lang, desc);
+								}
+							}
+						}
+					}
+
+					int textureCount = 0;
+					reader.Get(ref textureCount);
+
+					for (int j = 0; j < textureCount; j++)
+					{
+						if (version >= (int)MaterialVersion.Version18)
+						{
+							string name = null;
+							string desc = null;
+							reader.Get(ref name, Encoding.UTF8);
+							reader.Get(ref desc, Encoding.UTF8);
+							Textures[j].Summaries[Language.English] = name;
+							Textures[j].Descriptions[Language.English] = desc;
+						}
+						else
+						{
 							int count = 0;
 							reader.Get(ref count);
 
@@ -858,30 +985,9 @@ namespace Effekseer.Editor.Utils
 								reader.Get(ref lang);
 								reader.Get(ref name, Encoding.UTF8);
 								reader.Get(ref desc, Encoding.UTF8);
-								CustomData[j].Summaries.Add((Language)lang, name);
-								CustomData[j].Descriptions.Add((Language)lang, desc);
+								Textures[j].Summaries.Add((Language)lang, name);
+								Textures[j].Descriptions.Add((Language)lang, desc);
 							}
-						}
-					}
-
-					int textureCount = 0;
-					reader.Get(ref textureCount);
-
-					for (int j = 0; j < textureCount; j++)
-					{
-						int count = 0;
-						reader.Get(ref count);
-
-						for (int i = 0; i < count; i++)
-						{
-							int lang = 0;
-							string name = null;
-							string desc = null;
-							reader.Get(ref lang);
-							reader.Get(ref name, Encoding.UTF8);
-							reader.Get(ref desc, Encoding.UTF8);
-							Textures[j].Summaries.Add((Language)lang, name);
-							Textures[j].Descriptions.Add((Language)lang, desc);
 						}
 					}
 
@@ -890,19 +996,31 @@ namespace Effekseer.Editor.Utils
 
 					for (int j = 0; j < uniformCount; j++)
 					{
-						int count = 0;
-						reader.Get(ref count);
-
-						for (int i = 0; i < count; i++)
+						if (version >= (int)MaterialVersion.Version18)
 						{
-							int lang = 0;
 							string name = null;
 							string desc = null;
-							reader.Get(ref lang);
 							reader.Get(ref name, Encoding.UTF8);
 							reader.Get(ref desc, Encoding.UTF8);
-							Uniforms[j].Summaries.Add((Language)lang, name);
-							Uniforms[j].Descriptions.Add((Language)lang, desc);
+							Uniforms[j].Summaries[Language.English] = name;
+							Uniforms[j].Descriptions[Language.English] = desc;
+						}
+						else
+						{
+							int count = 0;
+							reader.Get(ref count);
+
+							for (int i = 0; i < count; i++)
+							{
+								int lang = 0;
+								string name = null;
+								string desc = null;
+								reader.Get(ref lang);
+								reader.Get(ref name, Encoding.UTF8);
+								reader.Get(ref desc, Encoding.UTF8);
+								Uniforms[j].Summaries.Add((Language)lang, name);
+								Uniforms[j].Descriptions.Add((Language)lang, desc);
+							}
 						}
 					}
 
@@ -913,19 +1031,31 @@ namespace Effekseer.Editor.Utils
 
 						for (int j = 0; j < gradientCount; j++)
 						{
-							int count = 0;
-							reader.Get(ref count);
-
-							for (int i = 0; i < count; i++)
+							if (version >= (int)MaterialVersion.Version18)
 							{
-								int lang = 0;
 								string name = null;
 								string desc = null;
-								reader.Get(ref lang);
 								reader.Get(ref name, Encoding.UTF8);
 								reader.Get(ref desc, Encoding.UTF8);
-								Gradients[j].Summaries.Add((Language)lang, name);
-								Gradients[j].Descriptions.Add((Language)lang, desc);
+								Gradients[j].Summaries[Language.English] = name;
+								Gradients[j].Descriptions[Language.English] = desc;
+							}
+							else
+							{
+								int count = 0;
+								reader.Get(ref count);
+
+								for (int i = 0; i < count; i++)
+								{
+									int lang = 0;
+									string name = null;
+									string desc = null;
+									reader.Get(ref lang);
+									reader.Get(ref name, Encoding.UTF8);
+									reader.Get(ref desc, Encoding.UTF8);
+									Gradients[j].Summaries.Add((Language)lang, name);
+									Gradients[j].Descriptions.Add((Language)lang, desc);
+								}
 							}
 						}
 					}
@@ -937,7 +1067,7 @@ namespace Effekseer.Editor.Utils
 				buf[3] == 'D')
 				{
 					var temp = new byte[BitConverter.ToInt32(buf, 4)];
-					if (br.Read(temp, 0, temp.Length) != temp.Length) return false;
+					if (br.Read(temp, 0, temp.Length) != temp.Length) return FailToReadChunk(br, "E_CD", temp.Length);
 
 					var reader = new BinaryReader(temp);
 
@@ -960,7 +1090,7 @@ namespace Effekseer.Editor.Utils
 				buf[3] == 'E')
 				{
 					var temp = new byte[BitConverter.ToInt32(buf, 4)];
-					if (br.Read(temp, 0, temp.Length) != temp.Length) return false;
+					if (br.Read(temp, 0, temp.Length) != temp.Length) return FailToReadChunk(br, "GENE", temp.Length);
 
 					var reader = new BinaryReader(temp);
 

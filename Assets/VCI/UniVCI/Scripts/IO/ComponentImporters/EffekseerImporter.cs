@@ -5,8 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Effekseer;
 using UnityEngine;
-using VRMShaders;
-using ColorSpace = VRMShaders.ColorSpace;
+using UniGLTF;
+using ColorSpace = UniGLTF.ColorSpace;
 
 namespace VCI
 {
@@ -64,8 +64,7 @@ namespace VCI
                         {
                             var image = effect.images[t];
                             var path = resourcePath.TexturePathList[t];
-                            // NOTE: Copy
-                            var buffer = gltfData.GetBytesFromBufferView(image.bufferView).ToArray();
+                            var buffer = gltfData.GetBytesFromBufferView(image.bufferView);
 
                             if (image.mimeType == EffekseerImageJsonObject.PngMimeTypeString)
                             {

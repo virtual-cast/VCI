@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UniGLTF;
 using UnityEditor;
 using UnityEngine;
-using VRMShaders;
 using Object = UnityEngine.Object;
 
 namespace VCI

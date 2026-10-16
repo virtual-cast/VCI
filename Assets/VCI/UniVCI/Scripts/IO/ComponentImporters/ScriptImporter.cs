@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using UniGLTF;
 using UniJSON;
 using UnityEngine;
-using VRMShaders;
 
 namespace VCI
 {

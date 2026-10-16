@@ -105,6 +105,10 @@ namespace Effekseer
 		/// </summary>
 		public List<EffekseerHandle> handles = new List<EffekseerHandle>();
 
+		const int DynamicInputCount = EffekseerPlayEffectParameters.DynamicInputCount;
+		readonly float[] dynamicInputs = new float[DynamicInputCount];
+		readonly bool[] dynamicInputSet = new bool[DynamicInputCount];
+
 		/// <summary xml:lang="en">
 		/// Plays the effect.
 		/// <param name="name">Effect name</param>
@@ -115,7 +119,32 @@ namespace Effekseer
 		/// </summary>
 		public EffekseerHandle Play(EffekseerEffectAsset effectAsset)
 		{
-			var h = EffekseerSystem.PlayEffect(effectAsset, transform.position);
+			var param = EffekseerPlayEffectParameters.Create(transform.position);
+			Vector3 axis;
+			float angle;
+			transform.rotation.ToAngleAxis(out angle, out axis);
+			if (float.IsNaN(axis.x) || float.IsInfinity(axis.x))
+			{
+				param.SetRotation(new Vector3(0.0f, -1.0f, 0.0f), 360.0f * Mathf.Deg2Rad);
+			}
+			else
+			{
+				param.SetRotation(axis, angle * Mathf.Deg2Rad);
+			}
+
+			var scale = (EmitterScale == EffekseerEmitterScale.Local) ? transform.localScale : transform.lossyScale;
+			param.SetScale(scale);
+			param.SetVisible(shown);
+			param.Speed = speed;
+			for (int i = 0; i < DynamicInputCount; i++)
+			{
+				if (dynamicInputSet[i])
+				{
+					param.SetDynamicInput(i, dynamicInputs[i]);
+				}
+			}
+
+			var h = EffekseerSystem.PlayEffect(effectAsset, param);
 
 			// must run after loading
 			cachedMagnification = effectAsset.Magnification;
@@ -123,9 +152,7 @@ namespace Effekseer
 			ApplyRotationAndScale(ref h);
 
 			h.layer = gameObject.layer;
-			if (speed != 1.0f) h.speed = speed;
 			if (paused) h.paused = paused;
-			if (shown) h.shown = shown;
 			handles.Add(h);
 			return h;
 		}
@@ -229,9 +256,20 @@ namespace Effekseer
 		/// <returns></returns>
 		public float GetDynamicInput(int index)
 		{
+			if (!IsValidDynamicInputIndex(index))
+			{
+				Debug.LogWarningFormat("[Effekseer] Dynamic input index is out of range. index={0}, valid=0..{1}", index, DynamicInputCount - 1);
+				return 0.0f;
+			}
+
 			foreach (var handle in handles)
 			{
 				return handle.GetDynamicInput(index);
+			}
+
+			if (dynamicInputSet[index])
+			{
+				return dynamicInputs[index];
 			}
 
 			return 0.0f;
@@ -247,6 +285,15 @@ namespace Effekseer
 		/// <param name="value"></param>
 		public void SetDynamicInput(int index, float value)
 		{
+			if (!IsValidDynamicInputIndex(index))
+			{
+				Debug.LogWarningFormat("[Effekseer] Dynamic input index is out of range. index={0}, valid=0..{1}", index, DynamicInputCount - 1);
+				return;
+			}
+
+			dynamicInputs[index] = value;
+			dynamicInputSet[index] = true;
+
 			foreach (var handle in handles)
 			{
 				handle.SetDynamicInput(index, value);
@@ -275,16 +322,17 @@ namespace Effekseer
 		/// <param name="worldPos"></param>
 		public void SetDynamicInputWithLocalPosition(ref Vector3 localPos)
 		{
-			SetDynamicInput(0, localPos.x / cachedMagnification);
-			SetDynamicInput(1, localPos.y / cachedMagnification);
+			var magnification = GetSafeMagnification();
+			SetDynamicInput(0, localPos.x / magnification);
+			SetDynamicInput(1, localPos.y / magnification);
 
 			if (EffekseerSettings.Instance.isRightEffekseerHandledCoordinateSystem)
 			{
-				SetDynamicInput(2, localPos.z / cachedMagnification);
+				SetDynamicInput(2, localPos.z / magnification);
 			}
 			else
 			{
-				SetDynamicInput(2, -localPos.z / cachedMagnification);
+				SetDynamicInput(2, -localPos.z / magnification);
 			}
 		}
 
@@ -310,7 +358,8 @@ namespace Effekseer
 		/// <param name="localPos"></param>
 		public void SetDynamicInputWithLocalDistance(ref Vector3 localPos)
 		{
-			SetDynamicInput(0, localPos.magnitude / cachedMagnification);
+			var magnification = GetSafeMagnification();
+			SetDynamicInput(0, localPos.magnitude / magnification);
 		}
 
 		/// <summary xml:lang="en">
@@ -324,7 +373,7 @@ namespace Effekseer
 		{
 			foreach (var handle in handles)
 			{
-				Plugin.EffekseerSendTrigger(handle.m_handle, index);
+				handle.SendTrigger(index);
 			}
 		}
 
@@ -554,6 +603,26 @@ namespace Effekseer
 			}
 
 			handle.TimeScale = TimeScale;
+		}
+
+		bool IsValidDynamicInputIndex(int index)
+		{
+			return 0 <= index && index < DynamicInputCount;
+		}
+
+		float GetSafeMagnification()
+		{
+			if (!Mathf.Approximately(cachedMagnification, 0.0f))
+			{
+				return cachedMagnification;
+			}
+
+			if (effectAsset != null && !Mathf.Approximately(effectAsset.Scale, 0.0f))
+			{
+				return effectAsset.Scale;
+			}
+
+			return 1.0f;
 		}
 	}
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using UniGLTF;
 using UnityEngine;
-using VRMShaders;
 
 namespace VCI
 {
@@ -12,10 +11,12 @@ namespace VCI
             VciExportingTextureSettingFixer.Fix(root);
 
             var exportingGltfData = new ExportingGltfData();
-            using (var exporter = new VCIExporter(exportingGltfData, new EditorAnimationNodeExporter(), collisionLayerProvider))
+            using (var exporter = new VCIExporter(exportingGltfData,
+                animationNodeExporter: new EditorAnimationNodeExporter(), colliderLayerProvider: collisionLayerProvider,
+                textureSerializer: textureDeserializer ?? new EditorTextureSerializer()))
             {
                 exporter.Prepare(root);
-                exporter.Export(textureDeserializer ?? new EditorTextureSerializer());
+                exporter.Export();
                 return exportingGltfData.ToGlbBytes();
             }
         }

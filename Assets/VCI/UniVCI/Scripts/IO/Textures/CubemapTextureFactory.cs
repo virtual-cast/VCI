@@ -1,47 +1,65 @@
-﻿using System;
-using System.Collections;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using UniGLTF;
-using VRMShaders;
 
 namespace VCI
 {
-    public sealed class CubemapTextureImporter
+    public sealed class CubemapTextureFactory : IResponsibilityForDestroyObjects
     {
         private readonly GltfData _data;
-        private readonly TextureFactory _textureFactory;
+        private readonly IntermediateTextureFactory _intermediateTextureFactory;
         private readonly Shader _importFromDLdrShader;
         private readonly Shader _importFromRgbmShader;
-        private readonly Dictionary<int, Cubemap> _cubemapTextureCache = new Dictionary<int, Cubemap>();
+        private readonly Dictionary<SubAssetKey, Cubemap> _cubemapTextureCache = new();
+        private bool _disposed;
 
-        public CubemapCompressionType CompressionType { get; }
-
-        public CubemapTextureImporter(GltfData data, TextureFactory textureFactory, CubemapCompressionType compressionType)
+        public CubemapTextureFactory(GltfData data, IntermediateTextureFactory intermediateTextureFactory)
         {
             _data = data;
-            _textureFactory = textureFactory;
-            CompressionType = compressionType;
+            _intermediateTextureFactory = intermediateTextureFactory;
             _importFromDLdrShader = Shader.Find("Hidden/UniVCI/CubemapConversion/ImportFromDLdr");
             _importFromRgbmShader = Shader.Find("Hidden/UniVCI/CubemapConversion/ImportFromRgbm");
         }
 
-        public async Task<Cubemap> GetOrConvertCubemapTextureAsync(CubemapTextureJsonObject gltfCubemapTexture, IAwaitCaller awaitCaller)
+        public void Dispose()
         {
-            // FIXME: GLTF の TextureFactory でライトマップテクスチャを生成できるようにする
-            // FIXME: 自前でキャッシュを持つべきではない
-            var key = gltfCubemapTexture.texture.cubemapPositiveX.index;
-            if (!_cubemapTextureCache.ContainsKey(key))
+            if (_disposed) return;
+            _disposed = true;
+            foreach (var (_, v) in _cubemapTextureCache)
             {
-                var cubemap = await ConvertCubemapAsync(gltfCubemapTexture, awaitCaller);
-                _cubemapTextureCache.Add(key, cubemap);
+                UnityObjectDestroyer.DestroyRuntimeOrEditor(v);
             }
-
-            return _cubemapTextureCache[key];
+            _cubemapTextureCache.Clear();
         }
 
-        public async Task<Cubemap> ConvertCubemapAsync(CubemapTextureJsonObject gltfCubemapTexture, IAwaitCaller awaitCaller)
+        public void TransferOwnership(TakeResponsibilityForDestroyObjectFunc take)
+        {
+            foreach (var (k, v) in _cubemapTextureCache.ToArray())
+            {
+                take(k, v);
+                _cubemapTextureCache.Remove(k);
+            }
+        }
+
+        public async Task<Cubemap> GetOrConvertCubemapTextureAsync(CubemapTextureJsonObject gltfCubemapTexture, CubemapCompressionType compressionType, IAwaitCaller awaitCaller)
+        {
+            var name = $"cubemap_{gltfCubemapTexture.texture.cubemapPositiveX.index}_{compressionType}";
+            var key = new SubAssetKey(typeof(Cubemap), name);
+
+            // Check cache
+            if (_cubemapTextureCache.TryGetValue(key, out var cache)) return cache;
+
+            // Convert cubemap
+            var cubemap = await ConvertCubemapAsync(gltfCubemapTexture, compressionType, awaitCaller);
+            cubemap.name = name;
+            _cubemapTextureCache.Add(key, cubemap);
+            return cubemap;
+        }
+
+        private async Task<Cubemap> ConvertCubemapAsync(CubemapTextureJsonObject gltfCubemapTexture, CubemapCompressionType compressionType, IAwaitCaller awaitCaller)
         {
             var mipLength = gltfCubemapTexture.mipmapCount; // original を含めない mipmap だけの個数
 
@@ -50,20 +68,20 @@ namespace VCI
                 return null;
             }
 
-            var positiveX = await _textureFactory.GetTextureAsync(param, awaitCaller);
+            var positiveX = await _intermediateTextureFactory.GetTextureAsync(param, awaitCaller);
             var width = positiveX.width;
 
             var cubemap = new Cubemap(width, TextureFormat.RGBAHalf, mipLength + 1);
 
             // Set original
-            var success = await UpdateCubemapFace(gltfCubemapTexture.texture, cubemap, 0, awaitCaller);
+            var success = await UpdateCubemapFace(gltfCubemapTexture.texture, cubemap, 0, compressionType, awaitCaller);
 
             // Set mipmaps
             for (var idx = 0; idx < mipLength; ++idx)
             {
                 var tex = gltfCubemapTexture.mipmapTextures[idx];
                 var mipValue = idx + 1;
-                success &= await UpdateCubemapFace(tex, cubemap, mipValue, awaitCaller);
+                success &= await UpdateCubemapFace(tex, cubemap, mipValue, compressionType, awaitCaller);
             }
 
             // Apply
@@ -81,7 +99,7 @@ namespace VCI
             }
         }
 
-        private async Task<bool> UpdateCubemapFace(CubemapFaceTextureSetJsonObject src, Cubemap dst, int mipmap, IAwaitCaller awaitCaller)
+        private async Task<bool> UpdateCubemapFace(CubemapFaceTextureSetJsonObject src, Cubemap dst, int mipmap, CubemapCompressionType compressionType, IAwaitCaller awaitCaller)
         {
             if (!GltfTextureImporter.TryCreateSrgb(_data, src.cubemapPositiveX.index, Vector2.zero, Vector2.one, out _, out var positiveXParam)) return false;
             if (!GltfTextureImporter.TryCreateSrgb(_data, src.cubemapNegativeX.index, Vector2.zero, Vector2.one, out _, out var negativeXParam)) return false;
@@ -90,24 +108,24 @@ namespace VCI
             if (!GltfTextureImporter.TryCreateSrgb(_data, src.cubemapPositiveZ.index, Vector2.zero, Vector2.one, out _, out var positiveZParam)) return false;
             if (!GltfTextureImporter.TryCreateSrgb(_data, src.cubemapNegativeZ.index, Vector2.zero, Vector2.one, out _, out var negativeZParam)) return false;
 
-            var positiveX = await _textureFactory.GetTextureAsync(positiveXParam, awaitCaller);
-            var negativeX = await _textureFactory.GetTextureAsync(negativeXParam, awaitCaller);
-            var positiveY = await _textureFactory.GetTextureAsync(positiveYParam, awaitCaller);
-            var negativeY = await _textureFactory.GetTextureAsync(negativeYParam, awaitCaller);
-            var positiveZ = await _textureFactory.GetTextureAsync(positiveZParam, awaitCaller);
-            var negativeZ = await _textureFactory.GetTextureAsync(negativeZParam, awaitCaller);
+            var positiveX = await _intermediateTextureFactory.GetTextureAsync(positiveXParam, awaitCaller);
+            var negativeX = await _intermediateTextureFactory.GetTextureAsync(negativeXParam, awaitCaller);
+            var positiveY = await _intermediateTextureFactory.GetTextureAsync(positiveYParam, awaitCaller);
+            var negativeY = await _intermediateTextureFactory.GetTextureAsync(negativeYParam, awaitCaller);
+            var positiveZ = await _intermediateTextureFactory.GetTextureAsync(positiveZParam, awaitCaller);
+            var negativeZ = await _intermediateTextureFactory.GetTextureAsync(negativeZParam, awaitCaller);
 
-            if (!await RenderCubemapFaceTextureAsync(positiveX, dst, GltfCubemapFace.PositiveX.ConvertToUnityCubemapFace(), mipmap, awaitCaller)) return false;
-            if (!await RenderCubemapFaceTextureAsync(negativeX, dst, GltfCubemapFace.NegativeX.ConvertToUnityCubemapFace(), mipmap, awaitCaller)) return false;
-            if (!await RenderCubemapFaceTextureAsync(positiveY, dst, GltfCubemapFace.PositiveY.ConvertToUnityCubemapFace(), mipmap, awaitCaller)) return false;
-            if (!await RenderCubemapFaceTextureAsync(negativeY, dst, GltfCubemapFace.NegativeY.ConvertToUnityCubemapFace(), mipmap, awaitCaller)) return false;
-            if (!await RenderCubemapFaceTextureAsync(positiveZ, dst, GltfCubemapFace.PositiveZ.ConvertToUnityCubemapFace(), mipmap, awaitCaller)) return false;
-            if (!await RenderCubemapFaceTextureAsync(negativeZ, dst, GltfCubemapFace.NegativeZ.ConvertToUnityCubemapFace(), mipmap, awaitCaller)) return false;
+            if (!await RenderCubemapFaceTextureAsync(positiveX, dst, GltfCubemapFace.PositiveX.ConvertToUnityCubemapFace(), mipmap, compressionType, awaitCaller)) return false;
+            if (!await RenderCubemapFaceTextureAsync(negativeX, dst, GltfCubemapFace.NegativeX.ConvertToUnityCubemapFace(), mipmap, compressionType, awaitCaller)) return false;
+            if (!await RenderCubemapFaceTextureAsync(positiveY, dst, GltfCubemapFace.PositiveY.ConvertToUnityCubemapFace(), mipmap, compressionType, awaitCaller)) return false;
+            if (!await RenderCubemapFaceTextureAsync(negativeY, dst, GltfCubemapFace.NegativeY.ConvertToUnityCubemapFace(), mipmap, compressionType, awaitCaller)) return false;
+            if (!await RenderCubemapFaceTextureAsync(positiveZ, dst, GltfCubemapFace.PositiveZ.ConvertToUnityCubemapFace(), mipmap, compressionType, awaitCaller)) return false;
+            if (!await RenderCubemapFaceTextureAsync(negativeZ, dst, GltfCubemapFace.NegativeZ.ConvertToUnityCubemapFace(), mipmap, compressionType, awaitCaller)) return false;
 
             return true;
         }
 
-        private async Task<bool> RenderCubemapFaceTextureAsync(Texture src, Cubemap dst, CubemapFace srcFace, int mipmap, IAwaitCaller awaitCaller)
+        private async Task<bool> RenderCubemapFaceTextureAsync(Texture src, Cubemap dst, CubemapFace srcFace, int mipmap, CubemapCompressionType compressionType, IAwaitCaller awaitCaller)
         {
             if (!Mathf.IsPowerOfTwo(dst.width)) return false;
             if (!Mathf.IsPowerOfTwo(dst.height)) return false;
@@ -119,7 +137,7 @@ namespace VCI
 
             var rt = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.DefaultHDR, RenderTextureReadWrite.Linear);
 
-            var shader = GetImporterShader();
+            var shader = GetImporterShader(compressionType);
             if (shader == null)
             {
                 Graphics.Blit(src, rt);
@@ -180,9 +198,9 @@ namespace VCI
             return true;
         }
 
-        private Shader GetImporterShader()
+        private Shader GetImporterShader(CubemapCompressionType compressionType)
         {
-            switch (CompressionType)
+            switch (compressionType)
             {
                 case CubemapCompressionType.Raw:
                     return null;
@@ -191,7 +209,7 @@ namespace VCI
                 case CubemapCompressionType.Rgbm:
                     return _importFromRgbmShader;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(CompressionType), CompressionType, null);
+                    throw new ArgumentOutOfRangeException(nameof(compressionType), compressionType, null);
             }
         }
     }

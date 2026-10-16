@@ -4,7 +4,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UniGLTF;
-using VRMShaders;
 using ColorSpace = UnityEngine.ColorSpace;
 
 namespace VCI
