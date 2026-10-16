@@ -4,7 +4,6 @@ using System.Linq;
 using UnityEngine;
 using UniGLTF;
 using VRM;
-using VRMShaders;
 
 namespace VCI
 {
@@ -12,6 +11,10 @@ namespace VCI
     {
         private readonly glTF_VRM_extensions _temporaryConvertedVrmExt = new();
         private readonly bool _migrateSrgbColor;
+        private readonly BuiltInVrmMToonMaterialImporter _builtInVrmMToonMaterialImporter = new();
+        private readonly BuiltInVciUnlitMaterialImporter _builtInVciUnlitMaterialImporter = new();
+        private readonly BuiltInVciPbrMaterialImporter _builtInVciPbrMaterialImporter = new();
+        private readonly BuiltInGltfDefaultMaterialImporter _builtInGltfDefaultMaterialImporter = new();
 
         public BuiltInVciMaterialDescriptorGenerator(glTF_VCAST_vci_material_unity vciMaterials, bool migrateSrgbColor)
         {
@@ -34,19 +37,19 @@ namespace VCI
         public MaterialDescriptor Get(GltfData data, int i)
         {
             // mtoon
-            if (BuiltInVrmMToonMaterialImporter.TryCreateParam(data, _temporaryConvertedVrmExt, i, out var matDesc))
+            if (_builtInVrmMToonMaterialImporter.TryCreateParam(data, _temporaryConvertedVrmExt, i, out var matDesc))
             {
                 return matDesc;
             }
 
             // unlit
-            if (BuiltInVciUnlitMaterialImporter.TryCreateParam(data, i, out matDesc, _migrateSrgbColor))
+            if (_builtInVciUnlitMaterialImporter.TryCreateParam(data, i, out matDesc, _migrateSrgbColor))
             {
                 return matDesc;
             }
 
             // pbr
-            if (BuiltInVciPbrMaterialImporter.TryCreateParam(data, i, out matDesc, _migrateSrgbColor))
+            if (_builtInVciPbrMaterialImporter.TryCreateParam(data, i, out matDesc, _migrateSrgbColor))
             {
                 return matDesc;
             }
@@ -58,7 +61,7 @@ namespace VCI
             }
             return new MaterialDescriptor(
                 GltfMaterialImportUtils.ImportMaterialName(i, null),
-                BuiltInGltfPbrMaterialImporter.Shader,
+                _builtInVciPbrMaterialImporter.Shader,
                 null,
                 new Dictionary<string, TextureDescriptor>(),
                 new Dictionary<string, float>(),
@@ -67,9 +70,9 @@ namespace VCI
                 new Action<Material>[]{});
         }
 
-        public MaterialDescriptor GetGltfDefault()
+        public MaterialDescriptor GetGltfDefault(string materialName = null)
         {
-            return BuiltInGltfDefaultMaterialImporter.CreateParam();
+            return _builtInGltfDefaultMaterialImporter.CreateParam();
         }
     }
 }

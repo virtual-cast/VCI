@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using VRMShaders;
+using UniGLTF;
 using Debug = UnityEngine.Debug;
 
 namespace VCI

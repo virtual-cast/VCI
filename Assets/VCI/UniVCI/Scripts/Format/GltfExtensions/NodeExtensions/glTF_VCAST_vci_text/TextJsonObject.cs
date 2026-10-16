@@ -1,7 +1,6 @@
 ﻿using System;
 using TMPro;
 using UniGLTF;
-using VRMShaders;
 
 namespace VCI
 {

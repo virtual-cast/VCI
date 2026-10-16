@@ -79,7 +79,9 @@ namespace Effekseer.Internal
 		public RenderTargetIdentifier colorTargetIdentifier;
 		public RenderTargetIdentifier? depthTargetIdentifier;
 		public RenderTextureDescriptor colorTargetDescriptor;
-		public Rect Viewport;
+		public Vector2? ActualScreenSize;
+		public Rect? Viewport;
+		public Rect? SourceViewport;
 		public bool isRequiredToChangeViewport = false;
 		public RenderTexture colorTargetRenderTexture = null;
 		public RenderTexture depthTargetRenderTexture = null;
@@ -98,6 +100,29 @@ namespace Effekseer.Internal
 
 		public RenderTargetProperty()
 		{
+		}
+
+		void SetTemporaryRenderTextureViewport(CommandBuffer cb, RenderTexture renderTexture)
+		{
+			if (renderTexture != null)
+			{
+				cb.SetViewport(new Rect(0, 0, renderTexture.width, renderTexture.height));
+			}
+		}
+
+		Rect GetSourceViewport()
+		{
+			if (SourceViewport.HasValue)
+			{
+				return SourceViewport.Value;
+			}
+
+			if (Viewport.HasValue)
+			{
+				return Viewport.Value;
+			}
+
+			return new Rect();
 		}
 
 		internal void ApplyToCommandBuffer(CommandBuffer cb, DepthRenderTexture depthRenderTexture, IEffekseerBlitter blitter)
@@ -135,14 +160,18 @@ namespace Effekseer.Internal
 				}
 				else if (renderFeature == RenderFeature.HDRP)
 				{
+					var sourceViewport = GetSourceViewport();
+					var normalizedArea = new Vector4(
+						sourceViewport.width / depthTargetRenderTexture.width,
+						sourceViewport.height / depthTargetRenderTexture.height,
+						sourceViewport.x / depthTargetRenderTexture.width,
+						sourceViewport.y / depthTargetRenderTexture.height);
+
 					var m = AllocateBlitArrayMaterial();
 					m.SetTexture("_BackgroundTex", depthTargetRenderTexture);
-					m.SetVector("textureArea", new Vector4(
-						Viewport.width / depthTargetRenderTexture.width,
-						Viewport.height / depthTargetRenderTexture.height,
-						Viewport.x / depthTargetRenderTexture.width,
-						Viewport.y / depthTargetRenderTexture.height));
+					m.SetVector("textureArea", normalizedArea);
 					cb.SetRenderTarget(depthRenderTexture.renderTexture);
+					SetTemporaryRenderTextureViewport(cb, depthRenderTexture.renderTexture);
 					cb.ClearRenderTarget(true, true, new Color(0, 0, 0));
 					cb.Blit(null, depthRenderTexture.renderTexture, m);
 				}
@@ -152,14 +181,7 @@ namespace Effekseer.Internal
 				}
 
 				// restore
-				if (depthTargetIdentifier.HasValue)
-				{
-					blitter.SetRenderTarget(cb, colorTargetIdentifier, depthTargetIdentifier.Value, xrRendering);
-				}
-				else
-				{
-					blitter.SetRenderTarget(cb, colorTargetIdentifier, xrRendering);
-				}
+				SetDefaultRenderTarget(cb, blitter);
 			}
 		}
 
@@ -167,31 +189,34 @@ namespace Effekseer.Internal
 		{
 			if (isRequiredToChangeViewport)
 			{
+				var sourceViewport = GetSourceViewport();
+				var normalizedArea = new Vector4(
+						sourceViewport.width / colorTargetRenderTexture.width,
+						sourceViewport.height / colorTargetRenderTexture.height,
+						sourceViewport.x / colorTargetRenderTexture.width,
+						sourceViewport.y / colorTargetRenderTexture.height);
+
+				// Dynamic resolution changes the render viewport, but the source region for the
+				// background/depth copy still matches the camera's full viewport.
 				if (colorTargetRenderTexture.dimension == TextureDimension.Tex2DArray)
 				{
 					var m = AllocateBlitArrayMaterial();
 					m.SetTexture("_BackgroundTex", colorTargetRenderTexture);
-					m.SetVector("textureArea", new Vector4(
-						Viewport.width / colorTargetRenderTexture.width,
-						Viewport.height / colorTargetRenderTexture.height,
-						Viewport.x / colorTargetRenderTexture.width,
-						Viewport.y / colorTargetRenderTexture.height));
+					m.SetVector("textureArea", normalizedArea);
 					blitter.SetRenderTarget(cb, backgroundRenderTexture.renderTexture, xrRendering);
+					SetTemporaryRenderTextureViewport(cb, backgroundRenderTexture.renderTexture);
 					cb.ClearRenderTarget(true, true, new Color(0, 0, 0));
-					blitter.Blit(cb, colorTargetIdentifier, backgroundRenderTexture.renderTexture, m, xrRendering);
+					cb.Blit(null, backgroundRenderTexture.renderTexture, m);
 				}
 				else
 				{
 					var m = AllocateBlitMaterial();
 					m.SetTexture("_BackgroundTex", colorTargetRenderTexture);
-					m.SetVector("textureArea", new Vector4(
-						Viewport.width / colorTargetRenderTexture.width,
-						Viewport.height / colorTargetRenderTexture.height,
-						Viewport.x / colorTargetRenderTexture.width,
-						Viewport.y / colorTargetRenderTexture.height));
+					m.SetVector("textureArea", normalizedArea);
 					blitter.SetRenderTarget(cb, backgroundRenderTexture.renderTexture, xrRendering);
+					SetTemporaryRenderTextureViewport(cb, backgroundRenderTexture.renderTexture);
 					cb.ClearRenderTarget(true, true, new Color(0, 0, 0));
-					blitter.Blit(cb, colorTargetIdentifier, backgroundRenderTexture.renderTexture, m, xrRendering);
+					cb.Blit(null, backgroundRenderTexture.renderTexture, m);
 				}
 			}
 			else if (isRequiredToCopyBackground)
@@ -204,9 +229,15 @@ namespace Effekseer.Internal
 			}
 
 			// restore
+			SetDefaultRenderTarget(cb, blitter);
+
+		}
+
+		internal void SetDefaultRenderTarget(CommandBuffer cb, IEffekseerBlitter blitter)
+		{
 			if (depthTargetIdentifier.HasValue)
 			{
-				blitter.SetRenderTarget(cb, colorTargetIdentifier, depthTargetIdentifier.Value, xrRendering);
+				blitter.SetRenderTarget(cb, colorTargetIdentifier, depthTargetIdentifier.Value, ActualScreenSize, xrRendering);
 			}
 			else
 			{
@@ -245,6 +276,44 @@ namespace Effekseer.Internal
 		}
 	}
 
+	/// <summary>
+	/// Abstraction over the draw commands Effekseer needs (DrawProcedural / SetGlobalBuffer).
+	/// This lets the renderer issue draws either to a legacy <see cref="CommandBuffer"/> or to a
+	/// RenderGraph RasterCommandBuffer without the core assembly referencing the RenderGraph module.
+	/// </summary>
+	public interface IEffekseerCommandBuffer
+	{
+		void DrawProcedural(Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, int vertexCount, int instanceCount, MaterialPropertyBlock properties);
+
+		void SetGlobalBuffer(string name, ComputeBuffer value);
+	}
+
+	/// <summary>
+	/// <see cref="IEffekseerCommandBuffer"/> backed by a legacy <see cref="CommandBuffer"/>.
+	/// Reused per render path; set <see cref="commandBuffer"/> before issuing draws.
+	/// </summary>
+	public sealed class EffekseerCommandBufferProxy : IEffekseerCommandBuffer
+	{
+		public CommandBuffer commandBuffer;
+
+		public EffekseerCommandBufferProxy() { }
+
+		public EffekseerCommandBufferProxy(CommandBuffer commandBuffer)
+		{
+			this.commandBuffer = commandBuffer;
+		}
+
+		public void DrawProcedural(Matrix4x4 matrix, Material material, int shaderPass, MeshTopology topology, int vertexCount, int instanceCount, MaterialPropertyBlock properties)
+		{
+			commandBuffer.DrawProcedural(matrix, material, shaderPass, topology, vertexCount, instanceCount, properties);
+		}
+
+		public void SetGlobalBuffer(string name, ComputeBuffer value)
+		{
+			commandBuffer.SetGlobalBuffer(name, value);
+		}
+	}
+
 	public interface IEffekseerRenderer
 	{
 		int layer { get; set; }
@@ -256,9 +325,21 @@ namespace Effekseer.Internal
 
 		void CleanUp();
 
-		CommandBuffer GetCameraCommandBuffer(Camera camera);
+		void Render(Camera camera, int additionalMask, RenderTargetProperty renderTargetProperty, CommandBuffer targetCommandBuffer, bool isScriptable, IEffekseerBlitter blitter);
 
-		void Render(Camera camera, RenderTargetProperty renderTargetProperty, CommandBuffer targetCommandBuffer, bool isScriptable, IEffekseerBlitter blitter);
+		/// <summary>
+		/// True when effects can be drawn directly into an externally-bound render attachment
+		/// (i.e. only DrawProcedural commands are required, no background/depth grab that needs
+		/// its own SetRenderTarget/Blit). Used by the URP RenderGraph path to draw inside a
+		/// RasterRenderPass so the camera color attachment is not discarded on tiled GPUs.
+		/// </summary>
+		bool CanRenderToAttachment { get; }
+
+		/// <summary>
+		/// Render effects assuming the color (and depth) attachment is already bound by the caller.
+		/// Must not change the render target or issue blits. Only valid when <see cref="CanRenderToAttachment"/> is true.
+		/// </summary>
+		void RenderToAttachment(Camera camera, int additionalMask, RenderTargetProperty renderTargetProperty, IEffekseerCommandBuffer drawCommandBuffer);
 
 		void OnPostRender(Camera camera);
 	}
@@ -305,6 +386,18 @@ namespace Effekseer.Internal
 				return EffekseerSettings.Instance.enableDepth;
 #endif
 			}
+		}
+
+		internal static void DestroyRenderTexture(RenderTexture renderTexture)
+		{
+#if UNITY_EDITOR
+			if (!Application.isPlaying)
+			{
+				UnityEngine.Object.DestroyImmediate(renderTexture);
+				return;
+			}
+#endif
+			UnityEngine.Object.Destroy(renderTexture);
 		}
 	}
 
@@ -408,6 +501,7 @@ namespace Effekseer.Internal
 			if (renderTexture != null)
 			{
 				renderTexture.Release();
+				EffekseerRendererUtils.DestroyRenderTexture(renderTexture);
 				renderTexture = null;
 				ptr = IntPtr.Zero;
 			}
@@ -455,6 +549,7 @@ namespace Effekseer.Internal
 			if (renderTexture != null)
 			{
 				renderTexture.Release();
+				EffekseerRendererUtils.DestroyRenderTexture(renderTexture);
 				renderTexture = null;
 				ptr = IntPtr.Zero;
 			}

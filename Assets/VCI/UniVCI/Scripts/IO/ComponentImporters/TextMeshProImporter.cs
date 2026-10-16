@@ -5,7 +5,6 @@ using TMPro;
 using UniGLTF;
 using UnityEngine;
 using UnityEngine.TextCore;
-using VRMShaders;
 
 namespace VCI
 {

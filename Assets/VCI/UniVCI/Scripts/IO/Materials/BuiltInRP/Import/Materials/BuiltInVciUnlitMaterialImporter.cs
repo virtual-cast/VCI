@@ -1,14 +1,14 @@
 ﻿using UniGLTF;
-using VRMShaders;
 
 namespace VCI
 {
-    public static class BuiltInVciUnlitMaterialImporter
+    public sealed class BuiltInVciUnlitMaterialImporter
     {
-        public static bool TryCreateParam(GltfData data, int i, out MaterialDescriptor matDesc, bool migrateSrgbColor)
+        private readonly BuiltInGltfUnlitMaterialImporter _builtinGltfUnlitMaterialImporter = new();
+        public bool TryCreateParam(GltfData data, int i, out MaterialDescriptor matDesc, bool migrateSrgbColor)
         {
             // NOTE: GLTF の KHR_materials_unlit 定義に準じる.
-            if (!BuiltInGltfUnlitMaterialImporter.TryCreateParam(data, i, out matDesc))
+            if (!_builtinGltfUnlitMaterialImporter.TryCreateParam(data, i, out matDesc))
             {
                 return false;
             }

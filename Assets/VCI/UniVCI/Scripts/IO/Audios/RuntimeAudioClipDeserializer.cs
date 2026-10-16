@@ -6,7 +6,7 @@ using NAudio.Wave;
 using NLayer.NAudioSupport;
 using Unity.Collections;
 using UnityEngine;
-using VRMShaders;
+using UniGLTF;
 using Debug = UnityEngine.Debug;
 
 namespace VCI

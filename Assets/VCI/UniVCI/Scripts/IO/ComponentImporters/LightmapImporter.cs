@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UniGLTF;
 using UnityEngine;
 using UnityEngine.Rendering;
-using VRMShaders;
 
 namespace VCI
 {
@@ -15,7 +14,8 @@ namespace VCI
             VciData vciData,
             IReadOnlyList<Transform> unityNodes,
             GameObject unityRoot,
-            TextureFactory textureFactory,
+            LightmapTextureFactory lightmapTextureFactory,
+            CubemapTextureFactory cubemapTextureFactory,
             bool isLocation,
             IAwaitCaller awaitCaller)
         {
@@ -39,13 +39,11 @@ namespace VCI
             // Lightmap
             var lightmapCompressionMode = locationLighting.GetLightmapCompressionModeAsEnum();
             var lightmapDirectionalMode = locationLighting.GetLightmapDirectionalModeAsEnum();
-            var lightmapTextureImporter =
-                new LightmapTextureImporter(vciData.GltfData, textureFactory, lightmapCompressionMode, lightmapDirectionalMode);
             var lightmapTextures = new List<Texture2D>();
             for (var idx = 0; idx < locationLighting.lightmapTextures.Length; ++idx)
             {
                 var x = locationLighting.lightmapTextures[idx];
-                var lightmapTexture = await lightmapTextureImporter.GetOrConvertLightmapTextureAsync(x.index, awaitCaller);
+                var lightmapTexture = await lightmapTextureFactory.GetOrConvertLightmapTextureAsync(x.index, lightmapCompressionMode, awaitCaller);
                 lightmapTextures.Add(lightmapTexture);
             }
 
@@ -56,8 +54,8 @@ namespace VCI
                 if (renderer == null) continue;
 
                 var lightmap = lightmapExtension.lightmap;
-                var lightmapTexture = await lightmapTextureImporter.GetOrConvertLightmapTextureAsync(
-                    lightmap.texture.index, awaitCaller);
+                var lightmapTexture = await lightmapTextureFactory.GetOrConvertLightmapTextureAsync(
+                    lightmap.texture.index, lightmapCompressionMode, awaitCaller);
                 var offset = new Vector2(lightmap.offset[0], lightmap.offset[1]);
                 var scale = new Vector2(lightmap.scale[0], lightmap.scale[1]);
 
@@ -75,8 +73,7 @@ namespace VCI
 
             // Ambient Lighting
             var skyboxCompressionMode = locationLighting.skyboxCubemap.GetSkyboxCompressionModeAsEnum();
-            var skyboxCubemapImporter = new CubemapTextureImporter(vciData.GltfData, textureFactory, skyboxCompressionMode);
-            var skyboxImporter = new SkyboxImporter(skyboxCubemapImporter);
+            var skyboxImporter = new SkyboxImporter(cubemapTextureFactory);
             var lightProbeImporter = new LightProbeImporter();
 
             var behaviour = unityRoot.AddComponent<VCILocationLighting>();
@@ -93,7 +90,7 @@ namespace VCI
                     throw new ArgumentOutOfRangeException();
             }
 
-            behaviour.Skybox = await skyboxImporter.CovertToSkyboxAsync(locationLighting.skyboxCubemap, awaitCaller);
+            behaviour.Skybox = await skyboxImporter.ConvertToSkyboxAsync(locationLighting.skyboxCubemap, skyboxCompressionMode, awaitCaller);
 
             var (lightProbePosArray, lightProbeCoefficientArray) = await awaitCaller.Run(() => lightProbeImporter.Import(locationLighting.lightProbes));
             behaviour.LightProbePositions = lightProbePosArray;
@@ -110,10 +107,9 @@ namespace VCI
                 var data = reflectionProbeExtension.reflectionProbe;
                 var gltfOffset = data.boxOffset;
                 var gltfSize = data.boxSize;
-                var cubemapImporter =
-                    new CubemapTextureImporter(vciData.GltfData, textureFactory, data.cubemap.GetSkyboxCompressionModeAsEnum());
+                var compressionMode = data.cubemap.GetSkyboxCompressionModeAsEnum();
 
-                var cubemap = await cubemapImporter.GetOrConvertCubemapTextureAsync(data.cubemap, awaitCaller);
+                var cubemap = await cubemapTextureFactory.GetOrConvertCubemapTextureAsync(data.cubemap, compressionMode, awaitCaller);
 
                 reflectionProbe.center = new Vector3(-gltfOffset[0], gltfOffset[1], gltfOffset[2]); // Invert X-axis
                 reflectionProbe.size = new Vector3(gltfSize[0], gltfSize[1], gltfSize[2]);

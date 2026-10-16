@@ -6,7 +6,6 @@ using Effekseer;
 using TMPro;
 using UniGLTF;
 using UnityEngine;
-using VRMShaders;
 
 namespace VCI
 {
@@ -113,12 +112,7 @@ namespace VCI
         public void ShowMeshesAndSetUpdateWhenOffscreen()
         {
             ShowMeshes();
-            if (Root == null) return;
-            var skinnedMeshRenderers = Root.GetComponentsInChildren<SkinnedMeshRenderer>();
-            foreach (var renderer in skinnedMeshRenderers)
-            {
-                renderer.updateWhenOffscreen = true;
-            }
+            EnableUpdateWhenOffscreen(true);
         }
 
         public void ShowMeshes()
@@ -134,7 +128,7 @@ namespace VCI
             }
         }
 
-        public void EnableUpdateWhenOffscreen()
+        public void EnableUpdateWhenOffscreen(bool enable)
         {
             // ShowMeshes() と同様の理由で GltfModel の実装は使わない。
             // GltfModel.EnableUpdateWhenOffscreen();
@@ -142,7 +136,7 @@ namespace VCI
             {
                 if (renderer != null && renderer is SkinnedMeshRenderer skinnedRenderer)
                 {
-                    skinnedRenderer.updateWhenOffscreen = true;
+                    skinnedRenderer.updateWhenOffscreen = enable;
                 }
             }
         }

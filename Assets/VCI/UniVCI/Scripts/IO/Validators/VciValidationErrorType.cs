@@ -58,5 +58,14 @@
 
         // Audio
         RollOffModeNotSupported = 1101,
+
+        // BakedLighting
+        LightmapNotBaked = 1201,
+        NonBakedLightExists = 1202,
+        DirectionalLightmapNotSupported = 1203,
+        LightProbeNotFound = 1204,
+        FogEnabled = 1205,
+        NonBakedReflectionProbeExists = 1206,
+        MToonReceivesLightmap = 1207,
     }
 }

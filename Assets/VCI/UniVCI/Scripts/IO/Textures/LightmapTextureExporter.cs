@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UniGLTF;
-using VRMShaders;
 using ColorSpace = UnityEngine.ColorSpace;
 
 namespace VCI

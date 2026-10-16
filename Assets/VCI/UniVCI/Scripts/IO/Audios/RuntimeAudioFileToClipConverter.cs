@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Unity.Collections;
 using UnityEngine;
-using VRMShaders;
+using UniGLTF;
 
 namespace VCI
 {

@@ -6,7 +6,6 @@ using Effekseer;
 using TMPro;
 using UnityEngine;
 using UniGLTF;
-using VRMShaders;
 
 namespace VCI
 {
@@ -14,9 +13,12 @@ namespace VCI
     {
         public RuntimeVciInstance RuntimeVciInstance { get; private set; }
 
-        private AudioClipFactory AudioClipFactory { get; }
-        private PhysicMaterialFactory PhysicMaterialFactory { get; }
-        private ColliderMeshFactory ColliderMeshFactory { get; }
+        private readonly AudioClipFactory _audioClipFactory;
+        private readonly PhysicMaterialFactory _physicMaterialFactory;
+        private readonly ColliderMeshFactory _colliderMeshFactory;
+        private readonly IntermediateTextureFactory _intermediateTextureFactory;
+        private readonly LightmapTextureFactory _lightmapTextureFactory;
+        private readonly CubemapTextureFactory _cubemapTextureFactory;
 
         private readonly VciData _data;
         private readonly bool _isLocation;
@@ -24,6 +26,7 @@ namespace VCI
         private readonly IVciDefaultLayerProvider _vciDefaultLayerProvider;
         private readonly IVciColliderLayerProvider _vciColliderLayerProvider;
         private readonly ISpringBoneImporter _springBoneImporter;
+        private readonly ImporterContextSettings _settings;
 
         public VCIImporter(
             VciData data,
@@ -35,8 +38,9 @@ namespace VCI
             IVciColliderLayerProvider vciColliderLayerProvider = null,
             IFontProvider fontProvider = null,
             IMp3FileDecoder mp3FileDecoder = null,
-            ISpringBoneImporter springBoneImporter = null
-        ) : base(data.GltfData, externalObjectMap, textureDeserializer, materialDescriptorGenerator)
+            ISpringBoneImporter springBoneImporter = null,
+            ImporterContextSettings settings = null
+        ) : base(data.GltfData, externalObjectMap, textureDeserializer, materialDescriptorGenerator, settings)
         {
             _data = data;
             _isLocation = isLocation;
@@ -45,19 +49,17 @@ namespace VCI
             _fontProvider = fontProvider;
             var mp3DecodeStrategy = new Mp3DecodeStrategyAdapter(new NAudioMp3DecoderImpl(), mp3FileDecoder);
             _springBoneImporter = springBoneImporter ?? new SpringBoneImporter();
-            AudioClipFactory = new AudioClipFactory(ExternalObjectMap
+            _settings = settings ?? new ImporterContextSettings();
+            _audioClipFactory = new AudioClipFactory(ExternalObjectMap
                 .Where(x => x.Value is AudioClip)
                 .ToDictionary(x => x.Key, x => (AudioClip)x.Value),
                 mp3DecodeStrategy);
-            PhysicMaterialFactory = new PhysicMaterialFactory(ExternalObjectMap
+            _physicMaterialFactory = new PhysicMaterialFactory(ExternalObjectMap
                 .Where(x => x.Value is PhysicsMaterial)
                 .ToDictionary(x => x.Key, x => (PhysicsMaterial)x.Value));
-            ColliderMeshFactory = new ColliderMeshFactory(ExternalObjectMap
+            _colliderMeshFactory = new ColliderMeshFactory(ExternalObjectMap
                 .Where(x => x.Value is Mesh)
                 .ToDictionary(x => x.Key, x => (Mesh)x.Value));
-
-            // VCI Specification
-            InvertAxis = Axes.Z;
 
             if (_data.Meta == null)
             {
@@ -73,15 +75,33 @@ namespace VCI
 
             MaterialDescriptorGenerator = materialDescriptorGenerator ?? new BuiltInVciMaterialDescriptorGenerator(_data.UnityMaterials, _data.VciMigrationFlags.IsPbrBaseColorSrgb);
             TextureDescriptorGenerator = new VciTextureDescriptorGenerator(_data.GltfData, _data.UnityMaterials, _data.Meta);
+
+            _intermediateTextureFactory = new IntermediateTextureFactory(TextureFactory.TextureDeserializer, TextureFactory.ExternalTextures);
+            _lightmapTextureFactory = new LightmapTextureFactory(_data.GltfData, TextureFactory, _intermediateTextureFactory);
+            _cubemapTextureFactory = new CubemapTextureFactory(_data.GltfData, _intermediateTextureFactory);
         }
 
         public override void TransferOwnership(TakeResponsibilityForDestroyObjectFunc take)
         {
             base.TransferOwnership(take);
 
-            AudioClipFactory.TransferOwnership(take);
-            PhysicMaterialFactory.TransferOwnership(take);
-            ColliderMeshFactory.TransferOwnership(take);
+            _audioClipFactory.TransferOwnership(take);
+            _physicMaterialFactory.TransferOwnership(take);
+            _colliderMeshFactory.TransferOwnership(take);
+            _lightmapTextureFactory.TransferOwnership(take);
+            _cubemapTextureFactory.TransferOwnership(take);
+        }
+
+        public override void Dispose()
+        {
+            _audioClipFactory.Dispose();
+            _physicMaterialFactory.Dispose();
+            _colliderMeshFactory.Dispose();
+            _intermediateTextureFactory.Dispose();
+            _lightmapTextureFactory.Dispose();
+            _cubemapTextureFactory.Dispose();
+
+            base.Dispose();
         }
 
         private const string MATERIAL_EXTENSION_NAME = "VCAST_vci_material_unity";
@@ -140,7 +160,7 @@ namespace VCI
             {
                 // NOTE: LoadAsyncはCancellationTokenに対応しているが、そもそもVCIロードがキャンセル未対応
                 // そのため、現時点ではCancellationTokenを渡さない
-                await AudioImporter.LoadAsync(_data, Nodes, Root, AudioClipFactory, awaitCaller);
+                await AudioImporter.LoadAsync(_data, Nodes, Root, _audioClipFactory, awaitCaller);
             }
 
             // Animation
@@ -188,9 +208,9 @@ namespace VCI
                     _data,
                     Nodes,
                     _vciColliderLayerProvider,
-                    InvertAxis.Create(),
-                    PhysicMaterialFactory,
-                    ColliderMeshFactory,
+                    _settings.InvertAxis.Create(),
+                    _physicMaterialFactory,
+                    _colliderMeshFactory,
                     awaitCaller);
                 rigidbodySettings = await PhysicsRigidbodyImporter.LoadAsync(_data, Nodes, awaitCaller);
                 await PhysicsJointImporter.LoadAsync(_data, Nodes, awaitCaller);
@@ -222,8 +242,10 @@ namespace VCI
 
             using (measureTime("Lightmap"))
             {
-                await LightmapImporter.LoadAsync(_data, Nodes, Root, TextureFactory, _isLocation, awaitCaller);
+                await LightmapImporter.LoadAsync(_data, Nodes, Root, _lightmapTextureFactory, _cubemapTextureFactory, _isLocation, awaitCaller);
             }
+            // 中間テクスチャは最終成果物への変換完了後に不要
+            _intermediateTextureFactory.Dispose();
 
             // NOTE: VCI ロード時に生成したリソースを移譲する.
             var runtimeVciResources = new List<(SubAssetKey, UnityEngine.Object)>();
@@ -242,7 +264,7 @@ namespace VCI
 
         public override async Task LoadAnimationAsync(IAwaitCaller awaitCaller)
         {
-            await AnimationImporter.LoadAsync(_data, AnimationClipFactory, InvertAxis.Create(), awaitCaller);
+            await AnimationImporter.LoadAsync(_data, AnimationClipFactory, _settings.InvertAxis.Create(), awaitCaller);
         }
 
         protected override async Task SetupAnimationsAsync(IAwaitCaller awaitCaller)

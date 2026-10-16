@@ -1,14 +1,17 @@
 ﻿using UniGLTF;
-using VRMShaders;
+using UnityEngine;
 
 namespace VCI
 {
-    public static class BuiltInVciPbrMaterialImporter
+    public sealed class BuiltInVciPbrMaterialImporter
     {
-        public static bool TryCreateParam(GltfData data, int i, out MaterialDescriptor matDesc, bool migrateSrgbColor)
+        private readonly BuiltInGltfPbrMaterialImporter _builtinGltfPbrMaterialImporter = new();
+        public Shader Shader => _builtinGltfPbrMaterialImporter.Shader;
+
+        public bool TryCreateParam(GltfData data, int i, out MaterialDescriptor matDesc, bool migrateSrgbColor)
         {
             // NOTE: GLTF の PBR 定義に準じる.
-            if (!BuiltInGltfPbrMaterialImporter.TryCreateParam(data, i, out matDesc))
+            if (!_builtinGltfPbrMaterialImporter.TryCreateParam(data, i, out matDesc))
             {
                 return false;
             }

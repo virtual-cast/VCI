@@ -165,9 +165,9 @@ namespace VCI
         private void Migrate()
         {
             var exportingGltfData = new ExportingGltfData();
-            using var exporter = new VCIExporter(exportingGltfData);
+            using var exporter = new VCIExporter(exportingGltfData, textureSerializer: new DummyTextureSerializer());
             exporter.Prepare(_vciObject.gameObject);
-            exporter.Export(new DummyTextureSerializer());
+            exporter.Export();
             var binary = exportingGltfData.ToGlbBytes();
 
             // パースと同時にマイグレートされる

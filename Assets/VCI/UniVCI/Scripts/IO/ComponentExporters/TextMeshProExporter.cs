@@ -3,7 +3,7 @@ using TMPro;
 using UniGLTF;
 using UnityEngine;
 using UnityEngine.TextCore;
-using ColorSpace = VRMShaders.ColorSpace;
+using ColorSpace = UniGLTF.ColorSpace;
 
 namespace VCI
 {

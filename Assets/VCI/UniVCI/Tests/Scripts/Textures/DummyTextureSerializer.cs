@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
-using VRMShaders;
-using ColorSpace = VRMShaders.ColorSpace;
+using UniGLTF;
+using ColorSpace = UniGLTF.ColorSpace;
 
 namespace VCI
 {

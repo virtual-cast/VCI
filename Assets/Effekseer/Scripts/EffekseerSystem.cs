@@ -36,6 +36,24 @@ namespace Effekseer
 		/// <returns>再生したエフェクトインスタンス</returns>
 		public static EffekseerHandle PlayEffect(EffekseerEffectAsset effectAsset, Vector3 location)
 		{
+			var param = EffekseerPlayEffectParameters.Create(location);
+			return PlayEffect(effectAsset, param);
+		}
+
+		/// <summary xml:lang="en">
+		/// Plays the effect with parameters.
+		/// </summary>
+		/// <param name="effectAsset" xml:lang="en">Effect asset</param>
+		/// <param name="param" xml:lang="en">Play parameters</param>
+		/// <returns>Played effect instance</returns>
+		/// <summary xml:lang="ja">
+		/// パラメータを指定してエフェクトを再生する。
+		/// </summary>
+		/// <param name="effectAsset" xml:lang="ja">エフェクトアセット</param>
+		/// <param name="param" xml:lang="ja">再生パラメータ</param>
+		/// <returns>再生したエフェクトインスタンス</returns>
+		public static EffekseerHandle PlayEffect(EffekseerEffectAsset effectAsset, EffekseerPlayEffectParameters param)
+		{
 			if (Instance == null)
 			{
 #if UNITY_EDITOR
@@ -61,7 +79,7 @@ namespace Effekseer
 			IntPtr nativeEffect;
 			if (Instance.nativeEffects.TryGetValue(effectAsset.GetInstanceID(), out nativeEffect))
 			{
-				int handle = Plugin.EffekseerPlayEffect(nativeEffect, location.x, location.y, location.z);
+				int handle = Plugin.EffekseerPlayEffect(nativeEffect, ref param);
 				return new EffekseerHandle(handle);
 			}
 			return new EffekseerHandle(-1);
@@ -301,7 +319,7 @@ namespace Effekseer
 				Debug.LogError("[Effekseer] EffekseerSystem instance is already found.");
 			}
 
-#if (UNITY_WEBGL || UNITY_IOS || UNITY_SWITCH) && !UNITY_EDITOR
+#if (UNITY_WEBGL || UNITY_IOS || UNITY_SWITCH || UNITY_SWITCH2) && !UNITY_EDITOR
 			Plugin.RegisterPlugin();
 #endif
 
@@ -400,6 +418,9 @@ namespace Effekseer
 #if UNITY_2017_4_OR_NEWER
 				case GraphicsDeviceType.Switch:
 #endif
+#if UNITY_6000_0_OR_NEWER
+				case GraphicsDeviceType.Switch2:
+#endif
 					reversedDepth = true;
 					break;
 			}
@@ -467,8 +488,16 @@ namespace Effekseer
 
 			// Finalize Effekseer library
 			Plugin.EffekseerTerm();
-			// For a platform that is releasing in render thread
-			GL.IssuePluginEvent(Plugin.EffekseerGetRenderFunc(), 0);
+
+			if (Instance.RendererType == EffekseerRendererType.Native)
+			{
+				// For a platform that is releasing in render thread
+				GL.IssuePluginEvent(Plugin.EffekseerGetRenderFunc(), 0);
+			}
+			else
+			{
+				Plugin.EffekseerUpdateState(0);
+			}
 
 			Instance = null;
 		}
@@ -587,6 +616,18 @@ namespace Effekseer
 		{
 			restFrames = 0;
 		}
+
+		public void UpdateRendererState()
+		{
+			if (Instance.RendererType == EffekseerRendererType.Native)
+			{
+				GL.IssuePluginEvent(Plugin.EffekseerGetUpdateStateFunc(), 0);
+			}
+			else
+			{
+				Plugin.EffekseerUpdateState(0);
+			}
+		}
 #endif
 
 		float restFrames = 0;
@@ -610,6 +651,15 @@ namespace Effekseer
 			restFrames -= updateCount;
 
 			ApplyLightingToNative();
+
+			if (Instance.RendererType == EffekseerRendererType.Native)
+			{
+				GL.IssuePluginEvent(Plugin.EffekseerGetUpdateStateFunc(), 0);
+			}
+			else
+			{
+				Plugin.EffekseerUpdateState(0);
+			}
 		}
 
 		/// <summary>

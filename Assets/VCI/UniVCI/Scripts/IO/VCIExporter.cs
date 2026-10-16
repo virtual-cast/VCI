@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UniGLTF;
 using UnityEngine;
-using VRMShaders;
 
 namespace VCI
 {
@@ -28,16 +27,17 @@ namespace VCI
         private List<Transform> _originalNodes = new List<Transform>();
 
         // NOTE: GltfExportSettings には VCI の仕様が含まれるため、強制的に上書きする.
-        public VCIExporter(ExportingGltfData gltfData, IVciAnimationNodeExporter animationNodeExporter = null, IVciColliderLayerProvider colliderLayerProvider = null)
-            : base(gltfData, VciExportSettings, animationExporter: animationNodeExporter?.GltfRootAnimationExporter)
+        public VCIExporter(
+            ExportingGltfData gltfData,
+            IVciAnimationNodeExporter animationNodeExporter = null,
+            IVciColliderLayerProvider colliderLayerProvider = null,
+            IMaterialExporter materialExporter = null,
+            ITextureSerializer textureSerializer = null
+        ) : base(gltfData, VciExportSettings, animationExporter: animationNodeExporter?.GltfRootAnimationExporter,
+            materialExporter: materialExporter, textureSerializer: textureSerializer)
         {
             _animationNodeExporter = animationNodeExporter ?? new RuntimeAnimationNodeExporter();
             _colliderLayerProvider = colliderLayerProvider ?? new VciDefaultLayerSettings();
-        }
-
-        protected override IMaterialExporter CreateMaterialExporter()
-        {
-            return new BuiltInVciMaterialExporter();
         }
 
         public override void Prepare(GameObject go)
@@ -255,7 +255,7 @@ namespace VCI
             }
 
             // Scene Lighting
-            if (VciSymbols.IsDevelopmentEnabled)
+            if (Copy.GetComponent<VCIBakedLighting>() != null)
             {
                 var lightmapTextureExporter = new LightmapTextureExporter(TextureExporter, textureSerializer);
                 var cubemapTextureExporter = new CubemapTextureExporter(TextureExporter, textureSerializer);

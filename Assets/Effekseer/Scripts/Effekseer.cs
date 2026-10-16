@@ -64,6 +64,128 @@ namespace Effekseer
 		Unknown,
 	}
 
+	[StructLayout(LayoutKind.Sequential)]
+	public struct EffekseerPlayEffectParameters
+	{
+		public const int DynamicInputCount = 4;
+
+		public float PositionX;
+		public float PositionY;
+		public float PositionZ;
+		public float RotationAxisX;
+		public float RotationAxisY;
+		public float RotationAxisZ;
+		public float RotationAngle;
+		public float ScaleX;
+		public float ScaleY;
+		public float ScaleZ;
+		public int Visible;
+		public float Speed;
+		public float DynamicInput0;
+		public float DynamicInput1;
+		public float DynamicInput2;
+		public float DynamicInput3;
+		public int DynamicInputFlags;
+
+		public static EffekseerPlayEffectParameters Default
+		{
+			get
+			{
+				return new EffekseerPlayEffectParameters
+				{
+					PositionX = 0.0f,
+					PositionY = 0.0f,
+					PositionZ = 0.0f,
+					RotationAxisX = 0.0f,
+					RotationAxisY = 0.0f,
+					RotationAxisZ = 1.0f,
+					RotationAngle = 0.0f,
+					ScaleX = 1.0f,
+					ScaleY = 1.0f,
+					ScaleZ = 1.0f,
+					Visible = 1,
+					Speed = 1.0f,
+					DynamicInput0 = 0.0f,
+					DynamicInput1 = 0.0f,
+					DynamicInput2 = 0.0f,
+					DynamicInput3 = 0.0f,
+					DynamicInputFlags = 0,
+				};
+			}
+		}
+
+		public static EffekseerPlayEffectParameters Create(Vector3 position)
+		{
+			var param = Default;
+			param.SetPosition(position);
+			return param;
+		}
+
+		public void SetPosition(Vector3 position)
+		{
+			PositionX = position.x;
+			PositionY = position.y;
+			PositionZ = position.z;
+		}
+
+		public void SetRotation(Vector3 axis, float angle)
+		{
+			RotationAxisX = axis.x;
+			RotationAxisY = axis.y;
+			RotationAxisZ = axis.z;
+			RotationAngle = angle;
+		}
+
+		public void SetScale(Vector3 scale)
+		{
+			ScaleX = scale.x;
+			ScaleY = scale.y;
+			ScaleZ = scale.z;
+		}
+
+		public void SetVisible(bool visible)
+		{
+			Visible = visible ? 1 : 0;
+		}
+
+		public void SetDynamicInput(int index, float value)
+		{
+			if (index < 0 || DynamicInputCount <= index)
+			{
+				Debug.LogWarningFormat("[Effekseer] Dynamic input index is out of range. index={0}, valid=0..{1}", index, DynamicInputCount - 1);
+				return;
+			}
+
+			if (index == 0) DynamicInput0 = value;
+			else if (index == 1) DynamicInput1 = value;
+			else if (index == 2) DynamicInput2 = value;
+			else if (index == 3) DynamicInput3 = value;
+
+			DynamicInputFlags |= 1 << index;
+		}
+
+		public bool TryGetDynamicInput(int index, out float value)
+		{
+			value = 0.0f;
+
+			if (index < 0 || DynamicInputCount <= index)
+			{
+				return false;
+			}
+
+			if ((DynamicInputFlags & (1 << index)) == 0)
+			{
+				return false;
+			}
+
+			if (index == 0) value = DynamicInput0;
+			else if (index == 1) value = DynamicInput1;
+			else if (index == 2) value = DynamicInput2;
+			else if (index == 3) value = DynamicInput3;
+			return true;
+		}
+	}
+
 	enum ExternalTextureType : int
 	{
 		Background,
@@ -73,13 +195,13 @@ namespace Effekseer
 
 	internal static class Plugin
 	{
-#if !UNITY_EDITOR && (UNITY_IPHONE || UNITY_WEBGL || UNITY_SWITCH)
+#if !UNITY_EDITOR && (UNITY_IPHONE || UNITY_WEBGL || UNITY_SWITCH || UNITY_SWITCH2)
 			public const string pluginName = "__Internal";
 #else
 		public const string pluginName = "EffekseerUnity";
 #endif
 
-#if (UNITY_WEBGL || UNITY_IOS || UNITY_SWITCH) && !UNITY_EDITOR
+#if (UNITY_WEBGL || UNITY_IOS || UNITY_SWITCH || UNITY_SWITCH2) && !UNITY_EDITOR
 		[DllImport (pluginName)]
 		public static extern void RegisterPlugin();
 #endif
@@ -100,6 +222,9 @@ namespace Effekseer
 		public static extern void EffekseerUpdate(float deltaTime);
 
 		[DllImport(pluginName)]
+		public static extern IntPtr EffekseerGetUpdateStateFunc();
+
+		[DllImport(pluginName)]
 		public static extern IntPtr EffekseerGetRenderFunc(int renderId = 0);
 
 		[DllImport(pluginName)]
@@ -107,6 +232,9 @@ namespace Effekseer
 
 		[DllImport(pluginName)]
 		public static extern IntPtr EffekseerGetRenderBackFunc(int renderId = 0);
+
+		[DllImport(pluginName)]
+		public static extern void EffekseerUpdateState(int renderId = 0);
 
 		[DllImport(pluginName)]
 		public static extern void EffekseerRender(int renderId = 0);
@@ -170,7 +298,7 @@ namespace Effekseer
 		public static extern float EffekseerGetEffectMagnification(IntPtr effect);
 
 		[DllImport(pluginName)]
-		public static extern int EffekseerPlayEffect(IntPtr effect, float x, float y, float z);
+		public static extern int EffekseerPlayEffect(IntPtr effect, ref EffekseerPlayEffectParameters param);
 
 		[DllImport(pluginName)]
 		public static extern void EffekseerUpdateHandle(int handle, float deltaDrame);
@@ -262,6 +390,12 @@ namespace Effekseer
 		[DllImport(pluginName)]
 		public static extern void EffekseerSetDynamicInput(int handle, int index, float value);
 
+		[DllImport(pluginName)]
+		public static extern IntPtr Effekseer_Manager_GetName(int handle);
+
+		[DllImport(pluginName)]
+		public static extern int Effekseer_Manager_GetEffectHandles(int[] dst, int count);
+
 		public delegate int EffekseerGetUnityIdFromPath(IntPtr path);
 
 		[DllImport(pluginName)]
@@ -306,7 +440,8 @@ namespace Effekseer
 			public Vector3 Normal;
 			public Vector3 Binormal;
 			public Vector3 Tangent;
-			public Vector2 UV;
+			public Vector2 UV1;
+			public Vector2 UV2;
 			public Color32 VColor;
 		}
 
@@ -533,6 +668,7 @@ namespace Effekseer
 			public float FlipbookIndexAndNextRate;
 			public float AlphaThreshold;
 			public float ViewOffsetDistance;
+			public Vector2 ParticleTime;
 		};
 
 		[DllImport(pluginName)]

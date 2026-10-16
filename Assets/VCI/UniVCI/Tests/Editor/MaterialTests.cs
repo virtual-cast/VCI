@@ -2,7 +2,6 @@
 using UnityEngine;
 using UniGLTF;
 using UniJSON;
-using VRMShaders;
 
 namespace VCI
 {
@@ -52,10 +51,10 @@ namespace VCI
             var renderer = cube.GetComponent<Renderer>();
             renderer.sharedMaterial = src;
             var exportingGltfData = new ExportingGltfData();
-            using (var exporter = new VCIExporter(exportingGltfData))
+            using (var exporter = new VCIExporter(exportingGltfData, textureSerializer: new RuntimeTextureSerializer()))
             {
                 exporter.Prepare(root);
-                exporter.Export(new RuntimeTextureSerializer());
+                exporter.Export();
             }
             var bytes = exportingGltfData.ToGlbBytes();
 
