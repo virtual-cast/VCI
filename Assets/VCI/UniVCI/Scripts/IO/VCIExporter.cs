@@ -34,7 +34,7 @@ namespace VCI
             IMaterialExporter materialExporter = null,
             ITextureSerializer textureSerializer = null
         ) : base(gltfData, VciExportSettings, animationExporter: animationNodeExporter?.GltfRootAnimationExporter,
-            materialExporter: materialExporter, textureSerializer: textureSerializer)
+            materialExporter: materialExporter ?? new BuiltInVciMaterialExporter(), textureSerializer: textureSerializer)
         {
             _animationNodeExporter = animationNodeExporter ?? new RuntimeAnimationNodeExporter();
             _colliderLayerProvider = colliderLayerProvider ?? new VciDefaultLayerSettings();

@@ -1,7 +1,7 @@
 {
   "name": "com.thirdparty.naudio",
   "displayName": "NAudio",
-  "version": "0.45.0",
+  "version": "0.45.1",
   "unity": "6000.3",
   "description": "",
   "dependencies": {}
