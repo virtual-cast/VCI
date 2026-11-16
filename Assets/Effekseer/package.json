@@ -1,7 +1,7 @@
 {
   "name": "com.thirdparty.effekseer",
   "displayName": "Effekseer",
-  "version": "0.45.1",
+  "version": "0.45.2",
   "unity": "6000.3",
   "description": "",
   "dependencies": {}

@@ -17,7 +17,8 @@ namespace VCI
         private static readonly IUnitySettingsValidator[] _validators =
         {
             new UnitySettingsColorSpaceValidator(),
-            new UnitySettingsLayerValidator()
+            new UnitySettingsLayerValidator(),
+            new UnitySettingsLodBiasValidator(),
         };
 
         public static bool IsValidAll()

@@ -41,7 +41,8 @@ namespace VCI
                 VciBinaryParser.DeserializePlayerSpawnPointRestrictionExtensions(gltfData.GLTF),
                 VciBinaryParser.DeserializeTextExtensions(gltfData.GLTF),
                 VciBinaryParser.DeserializeRectTransformExtensions(gltfData.GLTF),
-                VciBinaryParser.DeserializeEffekseerEmittersExtensions(gltfData.GLTF)
+                VciBinaryParser.DeserializeEffekseerEmittersExtensions(gltfData.GLTF),
+                VciBinaryParser.DeserializeLodGroupExtensions(gltfData.GLTF)
             );
         }
     }

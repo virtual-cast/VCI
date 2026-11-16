@@ -212,6 +212,15 @@ namespace VCI
                     glTF_VCAST_vci_audio_sources_Serializer.Serialize(f, audioSourcesExtension);
                     AddExtensionValue(gltfNode, usedExtensions, glTF_VCAST_vci_audio_sources.ExtensionName, f.GetStore().Bytes);
                 }
+
+                // LODGroup
+                var lodGroupExtension = LodGroupExporter.ExportLodGroup(node, exporter.Nodes, _gltf);
+                if (lodGroupExtension != null)
+                {
+                    var f = new UniJSON.JsonFormatter();
+                    glTF_VCAST_vci_lod_group_Serializer.Serialize(f, lodGroupExtension);
+                    AddExtensionValue(gltfNode, usedExtensions, glTF_VCAST_vci_lod_group.ExtensionName, f.GetStore().Bytes);
+                }
             }
 
             // Animation

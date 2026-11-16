@@ -234,6 +234,12 @@ namespace VCI
                 PlayerSpawnPointImporter.Load(_data, Nodes);
             }
 
+            // LODGroup
+            using (measureTime("LODGroup"))
+            {
+                LodGroupImporter.Load(_data, Nodes);
+            }
+
             // LocationBounds
             using (measureTime("LocationBounds"))
             {
