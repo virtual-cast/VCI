@@ -19,6 +19,7 @@
         NestedSubItem = 207,
         RootSubItem = 208,
         RootAudioSource = 209,
+        RootLodGroup = 210,
 
         // SpringBone
         TooManySpringBone = 400,

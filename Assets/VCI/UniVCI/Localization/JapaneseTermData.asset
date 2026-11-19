@@ -84,6 +84,10 @@ MonoBehaviour:
   - key: error209
     value: "AudioSource \u306F VCIObject \u306B\u30A2\u30BF\u30C3\u30C1\u3067\u304D\u307E\u305B\u3093\u3002\\nGameObject
       \u540D: {0}"
+  - key: error210
+    value: "LODGroup \u306F VCIObject \u306B\u30A2\u30BF\u30C3\u30C1\u3067\u304D\u307E\u305B\u3093\u3002\u30EB\u30FC\u30C8\u4EE5\u5916\u306E
+      GameObject \u306B\u30A2\u30BF\u30C3\u30C1\u3057\u3066\u304F\u3060\u3055\u3044\u3002\\nGameObject
+      \u540D: {0}"
   - key: error400
     value: "SpringBone \u306E\u6570\u304C\u591A\u3059\u304E\u307E\u3059\u3002"
   - key: error401

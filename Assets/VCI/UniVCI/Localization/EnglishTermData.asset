@@ -68,6 +68,9 @@ MonoBehaviour:
       of the VCIObject.\nThe GameObject name: {0}'
   - key: error209
     value: 'You cannot attach a AudioSource on VCIObject.\nThe GameObject name: {0}'
+  - key: error210
+    value: 'You cannot attach a LODGroup on VCIObject. Attach it to a child GameObject
+      of the VCIObject.\nThe GameObject name: {0}'
   - key: error400
     value: Too many SpringBones.
   - key: error401

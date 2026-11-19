@@ -64,7 +64,19 @@ namespace VCI
                 }
             }
 
-            // Check 5: VCIObject以下に最低1つはGameObjectがある
+            // Check 5: LODGroupはVCIObjectと同じGameObjectにアタッチできない
+            // NOTE: VCIObject の GameObject は glTF のノードとして出力されないため、LODGroup の設定が失われる
+            foreach (var transform in transforms)
+            {
+                if (transform.GetComponent<VCIObject>() == null) { continue; }
+                if (transform.GetComponent<LODGroup>() != null)
+                {
+                    var errorText = VCIConfig.GetFormattedText($"error{(int)VciValidationErrorType.RootLodGroup}", transform.name);
+                    throw new VciValidatorException(VciValidationErrorType.RootLodGroup, errorText);
+                }
+            }
+
+            // Check 6: VCIObject以下に最低1つはGameObjectがある
             if (vciObject.transform.childCount == 0)
             {
                 var errorText = VCIConfig.GetText($"error{(int)VciValidationErrorType.OnlyVciObject}");

@@ -57,7 +57,8 @@ namespace VCI
                 else
                 {
                     // 読み込み側で復元できないものは参照しない。
-                    Debug.LogWarning($"LODGroup refers to a renderer that is not exported: {renderer.name}");
+                    var rendererName = renderer != null ? renderer.name : "(missing)";
+                    Debug.LogWarning($"LODGroup refers to a renderer that is not exported: {rendererName}");
                 }
             }
 
