@@ -30,6 +30,7 @@ namespace VCI
         public IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_text extension)> TextNodes { get; }
         public IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_rectTransform extension)> RectTransformNodes { get; }
         public IReadOnlyList<(int gltfNodeIdx, glTF_Effekseer_emitters extension)> EffekseerEmittersNodes { get; }
+        public IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_lod_group extension)> LodGroupNodes { get; }
 
         public VciData(
             GltfData gltfData,
@@ -55,7 +56,8 @@ namespace VCI
             IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_player_spawn_point_restriction extension)> playerSpawnPointRestrictionNodes,
             IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_text extension)> textNodes,
             IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_rectTransform extension)> rectTransformNodes,
-            IReadOnlyList<(int gltfNodeIdx, glTF_Effekseer_emitters extension)> effekseerEmittersNodes)
+            IReadOnlyList<(int gltfNodeIdx, glTF_Effekseer_emitters extension)> effekseerEmittersNodes,
+            IReadOnlyList<(int gltfNodeIdx, glTF_VCAST_vci_lod_group extension)> lodGroupNodes)
         {
             GltfData = gltfData;
             VciMigrationFlags = vciMigrationFlags;
@@ -81,6 +83,7 @@ namespace VCI
             TextNodes = textNodes;
             RectTransformNodes = rectTransformNodes;
             EffekseerEmittersNodes = effekseerEmittersNodes;
+            LodGroupNodes = lodGroupNodes;
         }
 
         public void Dispose()

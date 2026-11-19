@@ -34,7 +34,8 @@ namespace VCI
             List<(int gltfNodeIdx, glTF_VCAST_vci_player_spawn_point_restriction extension)> playerSpawnPointRestrictionNodes,
             List<(int gltfNodeIdx, glTF_VCAST_vci_text extension)> textNodes,
             List<(int gltfNodeIdx, glTF_VCAST_vci_rectTransform extension)> rectTransformNodes,
-            List<(int gltfNodeIdx, glTF_Effekseer_emitters extension)> effekseerEmittersNodes)
+            List<(int gltfNodeIdx, glTF_Effekseer_emitters extension)> effekseerEmittersNodes,
+            List<(int gltfNodeIdx, glTF_VCAST_vci_lod_group extension)> lodGroupNodes)
         {
             VciPhysicsMigrator.Migrate(gltfData, collidersNodes, rigidbodyNodes, subItemNodes);
 
@@ -62,7 +63,8 @@ namespace VCI
                 playerSpawnPointRestrictionNodes,
                 textNodes,
                 rectTransformNodes,
-                effekseerEmittersNodes
+                effekseerEmittersNodes,
+                lodGroupNodes
             );
         }
     }

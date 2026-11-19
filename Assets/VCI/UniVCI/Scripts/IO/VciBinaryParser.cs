@@ -45,7 +45,8 @@ namespace VCI
                 DeserializePlayerSpawnPointRestrictionExtensions(gltfData.GLTF),
                 DeserializeTextExtensions(gltfData.GLTF),
                 DeserializeRectTransformExtensions(gltfData.GLTF),
-                DeserializeEffekseerEmittersExtensions(gltfData.GLTF)
+                DeserializeEffekseerEmittersExtensions(gltfData.GLTF),
+                DeserializeLodGroupExtensions(gltfData.GLTF)
             );
         }
 
@@ -322,6 +323,15 @@ namespace VCI
                 gltf,
                 glTF_Effekseer_emitters.ExtensionName,
                 glTF_Effekseer_emitters_Deserializer.Deserialize
+            );
+        }
+
+        public static List<(int gltfNodeIdx, glTF_VCAST_vci_lod_group extension)> DeserializeLodGroupExtensions(glTF gltf)
+        {
+            return DeserializeNodeExtensions(
+                gltf,
+                glTF_VCAST_vci_lod_group.ExtensionName,
+                glTF_VCAST_vci_lod_group_Deserializer.Deserialize
             );
         }
 

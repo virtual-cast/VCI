@@ -56,6 +56,9 @@ namespace VCI
         public glTF_VCAST_vci_location_bounds VCAST_vci_location_bounds;
         public glTF_VCAST_vci_player_spawn_point VCAST_vci_player_spawn_point;
         public glTF_VCAST_vci_player_spawn_point_restriction VCAST_vci_player_spawn_point_restriction;
+
+        // LOD
+        public glTF_VCAST_vci_lod_group VCAST_vci_lod_group;
     }
 }
 

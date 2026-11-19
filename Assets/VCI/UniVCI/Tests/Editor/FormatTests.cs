@@ -303,5 +303,60 @@ namespace VCI
                 Assert.Fail();
             }
         }
+
+        [Test]
+        public void VciLodGroup()
+        {
+            var src = new glTF_VCAST_vci_lod_group
+            {
+                lodGroup = new LodGroupJsonObject
+                {
+                    size = 2.5f,
+                    localReferencePoint = new[] { 0.1f, 0.2f, -0.3f },
+                    lods = new List<LodJsonObject>
+                    {
+                        new LodJsonObject
+                        {
+                            screenRelativeTransitionHeight = 0.6f,
+                            renderers = new[] { 1, 2 },
+                        },
+                        new LodJsonObject
+                        {
+                            screenRelativeTransitionHeight = 0.3f,
+                            renderers = new[] { 3 },
+                        },
+                        new LodJsonObject
+                        {
+                            screenRelativeTransitionHeight = 0.01f,
+                            renderers = new int[] { },
+                        },
+                    }
+                }
+            };
+
+            var dst = NodeExtensionSerializeAndDeserialize(
+                src,
+                glTF_VCAST_vci_lod_group.ExtensionName,
+                glTF_VCAST_vci_lod_group_Serializer.Serialize,
+                glTF_VCAST_vci_lod_group_Deserializer.Deserialize
+                );
+
+            if (dst != null)
+            {
+                Assert.AreEqual(2.5f, dst.lodGroup.size);
+                Assert.AreEqual(new[] { 0.1f, 0.2f, -0.3f }, dst.lodGroup.localReferencePoint);
+                Assert.AreEqual(3, dst.lodGroup.lods.Count);
+                Assert.AreEqual(0.6f, dst.lodGroup.lods[0].screenRelativeTransitionHeight);
+                Assert.AreEqual(new[] { 1, 2 }, dst.lodGroup.lods[0].renderers);
+                Assert.AreEqual(0.3f, dst.lodGroup.lods[1].screenRelativeTransitionHeight);
+                Assert.AreEqual(new[] { 3 }, dst.lodGroup.lods[1].renderers);
+                Assert.AreEqual(0.01f, dst.lodGroup.lods[2].screenRelativeTransitionHeight);
+                Assert.AreEqual(new int[] { }, dst.lodGroup.lods[2].renderers);
+            }
+            else
+            {
+                Assert.Fail();
+            }
+        }
     }
 }
